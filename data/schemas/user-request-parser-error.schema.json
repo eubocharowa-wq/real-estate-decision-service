@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://real-estate-decision-service.local/schemas/1.0/user-request-parser-error.schema.json",
+  "type": "object",
+  "properties": {
+    "schema_version": { "type": "string", "const": "1.0" },
+    "type": {
+      "type": "string",
+      "enum": [
+        "invalid_structure",
+        "unsupported_language",
+        "empty_request",
+        "parser_unavailable"
+      ]
+    },
+    "message": { "type": "string", "minLength": 1 },
+    "recoverable": { "type": "boolean" },
+    "raw_output_reference": {
+      "anyOf": [{ "type": "string", "minLength": 1 }, { "type": "null" }]
+    }
+  },
+  "required": [
+    "schema_version",
+    "type",
+    "message",
+    "recoverable",
+    "raw_output_reference"
+  ],
+  "additionalProperties": false,
+  "title": "UserRequestParserError"
+}

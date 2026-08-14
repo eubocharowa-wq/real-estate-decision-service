@@ -1,0 +1,2233 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://real-estate-decision-service.local/schemas/1.0/user-request-parser-result.schema.json",
+  "type": "object",
+  "properties": {
+    "schema_version": { "type": "string", "const": "1.0" },
+    "raw_text": { "type": "string", "minLength": 1 },
+    "locale": { "type": "string", "pattern": "^[a-z]{2}(?:-[A-Z]{2})?$" },
+    "parsed_request": {
+      "type": "object",
+      "properties": {
+        "schema_version": { "type": "string", "const": "1.0" },
+        "user_request_id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9:_-]*$"
+        },
+        "intent": {
+          "type": "string",
+          "enum": [
+            "find",
+            "compare",
+            "affordability",
+            "location_discovery",
+            "check",
+            "decision_help",
+            "mixed"
+          ]
+        },
+        "goal": {
+          "type": "object",
+          "properties": {
+            "purpose": {
+              "type": "string",
+              "enum": [
+                "own_residence",
+                "housing_improvement",
+                "relocation",
+                "child_purchase",
+                "parents_purchase",
+                "investment",
+                "capital_preservation",
+                "rental",
+                "seasonal_residence",
+                "second_home",
+                "other",
+                "unknown"
+              ]
+            },
+            "description": {
+              "anyOf": [
+                { "type": "string", "minLength": 1 },
+                { "type": "null" }
+              ]
+            }
+          },
+          "required": ["purpose", "description"],
+          "additionalProperties": false
+        },
+        "location": {
+          "type": "object",
+          "properties": {
+            "country_codes": {
+              "type": "array",
+              "items": { "type": "string", "pattern": "^[A-Z]{2}$" }
+            },
+            "regions": {
+              "type": "array",
+              "items": { "type": "string", "minLength": 1 }
+            },
+            "cities": {
+              "type": "array",
+              "items": { "type": "string", "minLength": 1 }
+            },
+            "preferred_districts": {
+              "type": "array",
+              "items": { "type": "string", "minLength": 1 }
+            },
+            "excluded_districts": {
+              "type": "array",
+              "items": { "type": "string", "minLength": 1 }
+            },
+            "destination_addresses": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "country_code": {
+                    "anyOf": [
+                      { "type": "string", "pattern": "^[A-Z]{2}$" },
+                      { "type": "null" }
+                    ]
+                  },
+                  "region": {
+                    "anyOf": [
+                      { "type": "string", "minLength": 1 },
+                      { "type": "null" }
+                    ]
+                  },
+                  "city": {
+                    "anyOf": [
+                      { "type": "string", "minLength": 1 },
+                      { "type": "null" }
+                    ]
+                  },
+                  "locality": {
+                    "anyOf": [
+                      { "type": "string", "minLength": 1 },
+                      { "type": "null" }
+                    ]
+                  },
+                  "district": {
+                    "anyOf": [
+                      { "type": "string", "minLength": 1 },
+                      { "type": "null" }
+                    ]
+                  },
+                  "street": {
+                    "anyOf": [
+                      { "type": "string", "minLength": 1 },
+                      { "type": "null" }
+                    ]
+                  },
+                  "house_number": {
+                    "anyOf": [
+                      { "type": "string", "minLength": 1 },
+                      { "type": "null" }
+                    ]
+                  },
+                  "postal_code": {
+                    "anyOf": [
+                      { "type": "string", "minLength": 1 },
+                      { "type": "null" }
+                    ]
+                  }
+                },
+                "required": [
+                  "country_code",
+                  "region",
+                  "city",
+                  "locality",
+                  "district",
+                  "street",
+                  "house_number",
+                  "postal_code"
+                ],
+                "additionalProperties": false,
+                "title": "Address"
+              }
+            },
+            "microdistricts": {
+              "type": "array",
+              "items": { "type": "string", "minLength": 1 }
+            },
+            "excluded_locations": {
+              "type": "array",
+              "items": { "type": "string", "minLength": 1 }
+            },
+            "location_flexible": {
+              "anyOf": [{ "type": "boolean" }, { "type": "null" }]
+            }
+          },
+          "required": [
+            "country_codes",
+            "regions",
+            "cities",
+            "preferred_districts",
+            "excluded_districts",
+            "destination_addresses"
+          ],
+          "additionalProperties": false
+        },
+        "property": {
+          "type": "object",
+          "properties": {
+            "allowed_property_types": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "apartment",
+                  "apartments",
+                  "house",
+                  "townhouse",
+                  "land"
+                ]
+              }
+            },
+            "allowed_market_types": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": ["new_build", "secondary", "suburban", "unknown"]
+              }
+            },
+            "rooms_min": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                { "type": "null" }
+              ]
+            },
+            "rooms_max": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                { "type": "null" }
+              ]
+            },
+            "excluded_property_types": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "apartment",
+                  "apartments",
+                  "house",
+                  "townhouse",
+                  "land"
+                ]
+              }
+            },
+            "property_type_flexible": {
+              "anyOf": [{ "type": "boolean" }, { "type": "null" }]
+            }
+          },
+          "required": [
+            "allowed_property_types",
+            "allowed_market_types",
+            "rooms_min",
+            "rooms_max"
+          ],
+          "additionalProperties": false
+        },
+        "budget": {
+          "type": "object",
+          "properties": {
+            "purchase_price": {
+              "type": "object",
+              "properties": {
+                "minimum": {
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "amount": {
+                          "type": "string",
+                          "pattern": "^(0|[1-9]\\d*)(\\.\\d+)?$",
+                          "description": "A base-unit monetary amount encoded as a decimal string to avoid binary floating-point loss."
+                        },
+                        "currency": {
+                          "type": "string",
+                          "pattern": "^[A-Z]{3}$"
+                        }
+                      },
+                      "required": ["amount", "currency"],
+                      "additionalProperties": false,
+                      "title": "Money"
+                    },
+                    { "type": "null" }
+                  ]
+                },
+                "maximum": {
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "amount": {
+                          "type": "string",
+                          "pattern": "^(0|[1-9]\\d*)(\\.\\d+)?$",
+                          "description": "A base-unit monetary amount encoded as a decimal string to avoid binary floating-point loss."
+                        },
+                        "currency": {
+                          "type": "string",
+                          "pattern": "^[A-Z]{3}$"
+                        }
+                      },
+                      "required": ["amount", "currency"],
+                      "additionalProperties": false,
+                      "title": "Money"
+                    },
+                    { "type": "null" }
+                  ]
+                }
+              },
+              "required": ["minimum", "maximum"],
+              "additionalProperties": false
+            },
+            "total_budget": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "amount": {
+                      "type": "string",
+                      "pattern": "^(0|[1-9]\\d*)(\\.\\d+)?$",
+                      "description": "A base-unit monetary amount encoded as a decimal string to avoid binary floating-point loss."
+                    },
+                    "currency": { "type": "string", "pattern": "^[A-Z]{3}$" }
+                  },
+                  "required": ["amount", "currency"],
+                  "additionalProperties": false,
+                  "title": "Money"
+                },
+                { "type": "null" }
+              ]
+            },
+            "renovation_budget": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "amount": {
+                      "type": "string",
+                      "pattern": "^(0|[1-9]\\d*)(\\.\\d+)?$",
+                      "description": "A base-unit monetary amount encoded as a decimal string to avoid binary floating-point loss."
+                    },
+                    "currency": { "type": "string", "pattern": "^[A-Z]{3}$" }
+                  },
+                  "required": ["amount", "currency"],
+                  "additionalProperties": false,
+                  "title": "Money"
+                },
+                { "type": "null" }
+              ]
+            },
+            "own_funds": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "amount": {
+                      "type": "string",
+                      "pattern": "^(0|[1-9]\\d*)(\\.\\d+)?$",
+                      "description": "A base-unit monetary amount encoded as a decimal string to avoid binary floating-point loss."
+                    },
+                    "currency": { "type": "string", "pattern": "^[A-Z]{3}$" }
+                  },
+                  "required": ["amount", "currency"],
+                  "additionalProperties": false,
+                  "title": "Money"
+                },
+                { "type": "null" }
+              ]
+            },
+            "reserve_after_purchase": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "amount": {
+                      "type": "string",
+                      "pattern": "^(0|[1-9]\\d*)(\\.\\d+)?$",
+                      "description": "A base-unit monetary amount encoded as a decimal string to avoid binary floating-point loss."
+                    },
+                    "currency": { "type": "string", "pattern": "^[A-Z]{3}$" }
+                  },
+                  "required": ["amount", "currency"],
+                  "additionalProperties": false,
+                  "title": "Money"
+                },
+                { "type": "null" }
+              ]
+            },
+            "budget_flexible": {
+              "anyOf": [{ "type": "boolean" }, { "type": "null" }]
+            },
+            "budget_context": {
+              "type": "string",
+              "enum": ["property_price", "total_entry", "ambiguous", "unknown"]
+            }
+          },
+          "required": ["purchase_price", "total_budget", "renovation_budget"],
+          "additionalProperties": false
+        },
+        "financing": {
+          "type": "object",
+          "properties": {
+            "purchase_methods": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": ["cash", "mortgage", "installment", "mixed", "unknown"]
+              }
+            },
+            "required_program_types": {
+              "type": "array",
+              "items": { "type": "string", "minLength": 1 }
+            },
+            "initial_payment_max": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "amount": {
+                      "type": "string",
+                      "pattern": "^(0|[1-9]\\d*)(\\.\\d+)?$",
+                      "description": "A base-unit monetary amount encoded as a decimal string to avoid binary floating-point loss."
+                    },
+                    "currency": { "type": "string", "pattern": "^[A-Z]{3}$" }
+                  },
+                  "required": ["amount", "currency"],
+                  "additionalProperties": false,
+                  "title": "Money"
+                },
+                { "type": "null" }
+              ]
+            },
+            "monthly_payment_max": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "amount": {
+                      "type": "string",
+                      "pattern": "^(0|[1-9]\\d*)(\\.\\d+)?$",
+                      "description": "A base-unit monetary amount encoded as a decimal string to avoid binary floating-point loss."
+                    },
+                    "currency": { "type": "string", "pattern": "^[A-Z]{3}$" }
+                  },
+                  "required": ["amount", "currency"],
+                  "additionalProperties": false,
+                  "title": "Money"
+                },
+                { "type": "null" }
+              ]
+            },
+            "financing_period": {
+              "type": "object",
+              "properties": {
+                "from": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "format": "date",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                    },
+                    { "type": "null" }
+                  ]
+                },
+                "to": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "format": "date",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                    },
+                    { "type": "null" }
+                  ]
+                }
+              },
+              "required": ["from", "to"],
+              "additionalProperties": false,
+              "title": "DateRange"
+            },
+            "preferred_banks": {
+              "type": "array",
+              "items": { "type": "string", "minLength": 1 }
+            },
+            "financing_flexible": {
+              "anyOf": [{ "type": "boolean" }, { "type": "null" }]
+            }
+          },
+          "required": [
+            "purchase_methods",
+            "required_program_types",
+            "initial_payment_max",
+            "monthly_payment_max",
+            "financing_period"
+          ],
+          "additionalProperties": false
+        },
+        "timeline": {
+          "type": "object",
+          "properties": {
+            "purchase_by": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date",
+                  "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                },
+                { "type": "null" }
+              ]
+            },
+            "move_in_by": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date",
+                  "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                },
+                { "type": "null" }
+              ]
+            },
+            "ready_now_required": {
+              "anyOf": [{ "type": "boolean" }, { "type": "null" }]
+            },
+            "construction_completion_by": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date",
+                  "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                },
+                { "type": "null" }
+              ]
+            },
+            "willing_to_wait": {
+              "anyOf": [{ "type": "boolean" }, { "type": "null" }]
+            }
+          },
+          "required": ["purchase_by", "move_in_by", "ready_now_required"],
+          "additionalProperties": false
+        },
+        "household": {
+          "type": "object",
+          "properties": {
+            "adults_count": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                { "type": "null" }
+              ]
+            },
+            "children_count": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                { "type": "null" }
+              ]
+            },
+            "pets_count": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                { "type": "null" }
+              ]
+            },
+            "notes": {
+              "anyOf": [
+                { "type": "string", "minLength": 1 },
+                { "type": "null" }
+              ]
+            },
+            "children_ages": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              }
+            },
+            "elderly_count": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                { "type": "null" }
+              ]
+            },
+            "accessibility_needs": {
+              "type": "array",
+              "items": { "type": "string", "minLength": 1 }
+            }
+          },
+          "required": ["adults_count", "children_count", "pets_count", "notes"],
+          "additionalProperties": false
+        },
+        "lifestyle": {
+          "type": "object",
+          "properties": {
+            "commute_modes": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": ["walk", "public_transport", "car", "bicycle", "other"]
+              }
+            },
+            "notes": {
+              "type": "array",
+              "items": { "type": "string", "minLength": 1 }
+            },
+            "remote_work": {
+              "anyOf": [{ "type": "boolean" }, { "type": "null" }]
+            },
+            "car_count": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                { "type": "null" }
+              ]
+            }
+          },
+          "required": ["commute_modes", "notes"],
+          "additionalProperties": false
+        },
+        "infrastructure": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "schema_version": { "type": "string", "const": "1.0" },
+              "criterion_id": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9:_-]*$"
+              },
+              "category": {
+                "type": "string",
+                "enum": [
+                  "finance",
+                  "property",
+                  "timeline",
+                  "location",
+                  "infrastructure",
+                  "house",
+                  "data",
+                  "transaction",
+                  "custom"
+                ]
+              },
+              "field": { "type": "string", "minLength": 1 },
+              "operator": {
+                "type": "string",
+                "enum": [
+                  "eq",
+                  "neq",
+                  "in",
+                  "not_in",
+                  "lte",
+                  "gte",
+                  "between",
+                  "within_distance",
+                  "within_time",
+                  "exists",
+                  "absent",
+                  "before",
+                  "after",
+                  "one_of",
+                  "boolean",
+                  "custom"
+                ]
+              },
+              "target": { "$ref": "#/$defs/__schema0" },
+              "unit": {
+                "anyOf": [
+                  { "type": "string", "minLength": 1 },
+                  { "type": "null" }
+                ]
+              },
+              "priority": {
+                "type": "string",
+                "enum": [
+                  "must",
+                  "preferred",
+                  "neutral",
+                  "avoid",
+                  "exclude",
+                  "unknown"
+                ]
+              },
+              "weight": {
+                "anyOf": [
+                  { "type": "integer", "minimum": 1, "maximum": 5 },
+                  { "type": "null" }
+                ]
+              },
+              "tolerance": { "$ref": "#/$defs/__schema1" },
+              "fit_function": {
+                "anyOf": [
+                  { "type": "string", "minLength": 1 },
+                  { "type": "null" }
+                ]
+              },
+              "criterion_group_id": {
+                "anyOf": [
+                  { "type": "string", "pattern": "^[a-z][a-z0-9:_-]*$" },
+                  { "type": "null" }
+                ]
+              },
+              "applicable_property_types": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "apartment",
+                    "apartments",
+                    "house",
+                    "townhouse",
+                    "land"
+                  ]
+                }
+              },
+              "source_requirement": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "authoritative",
+                    "primary",
+                    "secondary",
+                    "user_provided",
+                    "unknown"
+                  ]
+                }
+              },
+              "freshness_requirement": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "enum": ["fresh", "aging", "stale", "expired", "unknown"]
+                  },
+                  { "type": "null" }
+                ]
+              },
+              "critical_if_unknown": { "type": "boolean" },
+              "user_expression": {
+                "anyOf": [
+                  { "type": "string", "minLength": 1 },
+                  { "type": "null" }
+                ]
+              }
+            },
+            "required": [
+              "schema_version",
+              "criterion_id",
+              "category",
+              "field",
+              "operator",
+              "target",
+              "unit",
+              "priority",
+              "weight",
+              "tolerance",
+              "fit_function",
+              "criterion_group_id",
+              "applicable_property_types",
+              "source_requirement",
+              "freshness_requirement",
+              "critical_if_unknown",
+              "user_expression"
+            ],
+            "additionalProperties": false,
+            "title": "Criterion"
+          }
+        },
+        "property_features": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "schema_version": { "type": "string", "const": "1.0" },
+              "criterion_id": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9:_-]*$"
+              },
+              "category": {
+                "type": "string",
+                "enum": [
+                  "finance",
+                  "property",
+                  "timeline",
+                  "location",
+                  "infrastructure",
+                  "house",
+                  "data",
+                  "transaction",
+                  "custom"
+                ]
+              },
+              "field": { "type": "string", "minLength": 1 },
+              "operator": {
+                "type": "string",
+                "enum": [
+                  "eq",
+                  "neq",
+                  "in",
+                  "not_in",
+                  "lte",
+                  "gte",
+                  "between",
+                  "within_distance",
+                  "within_time",
+                  "exists",
+                  "absent",
+                  "before",
+                  "after",
+                  "one_of",
+                  "boolean",
+                  "custom"
+                ]
+              },
+              "target": { "$ref": "#/$defs/__schema0" },
+              "unit": {
+                "anyOf": [
+                  { "type": "string", "minLength": 1 },
+                  { "type": "null" }
+                ]
+              },
+              "priority": {
+                "type": "string",
+                "enum": [
+                  "must",
+                  "preferred",
+                  "neutral",
+                  "avoid",
+                  "exclude",
+                  "unknown"
+                ]
+              },
+              "weight": {
+                "anyOf": [
+                  { "type": "integer", "minimum": 1, "maximum": 5 },
+                  { "type": "null" }
+                ]
+              },
+              "tolerance": { "$ref": "#/$defs/__schema1" },
+              "fit_function": {
+                "anyOf": [
+                  { "type": "string", "minLength": 1 },
+                  { "type": "null" }
+                ]
+              },
+              "criterion_group_id": {
+                "anyOf": [
+                  { "type": "string", "pattern": "^[a-z][a-z0-9:_-]*$" },
+                  { "type": "null" }
+                ]
+              },
+              "applicable_property_types": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "apartment",
+                    "apartments",
+                    "house",
+                    "townhouse",
+                    "land"
+                  ]
+                }
+              },
+              "source_requirement": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "authoritative",
+                    "primary",
+                    "secondary",
+                    "user_provided",
+                    "unknown"
+                  ]
+                }
+              },
+              "freshness_requirement": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "enum": ["fresh", "aging", "stale", "expired", "unknown"]
+                  },
+                  { "type": "null" }
+                ]
+              },
+              "critical_if_unknown": { "type": "boolean" },
+              "user_expression": {
+                "anyOf": [
+                  { "type": "string", "minLength": 1 },
+                  { "type": "null" }
+                ]
+              }
+            },
+            "required": [
+              "schema_version",
+              "criterion_id",
+              "category",
+              "field",
+              "operator",
+              "target",
+              "unit",
+              "priority",
+              "weight",
+              "tolerance",
+              "fit_function",
+              "criterion_group_id",
+              "applicable_property_types",
+              "source_requirement",
+              "freshness_requirement",
+              "critical_if_unknown",
+              "user_expression"
+            ],
+            "additionalProperties": false,
+            "title": "Criterion"
+          }
+        },
+        "must_have": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "schema_version": { "type": "string", "const": "1.0" },
+              "criterion_id": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9:_-]*$"
+              },
+              "category": {
+                "type": "string",
+                "enum": [
+                  "finance",
+                  "property",
+                  "timeline",
+                  "location",
+                  "infrastructure",
+                  "house",
+                  "data",
+                  "transaction",
+                  "custom"
+                ]
+              },
+              "field": { "type": "string", "minLength": 1 },
+              "operator": {
+                "type": "string",
+                "enum": [
+                  "eq",
+                  "neq",
+                  "in",
+                  "not_in",
+                  "lte",
+                  "gte",
+                  "between",
+                  "within_distance",
+                  "within_time",
+                  "exists",
+                  "absent",
+                  "before",
+                  "after",
+                  "one_of",
+                  "boolean",
+                  "custom"
+                ]
+              },
+              "target": { "$ref": "#/$defs/__schema0" },
+              "unit": {
+                "anyOf": [
+                  { "type": "string", "minLength": 1 },
+                  { "type": "null" }
+                ]
+              },
+              "priority": {
+                "type": "string",
+                "enum": [
+                  "must",
+                  "preferred",
+                  "neutral",
+                  "avoid",
+                  "exclude",
+                  "unknown"
+                ]
+              },
+              "weight": {
+                "anyOf": [
+                  { "type": "integer", "minimum": 1, "maximum": 5 },
+                  { "type": "null" }
+                ]
+              },
+              "tolerance": { "$ref": "#/$defs/__schema1" },
+              "fit_function": {
+                "anyOf": [
+                  { "type": "string", "minLength": 1 },
+                  { "type": "null" }
+                ]
+              },
+              "criterion_group_id": {
+                "anyOf": [
+                  { "type": "string", "pattern": "^[a-z][a-z0-9:_-]*$" },
+                  { "type": "null" }
+                ]
+              },
+              "applicable_property_types": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "apartment",
+                    "apartments",
+                    "house",
+                    "townhouse",
+                    "land"
+                  ]
+                }
+              },
+              "source_requirement": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "authoritative",
+                    "primary",
+                    "secondary",
+                    "user_provided",
+                    "unknown"
+                  ]
+                }
+              },
+              "freshness_requirement": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "enum": ["fresh", "aging", "stale", "expired", "unknown"]
+                  },
+                  { "type": "null" }
+                ]
+              },
+              "critical_if_unknown": { "type": "boolean" },
+              "user_expression": {
+                "anyOf": [
+                  { "type": "string", "minLength": 1 },
+                  { "type": "null" }
+                ]
+              }
+            },
+            "required": [
+              "schema_version",
+              "criterion_id",
+              "category",
+              "field",
+              "operator",
+              "target",
+              "unit",
+              "priority",
+              "weight",
+              "tolerance",
+              "fit_function",
+              "criterion_group_id",
+              "applicable_property_types",
+              "source_requirement",
+              "freshness_requirement",
+              "critical_if_unknown",
+              "user_expression"
+            ],
+            "additionalProperties": false,
+            "title": "Criterion"
+          }
+        },
+        "nice_to_have": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "schema_version": { "type": "string", "const": "1.0" },
+              "criterion_id": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9:_-]*$"
+              },
+              "category": {
+                "type": "string",
+                "enum": [
+                  "finance",
+                  "property",
+                  "timeline",
+                  "location",
+                  "infrastructure",
+                  "house",
+                  "data",
+                  "transaction",
+                  "custom"
+                ]
+              },
+              "field": { "type": "string", "minLength": 1 },
+              "operator": {
+                "type": "string",
+                "enum": [
+                  "eq",
+                  "neq",
+                  "in",
+                  "not_in",
+                  "lte",
+                  "gte",
+                  "between",
+                  "within_distance",
+                  "within_time",
+                  "exists",
+                  "absent",
+                  "before",
+                  "after",
+                  "one_of",
+                  "boolean",
+                  "custom"
+                ]
+              },
+              "target": { "$ref": "#/$defs/__schema0" },
+              "unit": {
+                "anyOf": [
+                  { "type": "string", "minLength": 1 },
+                  { "type": "null" }
+                ]
+              },
+              "priority": {
+                "type": "string",
+                "enum": [
+                  "must",
+                  "preferred",
+                  "neutral",
+                  "avoid",
+                  "exclude",
+                  "unknown"
+                ]
+              },
+              "weight": {
+                "anyOf": [
+                  { "type": "integer", "minimum": 1, "maximum": 5 },
+                  { "type": "null" }
+                ]
+              },
+              "tolerance": { "$ref": "#/$defs/__schema1" },
+              "fit_function": {
+                "anyOf": [
+                  { "type": "string", "minLength": 1 },
+                  { "type": "null" }
+                ]
+              },
+              "criterion_group_id": {
+                "anyOf": [
+                  { "type": "string", "pattern": "^[a-z][a-z0-9:_-]*$" },
+                  { "type": "null" }
+                ]
+              },
+              "applicable_property_types": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "apartment",
+                    "apartments",
+                    "house",
+                    "townhouse",
+                    "land"
+                  ]
+                }
+              },
+              "source_requirement": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "authoritative",
+                    "primary",
+                    "secondary",
+                    "user_provided",
+                    "unknown"
+                  ]
+                }
+              },
+              "freshness_requirement": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "enum": ["fresh", "aging", "stale", "expired", "unknown"]
+                  },
+                  { "type": "null" }
+                ]
+              },
+              "critical_if_unknown": { "type": "boolean" },
+              "user_expression": {
+                "anyOf": [
+                  { "type": "string", "minLength": 1 },
+                  { "type": "null" }
+                ]
+              }
+            },
+            "required": [
+              "schema_version",
+              "criterion_id",
+              "category",
+              "field",
+              "operator",
+              "target",
+              "unit",
+              "priority",
+              "weight",
+              "tolerance",
+              "fit_function",
+              "criterion_group_id",
+              "applicable_property_types",
+              "source_requirement",
+              "freshness_requirement",
+              "critical_if_unknown",
+              "user_expression"
+            ],
+            "additionalProperties": false,
+            "title": "Criterion"
+          }
+        },
+        "avoid": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "schema_version": { "type": "string", "const": "1.0" },
+              "criterion_id": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9:_-]*$"
+              },
+              "category": {
+                "type": "string",
+                "enum": [
+                  "finance",
+                  "property",
+                  "timeline",
+                  "location",
+                  "infrastructure",
+                  "house",
+                  "data",
+                  "transaction",
+                  "custom"
+                ]
+              },
+              "field": { "type": "string", "minLength": 1 },
+              "operator": {
+                "type": "string",
+                "enum": [
+                  "eq",
+                  "neq",
+                  "in",
+                  "not_in",
+                  "lte",
+                  "gte",
+                  "between",
+                  "within_distance",
+                  "within_time",
+                  "exists",
+                  "absent",
+                  "before",
+                  "after",
+                  "one_of",
+                  "boolean",
+                  "custom"
+                ]
+              },
+              "target": { "$ref": "#/$defs/__schema0" },
+              "unit": {
+                "anyOf": [
+                  { "type": "string", "minLength": 1 },
+                  { "type": "null" }
+                ]
+              },
+              "priority": {
+                "type": "string",
+                "enum": [
+                  "must",
+                  "preferred",
+                  "neutral",
+                  "avoid",
+                  "exclude",
+                  "unknown"
+                ]
+              },
+              "weight": {
+                "anyOf": [
+                  { "type": "integer", "minimum": 1, "maximum": 5 },
+                  { "type": "null" }
+                ]
+              },
+              "tolerance": { "$ref": "#/$defs/__schema1" },
+              "fit_function": {
+                "anyOf": [
+                  { "type": "string", "minLength": 1 },
+                  { "type": "null" }
+                ]
+              },
+              "criterion_group_id": {
+                "anyOf": [
+                  { "type": "string", "pattern": "^[a-z][a-z0-9:_-]*$" },
+                  { "type": "null" }
+                ]
+              },
+              "applicable_property_types": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "apartment",
+                    "apartments",
+                    "house",
+                    "townhouse",
+                    "land"
+                  ]
+                }
+              },
+              "source_requirement": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "authoritative",
+                    "primary",
+                    "secondary",
+                    "user_provided",
+                    "unknown"
+                  ]
+                }
+              },
+              "freshness_requirement": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "enum": ["fresh", "aging", "stale", "expired", "unknown"]
+                  },
+                  { "type": "null" }
+                ]
+              },
+              "critical_if_unknown": { "type": "boolean" },
+              "user_expression": {
+                "anyOf": [
+                  { "type": "string", "minLength": 1 },
+                  { "type": "null" }
+                ]
+              }
+            },
+            "required": [
+              "schema_version",
+              "criterion_id",
+              "category",
+              "field",
+              "operator",
+              "target",
+              "unit",
+              "priority",
+              "weight",
+              "tolerance",
+              "fit_function",
+              "criterion_group_id",
+              "applicable_property_types",
+              "source_requirement",
+              "freshness_requirement",
+              "critical_if_unknown",
+              "user_expression"
+            ],
+            "additionalProperties": false,
+            "title": "Criterion"
+          }
+        },
+        "unknowns": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "field": { "type": "string", "minLength": 1 },
+              "reason": { "type": "string", "minLength": 1 },
+              "critical": { "type": "boolean" }
+            },
+            "required": ["field", "reason", "critical"],
+            "additionalProperties": false
+          }
+        },
+        "source_links": {
+          "type": "array",
+          "items": { "type": "string", "format": "uri" }
+        },
+        "clarifications": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "clarification_id": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9:_-]*$"
+              },
+              "question": { "type": "string", "minLength": 1 },
+              "status": {
+                "type": "string",
+                "enum": ["open", "answered", "dismissed"]
+              },
+              "answer": {
+                "anyOf": [
+                  { "type": "string", "minLength": 1 },
+                  { "type": "null" }
+                ]
+              }
+            },
+            "required": ["clarification_id", "question", "status", "answer"],
+            "additionalProperties": false
+          }
+        },
+        "confidence": {
+          "type": "object",
+          "properties": {
+            "extraction_confidence": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "status": { "type": "string", "enum": ["high", "medium", "low"] }
+          },
+          "required": ["extraction_confidence", "status"],
+          "additionalProperties": false
+        },
+        "result_limit": { "type": "integer", "minimum": 5, "maximum": 10 }
+      },
+      "required": [
+        "schema_version",
+        "user_request_id",
+        "intent",
+        "goal",
+        "location",
+        "property",
+        "budget",
+        "financing",
+        "timeline",
+        "household",
+        "lifestyle",
+        "infrastructure",
+        "property_features",
+        "must_have",
+        "nice_to_have",
+        "avoid",
+        "unknowns",
+        "source_links",
+        "clarifications",
+        "confidence",
+        "result_limit"
+      ],
+      "additionalProperties": false,
+      "title": "UserRequest"
+    },
+    "interpretation_confidence": {
+      "type": "object",
+      "properties": {
+        "score": { "type": "number", "minimum": 0, "maximum": 100 },
+        "band": { "type": "string", "enum": ["high", "medium", "low"] },
+        "factors": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "code": { "type": "string", "minLength": 1 },
+              "impact": { "type": "number" },
+              "explanation": { "type": "string", "minLength": 1 }
+            },
+            "required": ["code", "impact", "explanation"],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": ["score", "band", "factors"],
+      "additionalProperties": false
+    },
+    "extracted_facts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "fact_id": { "type": "string", "pattern": "^[a-z][a-z0-9:_-]*$" },
+          "field": { "type": "string", "minLength": 1 },
+          "value": { "$ref": "#/$defs/__schema2" },
+          "source_span": {
+            "type": "object",
+            "properties": {
+              "text": { "type": "string", "minLength": 1 },
+              "start": {
+                "anyOf": [
+                  {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  { "type": "null" }
+                ]
+              },
+              "end": {
+                "anyOf": [
+                  {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  { "type": "null" }
+                ]
+              }
+            },
+            "required": ["text", "start", "end"],
+            "additionalProperties": false
+          },
+          "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+          "priority_interpretation": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "value": {
+                    "type": "string",
+                    "enum": [
+                      "must",
+                      "preferred",
+                      "neutral",
+                      "avoid",
+                      "exclude",
+                      "unknown"
+                    ]
+                  },
+                  "confidence": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  },
+                  "source_text": { "type": "string", "minLength": 1 }
+                },
+                "required": ["value", "confidence", "source_text"],
+                "additionalProperties": false
+              },
+              { "type": "null" }
+            ]
+          }
+        },
+        "required": [
+          "fact_id",
+          "field",
+          "value",
+          "source_span",
+          "confidence",
+          "priority_interpretation"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "inferred_candidates": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "candidate_id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9:_-]*$"
+          },
+          "proposed_criterion": {
+            "type": "object",
+            "properties": {
+              "field": { "type": "string", "minLength": 1 },
+              "category": {
+                "type": "string",
+                "enum": [
+                  "finance",
+                  "property",
+                  "timeline",
+                  "location",
+                  "infrastructure",
+                  "house",
+                  "data",
+                  "transaction",
+                  "custom"
+                ]
+              },
+              "target": { "$ref": "#/$defs/__schema3" },
+              "priority": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "enum": [
+                      "must",
+                      "preferred",
+                      "neutral",
+                      "avoid",
+                      "exclude",
+                      "unknown"
+                    ]
+                  },
+                  { "type": "null" }
+                ]
+              }
+            },
+            "required": ["field", "category", "target", "priority"],
+            "additionalProperties": false
+          },
+          "reason": { "type": "string", "minLength": 1 },
+          "source_text": { "type": "string", "minLength": 1 },
+          "confidence": { "type": "number", "minimum": 0, "maximum": 1 }
+        },
+        "required": [
+          "candidate_id",
+          "proposed_criterion",
+          "reason",
+          "source_text",
+          "confidence"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "unknowns": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "field": { "type": "string", "minLength": 1 },
+          "reason": {
+            "type": "string",
+            "enum": [
+              "not_specified",
+              "ambiguous",
+              "dependent_value_missing",
+              "unsupported"
+            ]
+          },
+          "explanation": { "type": "string", "minLength": 1 },
+          "materiality": {
+            "type": "string",
+            "enum": ["critical", "high", "medium", "low"]
+          }
+        },
+        "required": ["field", "reason", "explanation", "materiality"],
+        "additionalProperties": false
+      }
+    },
+    "contradictions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "contradiction_id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9:_-]*$"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "location_inclusion_exclusion",
+              "property_type_inclusion_exclusion",
+              "invalid_min_max",
+              "criterion_must_exclude",
+              "impossible_deadline"
+            ]
+          },
+          "fields": {
+            "minItems": 1,
+            "type": "array",
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "message": { "type": "string", "minLength": 1 },
+          "source_spans": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "text": { "type": "string", "minLength": 1 },
+                "start": {
+                  "anyOf": [
+                    {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 9007199254740991
+                    },
+                    { "type": "null" }
+                  ]
+                },
+                "end": {
+                  "anyOf": [
+                    {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 9007199254740991
+                    },
+                    { "type": "null" }
+                  ]
+                }
+              },
+              "required": ["text", "start", "end"],
+              "additionalProperties": false
+            }
+          },
+          "blocking": { "type": "boolean" }
+        },
+        "required": [
+          "contradiction_id",
+          "type",
+          "fields",
+          "message",
+          "source_spans",
+          "blocking"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "clarification_candidates": {
+      "maxItems": 3,
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "clarification_id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9:_-]*$"
+          },
+          "field": { "type": "string", "minLength": 1 },
+          "reason": { "type": "string", "minLength": 1 },
+          "impact": {
+            "type": "string",
+            "enum": [
+              "hard_ambiguity",
+              "high_search_impact",
+              "finance_impact",
+              "deadline_impact",
+              "location_impact",
+              "unsupported_criterion"
+            ]
+          },
+          "proposed_question": { "type": "string", "minLength": 1 },
+          "options": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "label": { "type": "string", "minLength": 1 },
+                "value": { "$ref": "#/$defs/__schema4" }
+              },
+              "required": ["label", "value"],
+              "additionalProperties": false
+            }
+          },
+          "priority": {
+            "type": "string",
+            "enum": ["critical", "high", "medium", "low"]
+          },
+          "source_text": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 1 }
+          }
+        },
+        "required": [
+          "clarification_id",
+          "field",
+          "reason",
+          "impact",
+          "proposed_question",
+          "options",
+          "priority",
+          "source_text"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "warnings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "code": { "type": "string", "minLength": 1 },
+          "message": { "type": "string", "minLength": 1 },
+          "field": {
+            "anyOf": [{ "type": "string", "minLength": 1 }, { "type": "null" }]
+          }
+        },
+        "required": ["code", "message", "field"],
+        "additionalProperties": false
+      }
+    },
+    "confirmation_view": {
+      "type": "object",
+      "properties": {
+        "summary": {
+          "type": "object",
+          "properties": {
+            "headline": { "type": "string", "minLength": 1 },
+            "parts": {
+              "type": "array",
+              "items": { "type": "string", "minLength": 1 }
+            }
+          },
+          "required": ["headline", "parts"],
+          "additionalProperties": false
+        },
+        "groups": {
+          "type": "object",
+          "properties": {
+            "required": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "criterion_id": {
+                    "type": "string",
+                    "pattern": "^[a-z][a-z0-9:_-]*$"
+                  },
+                  "label": { "type": "string", "minLength": 1 },
+                  "value": { "$ref": "#/$defs/__schema5" },
+                  "priority": {
+                    "type": "string",
+                    "enum": [
+                      "must",
+                      "preferred",
+                      "neutral",
+                      "avoid",
+                      "exclude",
+                      "unknown"
+                    ]
+                  },
+                  "source_text": {
+                    "anyOf": [
+                      { "type": "string", "minLength": 1 },
+                      { "type": "null" }
+                    ]
+                  },
+                  "editable": {
+                    "type": "object",
+                    "properties": {
+                      "value": { "type": "boolean" },
+                      "priority": { "type": "boolean" },
+                      "removable": { "type": "boolean" }
+                    },
+                    "required": ["value", "priority", "removable"],
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "criterion_id",
+                  "label",
+                  "value",
+                  "priority",
+                  "source_text",
+                  "editable"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "preferred": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "criterion_id": {
+                    "type": "string",
+                    "pattern": "^[a-z][a-z0-9:_-]*$"
+                  },
+                  "label": { "type": "string", "minLength": 1 },
+                  "value": { "$ref": "#/$defs/__schema5" },
+                  "priority": {
+                    "type": "string",
+                    "enum": [
+                      "must",
+                      "preferred",
+                      "neutral",
+                      "avoid",
+                      "exclude",
+                      "unknown"
+                    ]
+                  },
+                  "source_text": {
+                    "anyOf": [
+                      { "type": "string", "minLength": 1 },
+                      { "type": "null" }
+                    ]
+                  },
+                  "editable": {
+                    "type": "object",
+                    "properties": {
+                      "value": { "type": "boolean" },
+                      "priority": { "type": "boolean" },
+                      "removable": { "type": "boolean" }
+                    },
+                    "required": ["value", "priority", "removable"],
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "criterion_id",
+                  "label",
+                  "value",
+                  "priority",
+                  "source_text",
+                  "editable"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "flexible": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "criterion_id": {
+                    "type": "string",
+                    "pattern": "^[a-z][a-z0-9:_-]*$"
+                  },
+                  "label": { "type": "string", "minLength": 1 },
+                  "value": { "$ref": "#/$defs/__schema5" },
+                  "priority": {
+                    "type": "string",
+                    "enum": [
+                      "must",
+                      "preferred",
+                      "neutral",
+                      "avoid",
+                      "exclude",
+                      "unknown"
+                    ]
+                  },
+                  "source_text": {
+                    "anyOf": [
+                      { "type": "string", "minLength": 1 },
+                      { "type": "null" }
+                    ]
+                  },
+                  "editable": {
+                    "type": "object",
+                    "properties": {
+                      "value": { "type": "boolean" },
+                      "priority": { "type": "boolean" },
+                      "removable": { "type": "boolean" }
+                    },
+                    "required": ["value", "priority", "removable"],
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "criterion_id",
+                  "label",
+                  "value",
+                  "priority",
+                  "source_text",
+                  "editable"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "unknown": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "field": { "type": "string", "minLength": 1 },
+                  "reason": {
+                    "type": "string",
+                    "enum": [
+                      "not_specified",
+                      "ambiguous",
+                      "dependent_value_missing",
+                      "unsupported"
+                    ]
+                  },
+                  "explanation": { "type": "string", "minLength": 1 },
+                  "materiality": {
+                    "type": "string",
+                    "enum": ["critical", "high", "medium", "low"]
+                  }
+                },
+                "required": ["field", "reason", "explanation", "materiality"],
+                "additionalProperties": false
+              }
+            }
+          },
+          "required": ["required", "preferred", "flexible", "unknown"],
+          "additionalProperties": false
+        },
+        "contradictions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "contradiction_id": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9:_-]*$"
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "location_inclusion_exclusion",
+                  "property_type_inclusion_exclusion",
+                  "invalid_min_max",
+                  "criterion_must_exclude",
+                  "impossible_deadline"
+                ]
+              },
+              "fields": {
+                "minItems": 1,
+                "type": "array",
+                "items": { "type": "string", "minLength": 1 }
+              },
+              "message": { "type": "string", "minLength": 1 },
+              "source_spans": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "text": { "type": "string", "minLength": 1 },
+                    "start": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 9007199254740991
+                        },
+                        { "type": "null" }
+                      ]
+                    },
+                    "end": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 9007199254740991
+                        },
+                        { "type": "null" }
+                      ]
+                    }
+                  },
+                  "required": ["text", "start", "end"],
+                  "additionalProperties": false
+                }
+              },
+              "blocking": { "type": "boolean" }
+            },
+            "required": [
+              "contradiction_id",
+              "type",
+              "fields",
+              "message",
+              "source_spans",
+              "blocking"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "clarification_questions": {
+          "maxItems": 3,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "clarification_id": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9:_-]*$"
+              },
+              "field": { "type": "string", "minLength": 1 },
+              "reason": { "type": "string", "minLength": 1 },
+              "impact": {
+                "type": "string",
+                "enum": [
+                  "hard_ambiguity",
+                  "high_search_impact",
+                  "finance_impact",
+                  "deadline_impact",
+                  "location_impact",
+                  "unsupported_criterion"
+                ]
+              },
+              "proposed_question": { "type": "string", "minLength": 1 },
+              "options": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "label": { "type": "string", "minLength": 1 },
+                    "value": { "$ref": "#/$defs/__schema4" }
+                  },
+                  "required": ["label", "value"],
+                  "additionalProperties": false
+                }
+              },
+              "priority": {
+                "type": "string",
+                "enum": ["critical", "high", "medium", "low"]
+              },
+              "source_text": {
+                "type": "array",
+                "items": { "type": "string", "minLength": 1 }
+              }
+            },
+            "required": [
+              "clarification_id",
+              "field",
+              "reason",
+              "impact",
+              "proposed_question",
+              "options",
+              "priority",
+              "source_text"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "source_text": { "type": "string", "minLength": 1 },
+        "can_confirm": { "type": "boolean" },
+        "can_add_criterion": { "type": "boolean", "const": true }
+      },
+      "required": [
+        "summary",
+        "groups",
+        "contradictions",
+        "clarification_questions",
+        "source_text",
+        "can_confirm",
+        "can_add_criterion"
+      ],
+      "additionalProperties": false
+    },
+    "user_requested_limit": {
+      "anyOf": [
+        { "type": "integer", "minimum": 5, "maximum": 10 },
+        { "type": "null" }
+      ]
+    },
+    "system_default_limit": { "type": "integer", "minimum": 5, "maximum": 10 },
+    "parser_version": { "type": "string", "minLength": 1 },
+    "prompt_version": {
+      "anyOf": [{ "type": "string", "minLength": 1 }, { "type": "null" }]
+    },
+    "normalization_version": { "type": "string", "minLength": 1 }
+  },
+  "required": [
+    "schema_version",
+    "raw_text",
+    "locale",
+    "parsed_request",
+    "interpretation_confidence",
+    "extracted_facts",
+    "inferred_candidates",
+    "unknowns",
+    "contradictions",
+    "clarification_candidates",
+    "warnings",
+    "confirmation_view",
+    "user_requested_limit",
+    "system_default_limit",
+    "parser_version",
+    "prompt_version",
+    "normalization_version"
+  ],
+  "additionalProperties": false,
+  "title": "UserRequestParserResult",
+  "$defs": {
+    "__schema0": {
+      "anyOf": [
+        { "type": "string" },
+        { "type": "number" },
+        { "type": "boolean" },
+        { "type": "null" },
+        { "type": "array", "items": { "$ref": "#/$defs/__schema0" } },
+        {
+          "type": "object",
+          "propertyNames": { "type": "string" },
+          "additionalProperties": { "$ref": "#/$defs/__schema0" }
+        }
+      ]
+    },
+    "__schema1": {
+      "anyOf": [
+        { "type": "string" },
+        { "type": "number" },
+        { "type": "boolean" },
+        { "type": "null" },
+        { "type": "array", "items": { "$ref": "#/$defs/__schema1" } },
+        {
+          "type": "object",
+          "propertyNames": { "type": "string" },
+          "additionalProperties": { "$ref": "#/$defs/__schema1" }
+        }
+      ]
+    },
+    "__schema2": {
+      "anyOf": [
+        { "type": "string" },
+        { "type": "number" },
+        { "type": "boolean" },
+        { "type": "null" },
+        { "type": "array", "items": { "$ref": "#/$defs/__schema2" } },
+        {
+          "type": "object",
+          "propertyNames": { "type": "string" },
+          "additionalProperties": { "$ref": "#/$defs/__schema2" }
+        }
+      ]
+    },
+    "__schema3": {
+      "anyOf": [
+        { "type": "string" },
+        { "type": "number" },
+        { "type": "boolean" },
+        { "type": "null" },
+        { "type": "array", "items": { "$ref": "#/$defs/__schema3" } },
+        {
+          "type": "object",
+          "propertyNames": { "type": "string" },
+          "additionalProperties": { "$ref": "#/$defs/__schema3" }
+        }
+      ]
+    },
+    "__schema4": {
+      "anyOf": [
+        { "type": "string" },
+        { "type": "number" },
+        { "type": "boolean" },
+        { "type": "null" },
+        { "type": "array", "items": { "$ref": "#/$defs/__schema4" } },
+        {
+          "type": "object",
+          "propertyNames": { "type": "string" },
+          "additionalProperties": { "$ref": "#/$defs/__schema4" }
+        }
+      ]
+    },
+    "__schema5": {
+      "anyOf": [
+        { "type": "string" },
+        { "type": "number" },
+        { "type": "boolean" },
+        { "type": "null" },
+        { "type": "array", "items": { "$ref": "#/$defs/__schema5" } },
+        {
+          "type": "object",
+          "propertyNames": { "type": "string" },
+          "additionalProperties": { "$ref": "#/$defs/__schema5" }
+        }
+      ]
+    }
+  }
+}

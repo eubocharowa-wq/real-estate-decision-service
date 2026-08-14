@@ -1,5 +1,10 @@
 import type { z } from "zod";
 
+import {
+  parserErrorSchema,
+  userRequestParserInputSchema,
+  userRequestParserResultSchema,
+} from "../user-request-parser/contracts";
 import { expertRequestSchema, expertResultSchema } from "./expert/schema";
 import {
   financingOfferSchema,
@@ -33,6 +38,21 @@ const schemaId = (name: string) =>
   `https://real-estate-decision-service.local/schemas/1.0/${name}.schema.json`;
 
 export const topLevelSchemas = [
+  {
+    file_name: "user-request-parser-input.schema.json",
+    id: schemaId("user-request-parser-input"),
+    schema: userRequestParserInputSchema,
+  },
+  {
+    file_name: "user-request-parser-result.schema.json",
+    id: schemaId("user-request-parser-result"),
+    schema: userRequestParserResultSchema,
+  },
+  {
+    file_name: "user-request-parser-error.schema.json",
+    id: schemaId("user-request-parser-error"),
+    schema: parserErrorSchema,
+  },
   {
     file_name: "user-request.schema.json",
     id: schemaId("user-request"),

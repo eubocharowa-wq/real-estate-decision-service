@@ -8,7 +8,7 @@ import { topLevelSchemas } from "../../src/domain/schemas";
 
 describe("generated JSON Schema contracts", () => {
   it("exports every top-level runtime schema without drift", () => {
-    expect(topLevelSchemas).toHaveLength(18);
+    expect(topLevelSchemas).toHaveLength(21);
 
     for (const definition of topLevelSchemas) {
       const outputPath = path.resolve(
