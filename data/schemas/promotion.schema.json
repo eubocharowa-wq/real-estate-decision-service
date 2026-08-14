@@ -1,0 +1,177 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://real-estate-decision-service.local/schemas/1.0/promotion.schema.json",
+  "type": "object",
+  "properties": {
+    "schema_version": { "type": "string", "const": "1.0" },
+    "promotion_id": { "type": "string", "pattern": "^[a-z][a-z0-9:_-]*$" },
+    "title": { "type": "string", "minLength": 1 },
+    "provider": {
+      "type": "object",
+      "properties": {
+        "provider_id": {
+          "anyOf": [
+            { "type": "string", "pattern": "^[a-z][a-z0-9:_-]*$" },
+            { "type": "null" }
+          ]
+        },
+        "provider_type": {
+          "type": "string",
+          "enum": ["bank", "developer", "government", "partner", "other"]
+        },
+        "name": { "type": "string", "minLength": 1 }
+      },
+      "required": ["provider_id", "provider_type", "name"],
+      "additionalProperties": false
+    },
+    "valid_from": {
+      "anyOf": [
+        {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+        },
+        { "type": "null" }
+      ]
+    },
+    "valid_until": {
+      "anyOf": [
+        {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+        },
+        { "type": "null" }
+      ]
+    },
+    "eligible_property_refs": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^[a-z][a-z0-9:_-]*$" }
+    },
+    "eligible_offer_refs": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^[a-z][a-z0-9:_-]*$" }
+    },
+    "price_impact": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": ["none", "increase", "decrease", "unknown"]
+        },
+        "amount": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "amount": {
+                  "type": "string",
+                  "pattern": "^(0|[1-9]\\d*)(\\.\\d+)?$",
+                  "description": "A base-unit monetary amount encoded as a decimal string to avoid binary floating-point loss."
+                },
+                "currency": { "type": "string", "pattern": "^[A-Z]{3}$" }
+              },
+              "required": ["amount", "currency"],
+              "additionalProperties": false,
+              "title": "Money"
+            },
+            { "type": "null" }
+          ]
+        },
+        "percent": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^(0|[1-9]\\d*)(\\.\\d+)?$",
+              "description": "A percentage encoded as a decimal string; business limits live outside schemas."
+            },
+            { "type": "null" }
+          ]
+        },
+        "description": {
+          "anyOf": [{ "type": "string", "minLength": 1 }, { "type": "null" }]
+        }
+      },
+      "required": ["kind", "amount", "percent", "description"],
+      "additionalProperties": false
+    },
+    "financing_impact": {
+      "type": "object",
+      "properties": {
+        "financing_offer_ids": {
+          "type": "array",
+          "items": { "type": "string", "pattern": "^[a-z][a-z0-9:_-]*$" }
+        },
+        "description": {
+          "anyOf": [{ "type": "string", "minLength": 1 }, { "type": "null" }]
+        }
+      },
+      "required": ["financing_offer_ids", "description"],
+      "additionalProperties": false
+    },
+    "conditions": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "source_reference": {
+      "type": "object",
+      "properties": {
+        "source_id": { "type": "string", "pattern": "^[a-z][a-z0-9:_-]*$" },
+        "snapshot_id": {
+          "anyOf": [
+            { "type": "string", "pattern": "^[a-z][a-z0-9:_-]*$" },
+            { "type": "null" }
+          ]
+        },
+        "source_url": {
+          "anyOf": [{ "type": "string", "format": "uri" }, { "type": "null" }]
+        },
+        "evidence_ids": {
+          "type": "array",
+          "items": { "type": "string", "pattern": "^[a-z][a-z0-9:_-]*$" }
+        }
+      },
+      "required": ["source_id", "snapshot_id", "source_url", "evidence_ids"],
+      "additionalProperties": false,
+      "title": "SourceReference"
+    },
+    "verification_status": {
+      "type": "string",
+      "enum": [
+        "confirmed",
+        "claimed",
+        "unconfirmed",
+        "conflicting",
+        "stale",
+        "unknown"
+      ]
+    },
+    "freshness_status": {
+      "type": "string",
+      "enum": ["fresh", "aging", "stale", "expired", "unknown"]
+    },
+    "evidence_refs": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^[a-z][a-z0-9:_-]*$" }
+    }
+  },
+  "required": [
+    "schema_version",
+    "promotion_id",
+    "title",
+    "provider",
+    "valid_from",
+    "valid_until",
+    "eligible_property_refs",
+    "eligible_offer_refs",
+    "price_impact",
+    "financing_impact",
+    "conditions",
+    "source_reference",
+    "verification_status",
+    "freshness_status",
+    "evidence_refs"
+  ],
+  "additionalProperties": false,
+  "title": "Promotion"
+}

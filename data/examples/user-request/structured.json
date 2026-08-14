@@ -1,0 +1,138 @@
+{
+  "schema_version": "1.0",
+  "user_request_id": "request_family_001",
+  "intent": "find",
+  "goal": {
+    "purpose": "own_residence",
+    "description": "Find a home for a family with a predictable purchase budget."
+  },
+  "location": {
+    "country_codes": ["RU"],
+    "regions": ["Tula Oblast"],
+    "cities": ["Tula"],
+    "preferred_districts": [],
+    "excluded_districts": [],
+    "destination_addresses": []
+  },
+  "property": {
+    "allowed_property_types": ["apartment", "house"],
+    "allowed_market_types": ["new_build", "secondary", "suburban"],
+    "rooms_min": 2,
+    "rooms_max": null
+  },
+  "budget": {
+    "purchase_price": {
+      "minimum": null,
+      "maximum": { "amount": "7000000.00", "currency": "RUB" }
+    },
+    "total_budget": { "amount": "7500000.00", "currency": "RUB" },
+    "renovation_budget": null
+  },
+  "financing": {
+    "purchase_methods": ["mortgage"],
+    "required_program_types": ["family_mortgage"],
+    "initial_payment_max": { "amount": "1500000.00", "currency": "RUB" },
+    "monthly_payment_max": { "amount": "75000.00", "currency": "RUB" },
+    "financing_period": { "from": null, "to": null }
+  },
+  "timeline": {
+    "purchase_by": "2027-09-30",
+    "move_in_by": "2027-12-31",
+    "ready_now_required": null
+  },
+  "household": {
+    "adults_count": 2,
+    "children_count": 2,
+    "pets_count": null,
+    "notes": null
+  },
+  "lifestyle": {
+    "commute_modes": ["public_transport", "car"],
+    "notes": ["School access matters for the daily routine."]
+  },
+  "infrastructure": [
+    {
+      "schema_version": "1.0",
+      "criterion_id": "criterion_school_walk",
+      "category": "infrastructure",
+      "field": "school_walk_time_min",
+      "operator": "within_time",
+      "target": 15,
+      "unit": "minutes",
+      "priority": "preferred",
+      "weight": 4,
+      "tolerance": null,
+      "fit_function": "school_walk_preference_v1",
+      "criterion_group_id": null,
+      "applicable_property_types": ["apartment", "house"],
+      "source_requirement": ["primary", "secondary"],
+      "freshness_requirement": null,
+      "critical_if_unknown": false,
+      "user_expression": "A school nearby is important."
+    }
+  ],
+  "property_features": [],
+  "must_have": [
+    {
+      "schema_version": "1.0",
+      "criterion_id": "criterion_budget_max",
+      "category": "finance",
+      "field": "purchase_price",
+      "operator": "lte",
+      "target": { "amount": "7000000.00", "currency": "RUB" },
+      "unit": "RUB",
+      "priority": "must",
+      "weight": null,
+      "tolerance": null,
+      "fit_function": null,
+      "criterion_group_id": null,
+      "applicable_property_types": ["apartment", "house"],
+      "source_requirement": ["primary"],
+      "freshness_requirement": "fresh",
+      "critical_if_unknown": true,
+      "user_expression": "No more than seven million rubles."
+    },
+    {
+      "schema_version": "1.0",
+      "criterion_id": "criterion_family_mortgage",
+      "category": "finance",
+      "field": "family_mortgage",
+      "operator": "boolean",
+      "target": true,
+      "unit": null,
+      "priority": "must",
+      "weight": null,
+      "tolerance": null,
+      "fit_function": null,
+      "criterion_group_id": null,
+      "applicable_property_types": ["apartment", "house"],
+      "source_requirement": ["authoritative", "primary"],
+      "freshness_requirement": "fresh",
+      "critical_if_unknown": true,
+      "user_expression": "Family mortgage is mandatory."
+    }
+  ],
+  "nice_to_have": [],
+  "avoid": [],
+  "unknowns": [
+    {
+      "field": "family_mortgage",
+      "reason": "Applicability to a specific offer is not confirmed yet.",
+      "critical": true
+    }
+  ],
+  "source_links": [],
+  "clarifications": [
+    {
+      "clarification_id": "clarification_ready_now",
+      "question": "Do you need to move in immediately?",
+      "status": "open",
+      "answer": null
+    }
+  ],
+  "confidence": {
+    "extraction_confidence": 0.94,
+    "status": "high"
+  },
+  "result_limit": 7
+}

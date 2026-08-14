@@ -1,0 +1,24 @@
+{
+  "schema_version": "1.0",
+  "request_id": "expert_request_001",
+  "user_id": "user_001",
+  "request_type": "information_verification",
+  "user_request_id": "request_family_001",
+  "property_ids": ["property_apartment_001"],
+  "comparison_id": null,
+  "questions": [
+    "Does the zero-down financing offer apply to this exact property offer?"
+  ],
+  "priority": "high",
+  "status": "new",
+  "required_specialist": "mortgage_specialist",
+  "context": {
+    "match_result_ids": ["match_result_001"],
+    "purchase_scenario_ids": ["scenario_apartment_001"],
+    "critical_unknowns": ["family_mortgage", "zero_initial_payment"],
+    "conflict_ids": ["conflict_initial_payment_001"],
+    "evidence_refs": ["evidence_zero_down_claim_001"],
+    "source_links": ["https://example.invalid/project-a/promo"]
+  },
+  "created_at": "2026-08-14T10:30:00+03:00"
+}

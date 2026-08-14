@@ -1,0 +1,119 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://real-estate-decision-service.local/schemas/1.0/field-evidence.schema.json",
+  "type": "object",
+  "properties": {
+    "schema_version": { "type": "string", "const": "1.0" },
+    "evidence_id": { "type": "string", "pattern": "^[a-z][a-z0-9:_-]*$" },
+    "entity_type": { "type": "string", "minLength": 1 },
+    "entity_id": { "type": "string", "pattern": "^[a-z][a-z0-9:_-]*$" },
+    "field": { "type": "string", "minLength": 1 },
+    "value": { "$ref": "#/$defs/__schema0" },
+    "raw_value": { "$ref": "#/$defs/__schema1" },
+    "source_id": { "type": "string", "pattern": "^[a-z][a-z0-9:_-]*$" },
+    "snapshot_id": {
+      "anyOf": [
+        { "type": "string", "pattern": "^[a-z][a-z0-9:_-]*$" },
+        { "type": "null" }
+      ]
+    },
+    "source_url": {
+      "anyOf": [{ "type": "string", "format": "uri" }, { "type": "null" }]
+    },
+    "collected_at": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+    },
+    "verification_status": {
+      "type": "string",
+      "enum": [
+        "confirmed",
+        "claimed",
+        "unconfirmed",
+        "conflicting",
+        "stale",
+        "unknown"
+      ]
+    },
+    "freshness_status": {
+      "type": "string",
+      "enum": ["fresh", "aging", "stale", "expired", "unknown"]
+    },
+    "extraction_confidence": {
+      "anyOf": [
+        { "type": "number", "minimum": 0, "maximum": 1 },
+        { "type": "null" }
+      ]
+    },
+    "evidence_type": {
+      "type": "string",
+      "enum": [
+        "primary_source",
+        "secondary_source",
+        "document",
+        "manual_expert",
+        "user_provided",
+        "derived",
+        "extraction"
+      ]
+    },
+    "evidence_text": {
+      "anyOf": [{ "type": "string", "minLength": 1 }, { "type": "null" }]
+    },
+    "evidence_reference": {
+      "anyOf": [{ "type": "string", "minLength": 1 }, { "type": "null" }]
+    }
+  },
+  "required": [
+    "schema_version",
+    "evidence_id",
+    "entity_type",
+    "entity_id",
+    "field",
+    "value",
+    "raw_value",
+    "source_id",
+    "snapshot_id",
+    "source_url",
+    "collected_at",
+    "verification_status",
+    "freshness_status",
+    "extraction_confidence",
+    "evidence_type",
+    "evidence_text",
+    "evidence_reference"
+  ],
+  "additionalProperties": false,
+  "title": "FieldEvidence",
+  "$defs": {
+    "__schema0": {
+      "anyOf": [
+        { "type": "string" },
+        { "type": "number" },
+        { "type": "boolean" },
+        { "type": "null" },
+        { "type": "array", "items": { "$ref": "#/$defs/__schema0" } },
+        {
+          "type": "object",
+          "propertyNames": { "type": "string" },
+          "additionalProperties": { "$ref": "#/$defs/__schema0" }
+        }
+      ]
+    },
+    "__schema1": {
+      "anyOf": [
+        { "type": "string" },
+        { "type": "number" },
+        { "type": "boolean" },
+        { "type": "null" },
+        { "type": "array", "items": { "$ref": "#/$defs/__schema1" } },
+        {
+          "type": "object",
+          "propertyNames": { "type": "string" },
+          "additionalProperties": { "$ref": "#/$defs/__schema1" }
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,113 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://real-estate-decision-service.local/schemas/1.0/data-quality.schema.json",
+  "type": "object",
+  "properties": {
+    "schema_version": { "type": "string", "const": "1.0" },
+    "data_quality_id": { "type": "string", "pattern": "^[a-z][a-z0-9:_-]*$" },
+    "data_confidence_score": { "type": "number", "minimum": 0, "maximum": 100 },
+    "data_completeness_score": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100
+    },
+    "freshness_score": { "type": "number", "minimum": 0, "maximum": 100 },
+    "confidence_status": {
+      "type": "string",
+      "enum": ["high", "medium", "low", "critical"]
+    },
+    "critical_unknown_count": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "critical_conflict_count": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "critical_override": { "type": "boolean" },
+    "fields": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "field": { "type": "string", "minLength": 1 },
+          "importance": { "type": "number", "minimum": 0, "maximum": 5 },
+          "verification_status": {
+            "type": "string",
+            "enum": [
+              "confirmed",
+              "claimed",
+              "unconfirmed",
+              "conflicting",
+              "stale",
+              "unknown"
+            ]
+          },
+          "freshness_status": {
+            "type": "string",
+            "enum": ["fresh", "aging", "stale", "expired", "unknown"]
+          },
+          "conflict_status": {
+            "type": "string",
+            "enum": ["none", "minor", "significant", "critical", "unresolved"]
+          },
+          "evidence_quality": {
+            "type": "string",
+            "enum": ["direct", "derived", "indirect", "weak", "missing"]
+          },
+          "field_confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+          "evidence_refs": {
+            "type": "array",
+            "items": { "type": "string", "pattern": "^[a-z][a-z0-9:_-]*$" }
+          }
+        },
+        "required": [
+          "field",
+          "importance",
+          "verification_status",
+          "freshness_status",
+          "conflict_status",
+          "evidence_quality",
+          "field_confidence",
+          "evidence_refs"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "recommended_checks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "field": { "type": "string", "minLength": 1 },
+          "priority": {
+            "type": "string",
+            "enum": ["critical", "high", "medium", "low"]
+          },
+          "action": { "type": "string", "minLength": 1 }
+        },
+        "required": ["field", "priority", "action"],
+        "additionalProperties": false
+      }
+    },
+    "algorithm_version": { "type": "string", "minLength": 1 }
+  },
+  "required": [
+    "schema_version",
+    "data_quality_id",
+    "data_confidence_score",
+    "data_completeness_score",
+    "freshness_score",
+    "confidence_status",
+    "critical_unknown_count",
+    "critical_conflict_count",
+    "critical_override",
+    "fields",
+    "recommended_checks",
+    "algorithm_version"
+  ],
+  "additionalProperties": false,
+  "title": "DataQuality"
+}

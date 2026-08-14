@@ -1,0 +1,186 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://real-estate-decision-service.local/schemas/1.0/expert-result.schema.json",
+  "type": "object",
+  "properties": {
+    "schema_version": { "type": "string", "const": "1.0" },
+    "expert_result_id": { "type": "string", "pattern": "^[a-z][a-z0-9:_-]*$" },
+    "request_id": { "type": "string", "pattern": "^[a-z][a-z0-9:_-]*$" },
+    "status": {
+      "type": "string",
+      "enum": [
+        "completed",
+        "partially_completed",
+        "needs_additional_specialist",
+        "unable_to_verify",
+        "cancelled"
+      ]
+    },
+    "checked_items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "field": { "type": "string", "minLength": 1 },
+          "status": {
+            "type": "string",
+            "enum": [
+              "confirmed",
+              "not_confirmed",
+              "observed_issue",
+              "unable_to_check",
+              "requires_specialist"
+            ]
+          },
+          "note": {
+            "anyOf": [{ "type": "string", "minLength": 1 }, { "type": "null" }]
+          }
+        },
+        "required": ["field", "status", "note"],
+        "additionalProperties": false
+      }
+    },
+    "not_checked_items": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "findings": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "confirmed": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "field": { "type": "string", "minLength": 1 },
+          "value": { "$ref": "#/$defs/__schema0" },
+          "verification_status": {
+            "type": "string",
+            "enum": [
+              "confirmed",
+              "claimed",
+              "unconfirmed",
+              "conflicting",
+              "stale",
+              "unknown"
+            ]
+          },
+          "evidence_refs": {
+            "minItems": 1,
+            "type": "array",
+            "items": { "type": "string", "pattern": "^[a-z][a-z0-9:_-]*$" }
+          }
+        },
+        "required": ["field", "value", "verification_status", "evidence_refs"],
+        "additionalProperties": false
+      }
+    },
+    "unconfirmed": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "conflicts": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^[a-z][a-z0-9:_-]*$" }
+    },
+    "risks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "category": {
+            "type": "string",
+            "enum": [
+              "financial",
+              "timeline",
+              "contractual",
+              "legal",
+              "data_conflict",
+              "unclear_condition"
+            ]
+          },
+          "description": { "type": "string", "minLength": 1 }
+        },
+        "required": ["category", "description"],
+        "additionalProperties": false
+      }
+    },
+    "recommendations": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "next_actions": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "evidence": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^[a-z][a-z0-9:_-]*$" }
+    },
+    "specialist": {
+      "type": "object",
+      "properties": {
+        "specialist_id": { "type": "string", "pattern": "^[a-z][a-z0-9:_-]*$" },
+        "specialist_type": {
+          "type": "string",
+          "enum": [
+            "real_estate_expert",
+            "lawyer",
+            "mortgage_specialist",
+            "property_inspector",
+            "technical_specialist"
+          ]
+        }
+      },
+      "required": ["specialist_id", "specialist_type"],
+      "additionalProperties": false
+    },
+    "completed_at": {
+      "anyOf": [
+        {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+        },
+        { "type": "null" }
+      ]
+    }
+  },
+  "required": [
+    "schema_version",
+    "expert_result_id",
+    "request_id",
+    "status",
+    "checked_items",
+    "not_checked_items",
+    "findings",
+    "confirmed",
+    "unconfirmed",
+    "conflicts",
+    "risks",
+    "recommendations",
+    "next_actions",
+    "evidence",
+    "specialist",
+    "completed_at"
+  ],
+  "additionalProperties": false,
+  "title": "ExpertResult",
+  "$defs": {
+    "__schema0": {
+      "anyOf": [
+        { "type": "string" },
+        { "type": "number" },
+        { "type": "boolean" },
+        { "type": "null" },
+        { "type": "array", "items": { "$ref": "#/$defs/__schema0" } },
+        {
+          "type": "object",
+          "propertyNames": { "type": "string" },
+          "additionalProperties": { "$ref": "#/$defs/__schema0" }
+        }
+      ]
+    }
+  }
+}

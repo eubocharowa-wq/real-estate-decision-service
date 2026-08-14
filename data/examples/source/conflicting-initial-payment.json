@@ -1,0 +1,16 @@
+{
+  "schema_version": "1.0",
+  "conflict_id": "conflict_initial_payment_001",
+  "entity_id": "financing_offer_zero_down_001",
+  "field": "initial_payment.percent",
+  "evidence_ids": [
+    "evidence_initial_payment_zero",
+    "evidence_initial_payment_twenty"
+  ],
+  "severity": "critical",
+  "status": "open",
+  "resolved_value": null,
+  "resolution_reason": null,
+  "resolved_by": null,
+  "resolved_at": null
+}

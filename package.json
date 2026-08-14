@@ -9,6 +9,8 @@
     "lint": "eslint .",
     "test": "vitest run",
     "typecheck": "next typegen && tsc --noEmit",
+    "schemas:generate": "node --import tsx scripts/generate-schemas.ts",
+    "schemas:check": "node --import tsx scripts/generate-schemas.ts --check",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
   },
@@ -16,17 +18,19 @@
     "node": "^20.19.0 || >=22.12.0"
   },
   "dependencies": {
-    "next": "16.2.12",
+    "next": "16.3.1",
     "react": "19.2.8",
-    "react-dom": "19.2.8"
+    "react-dom": "19.2.8",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@types/node": "^24.10.0",
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
     "eslint": "^9.39.0",
-    "eslint-config-next": "16.2.12",
+    "eslint-config-next": "16.3.1",
     "prettier": "^3.6.2",
+    "tsx": "^4.23.12",
     "typescript": "^5.9.3",
     "vitest": "4.1.10"
   }

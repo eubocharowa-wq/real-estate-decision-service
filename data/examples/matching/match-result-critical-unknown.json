@@ -1,0 +1,40 @@
+{
+  "schema_version": "1.0",
+  "match_result_id": "match_result_001",
+  "user_request_id": "request_family_001",
+  "property_id": "property_apartment_001",
+  "purchase_scenario_id": "scenario_apartment_001",
+  "eligibility_status": "eligible_with_unknowns",
+  "match_score": 90,
+  "property_fit_score": 94,
+  "financing_fit_score": 84,
+  "data_confidence_score": 62,
+  "data_completeness_score": 83,
+  "ranking_score": 87.25,
+  "criteria_results": [
+    {
+      "schema_version": "1.0",
+      "criterion_id": "criterion_family_mortgage",
+      "status": "unknown",
+      "actual": null,
+      "target": true,
+      "fit": null,
+      "margin": null,
+      "verification_status": "claimed",
+      "freshness_status": "fresh",
+      "evidence_refs": ["evidence_family_program_001"],
+      "unknown_reason": "Applicability to the specific offer is not confirmed.",
+      "explanation_data": {
+        "field": "family_mortgage",
+        "critical": true
+      }
+    }
+  ],
+  "hard_failures": [],
+  "compromises": ["The apartment is delivered in pre-finish condition."],
+  "strengths": ["The known price is within the requested budget."],
+  "unknown_critical": ["Family mortgage applicability requires confirmation."],
+  "recommended_actions": ["Verify financing terms for this exact offer."],
+  "algorithm_version": "matching-v1-contract-fixture",
+  "calculated_at": "2026-08-14T10:20:00+03:00"
+}

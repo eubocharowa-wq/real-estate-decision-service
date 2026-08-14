@@ -1,0 +1,17 @@
+{
+  "schema_version": "1.0",
+  "criterion_id": "criterion_family_mortgage",
+  "status": "unknown",
+  "actual": null,
+  "target": true,
+  "fit": null,
+  "margin": null,
+  "verification_status": "claimed",
+  "freshness_status": "fresh",
+  "evidence_refs": ["evidence_family_program_001"],
+  "unknown_reason": "The program is claimed, but applicability to the specific offer is not confirmed.",
+  "explanation_data": {
+    "field": "family_mortgage",
+    "critical": true
+  }
+}

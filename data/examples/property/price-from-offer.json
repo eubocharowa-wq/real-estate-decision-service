@@ -1,0 +1,33 @@
+{
+  "schema_version": "1.0",
+  "offer_id": "offer_price_from_001",
+  "property_id": "property_apartment_001",
+  "seller": {
+    "seller_type": "developer",
+    "seller_id": "seller_developer_001",
+    "name": "Synthetic Developer"
+  },
+  "source_reference": {
+    "source_id": "source_developer_001",
+    "snapshot_id": "snapshot_developer_001",
+    "source_url": "https://example.invalid/project-a",
+    "evidence_ids": ["evidence_price_from_001"]
+  },
+  "listing_price": { "amount": "4500000.00", "currency": "RUB" },
+  "price_from": true,
+  "availability": "unknown",
+  "published_at": null,
+  "updated_at": "2026-08-14T08:00:00+03:00",
+  "expires_at": null,
+  "mandatory_extras": [],
+  "commercial_terms": {
+    "reservation_terms": null,
+    "payment_terms": null,
+    "notes": ["The amount is a lower bound, not the exact unit price."]
+  },
+  "financing_offer_ids": [],
+  "promotion_ids": [],
+  "verification_status": "unconfirmed",
+  "freshness_status": "fresh",
+  "evidence_refs": ["evidence_price_from_001"]
+}

@@ -1,0 +1,25 @@
+{
+  "schema_version": "1.0",
+  "source_id": "source_developer_001",
+  "source_type": "developer_site",
+  "name": "Synthetic Developer Source",
+  "domain": "example.invalid",
+  "base_url": "https://example.invalid",
+  "coverage": {
+    "country_codes": ["RU"],
+    "regions": ["Tula Oblast"],
+    "property_types": ["apartment"]
+  },
+  "collection_method": "manual",
+  "trust_level": "primary",
+  "status": "inactive",
+  "policy_metadata": {
+    "access_status": "pending",
+    "storage_rights": null,
+    "display_rights": null,
+    "refresh_rights": null,
+    "reviewed_at": null,
+    "notes": "Synthetic fixture only; no production adapter is enabled."
+  },
+  "upstream_source_id": null
+}

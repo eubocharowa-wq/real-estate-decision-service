@@ -1,0 +1,34 @@
+{
+  "schema_version": "1.0",
+  "promotion_id": "promotion_expired_001",
+  "title": "Synthetic expired discount",
+  "provider": {
+    "provider_id": "provider_developer_001",
+    "provider_type": "developer",
+    "name": "Synthetic Developer"
+  },
+  "valid_from": "2026-07-01T00:00:00+03:00",
+  "valid_until": "2026-07-31T23:59:59+03:00",
+  "eligible_property_refs": ["property_apartment_001"],
+  "eligible_offer_refs": ["offer_price_from_001"],
+  "price_impact": {
+    "kind": "decrease",
+    "amount": { "amount": "100000.00", "currency": "RUB" },
+    "percent": null,
+    "description": "Expired fixed discount."
+  },
+  "financing_impact": {
+    "financing_offer_ids": [],
+    "description": null
+  },
+  "conditions": ["The promotion ended before the fixture collection date."],
+  "source_reference": {
+    "source_id": "source_developer_001",
+    "snapshot_id": "snapshot_developer_001",
+    "source_url": "https://example.invalid/project-a/expired-promo",
+    "evidence_ids": ["evidence_promotion_expired_001"]
+  },
+  "verification_status": "stale",
+  "freshness_status": "expired",
+  "evidence_refs": ["evidence_promotion_expired_001"]
+}

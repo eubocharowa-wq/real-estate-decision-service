@@ -1,0 +1,34 @@
+{
+  "schema_version": "1.0",
+  "scenario_id": "scenario_apartment_001",
+  "property_id": "property_apartment_001",
+  "offer_id": "offer_price_from_001",
+  "financing_program_id": "program_family_mortgage_001",
+  "financing_offer_id": "financing_offer_zero_down_001",
+  "promotion_id": null,
+  "entry_cash": { "amount": "150000.00", "currency": "RUB" },
+  "initial_payment": { "amount": "0.00", "currency": "RUB" },
+  "loan_amount": { "amount": "4500000.00", "currency": "RUB" },
+  "monthly_payment": { "amount": "72000.00", "currency": "RUB" },
+  "total_payment": null,
+  "mandatory_costs": [
+    {
+      "name": "Estimated registration and insurance costs",
+      "amount": { "amount": "150000.00", "currency": "RUB" },
+      "evidence_refs": ["evidence_scenario_cost_001"]
+    }
+  ],
+  "estimated_total_entry_cost": { "amount": "150000.00", "currency": "RUB" },
+  "assumptions": [
+    {
+      "assumption": "The advertised zero-down offer applies to this exact offer.",
+      "verification_status": "claimed",
+      "evidence_refs": ["evidence_zero_down_claim_001"]
+    }
+  ],
+  "terms_compatibility_status": "claimed",
+  "compatibility_evidence_refs": ["evidence_zero_down_claim_001"],
+  "verification_status": "claimed",
+  "freshness_status": "fresh",
+  "calculated_at": "2026-08-14T10:15:00+03:00"
+}

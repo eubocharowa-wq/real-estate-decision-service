@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://real-estate-decision-service.local/schemas/1.0/source-conflict.schema.json",
+  "type": "object",
+  "properties": {
+    "schema_version": { "type": "string", "const": "1.0" },
+    "conflict_id": { "type": "string", "pattern": "^[a-z][a-z0-9:_-]*$" },
+    "entity_id": { "type": "string", "pattern": "^[a-z][a-z0-9:_-]*$" },
+    "field": { "type": "string", "minLength": 1 },
+    "evidence_ids": {
+      "minItems": 2,
+      "type": "array",
+      "items": { "type": "string", "pattern": "^[a-z][a-z0-9:_-]*$" }
+    },
+    "severity": {
+      "type": "string",
+      "enum": ["minor", "significant", "critical", "unknown"]
+    },
+    "status": {
+      "type": "string",
+      "enum": ["open", "resolved", "dismissed", "unknown"]
+    },
+    "resolved_value": { "$ref": "#/$defs/__schema0" },
+    "resolution_reason": {
+      "anyOf": [{ "type": "string", "minLength": 1 }, { "type": "null" }]
+    },
+    "resolved_by": {
+      "anyOf": [
+        { "type": "string", "pattern": "^[a-z][a-z0-9:_-]*$" },
+        { "type": "null" }
+      ]
+    },
+    "resolved_at": {
+      "anyOf": [
+        {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+        },
+        { "type": "null" }
+      ]
+    }
+  },
+  "required": [
+    "schema_version",
+    "conflict_id",
+    "entity_id",
+    "field",
+    "evidence_ids",
+    "severity",
+    "status",
+    "resolved_value",
+    "resolution_reason",
+    "resolved_by",
+    "resolved_at"
+  ],
+  "additionalProperties": false,
+  "title": "SourceConflict",
+  "$defs": {
+    "__schema0": {
+      "anyOf": [
+        { "type": "string" },
+        { "type": "number" },
+        { "type": "boolean" },
+        { "type": "null" },
+        { "type": "array", "items": { "$ref": "#/$defs/__schema0" } },
+        {
+          "type": "object",
+          "propertyNames": { "type": "string" },
+          "additionalProperties": { "$ref": "#/$defs/__schema0" }
+        }
+      ]
+    }
+  }
+}

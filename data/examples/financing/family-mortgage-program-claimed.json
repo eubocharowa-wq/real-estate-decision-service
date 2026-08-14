@@ -1,0 +1,34 @@
+{
+  "schema_version": "1.0",
+  "program_id": "program_family_mortgage_001",
+  "program_type": "family_mortgage",
+  "provider": {
+    "provider_id": "provider_bank_001",
+    "provider_type": "bank",
+    "name": "Synthetic Bank"
+  },
+  "rule_version": "program-rules-2026-08-14",
+  "effective_from": "2026-08-01T00:00:00+03:00",
+  "effective_until": null,
+  "borrower_rules": [
+    {
+      "rule_id": "rule_borrower_category_001",
+      "field": "borrower_category",
+      "operator": "in",
+      "value": ["eligible_family"],
+      "description": "Synthetic structural rule; actual eligibility is not encoded in the schema."
+    }
+  ],
+  "property_rules": [],
+  "financial_rules": [],
+  "source_references": [
+    {
+      "source_id": "source_bank_001",
+      "snapshot_id": "snapshot_bank_program_001",
+      "source_url": "https://example.invalid/bank/programs/family",
+      "evidence_ids": ["evidence_family_program_001"]
+    }
+  ],
+  "verification_status": "claimed",
+  "freshness_status": "fresh"
+}

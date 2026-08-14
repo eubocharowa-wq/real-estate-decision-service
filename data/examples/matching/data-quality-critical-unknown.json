@@ -1,0 +1,41 @@
+{
+  "schema_version": "1.0",
+  "data_quality_id": "data_quality_match_001",
+  "data_confidence_score": 62,
+  "data_completeness_score": 83,
+  "freshness_score": 91,
+  "confidence_status": "low",
+  "critical_unknown_count": 1,
+  "critical_conflict_count": 0,
+  "critical_override": true,
+  "fields": [
+    {
+      "field": "listing_price",
+      "importance": 5,
+      "verification_status": "confirmed",
+      "freshness_status": "fresh",
+      "conflict_status": "none",
+      "evidence_quality": "direct",
+      "field_confidence": 1,
+      "evidence_refs": ["evidence_price_confirmed_001"]
+    },
+    {
+      "field": "family_mortgage",
+      "importance": 5,
+      "verification_status": "claimed",
+      "freshness_status": "fresh",
+      "conflict_status": "none",
+      "evidence_quality": "indirect",
+      "field_confidence": 0.56,
+      "evidence_refs": ["evidence_family_program_001"]
+    }
+  ],
+  "recommended_checks": [
+    {
+      "field": "family_mortgage",
+      "priority": "critical",
+      "action": "Confirm program applicability to this exact offer."
+    }
+  ],
+  "algorithm_version": "confidence-v1-contract-fixture"
+}

@@ -1,0 +1,32 @@
+{
+  "schema_version": "1.0",
+  "expert_result_id": "expert_result_001",
+  "request_id": "expert_request_001",
+  "status": "partially_completed",
+  "checked_items": [
+    {
+      "field": "zero_initial_payment",
+      "status": "not_confirmed",
+      "note": "The promotional claim was found, but property-level applicability was not confirmed."
+    }
+  ],
+  "not_checked_items": ["legal status", "technical condition"],
+  "findings": ["The zero-down condition remains a claim for this property."],
+  "confirmed": [],
+  "unconfirmed": ["zero_initial_payment"],
+  "conflicts": ["conflict_initial_payment_001"],
+  "risks": [
+    {
+      "category": "financial",
+      "description": "The required initial payment may be higher than the advertised amount."
+    }
+  ],
+  "recommendations": ["Obtain written property-specific financing terms."],
+  "next_actions": ["Request confirmation from the financing provider."],
+  "evidence": ["evidence_zero_down_claim_001"],
+  "specialist": {
+    "specialist_id": "specialist_mortgage_001",
+    "specialist_type": "mortgage_specialist"
+  },
+  "completed_at": "2026-08-14T12:00:00+03:00"
+}

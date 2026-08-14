@@ -1,0 +1,77 @@
+{
+  "schema_version": "1.0",
+  "identity": {
+    "property_id": "property_house_001",
+    "canonical_key": "ru-tula-region-settlement-b-house-8",
+    "cadastral_number": null,
+    "source_unit_ids": ["house-8"]
+  },
+  "property_type": "house",
+  "market_type": "suburban",
+  "location": {
+    "address": {
+      "country_code": "RU",
+      "region": "Tula Oblast",
+      "city": null,
+      "locality": "Synthetic Settlement B",
+      "district": null,
+      "street": "Field Lane",
+      "house_number": "8",
+      "postal_code": null
+    },
+    "geo_point": { "latitude": 54.112, "longitude": 37.481 }
+  },
+  "physical": {
+    "total_area_m2": 124.8,
+    "living_area_m2": 76.2,
+    "kitchen_area_m2": 18.5,
+    "rooms": 4,
+    "bedrooms": 3,
+    "floor": null,
+    "balcony": null,
+    "bathrooms": 2,
+    "layout_type": "two-storey-house"
+  },
+  "building": {
+    "name": null,
+    "building_type": "aerated-concrete",
+    "floors_total": 2,
+    "built_year": 2023,
+    "elevator": null,
+    "freight_elevator": null
+  },
+  "condition": {
+    "finishing_type": "renovated",
+    "condition_description": "Ready for a visual inspection; hidden defects were not assessed.",
+    "ready_for_living": true
+  },
+  "land": {
+    "area_sotka": 8.2,
+    "category": "settlement-land",
+    "permitted_use": "individual-housing"
+  },
+  "utilities": {
+    "electricity": "connected",
+    "water": "connected",
+    "gas": "available",
+    "sewerage": "connected",
+    "heating": "connected",
+    "internet": "unknown"
+  },
+  "timeline": {
+    "planned_commissioning_date": null,
+    "handover_date": null,
+    "move_in_possible_date": null
+  },
+  "ownership": {
+    "ownership_type": "private",
+    "encumbrance_status": "claimed_none",
+    "ownership_notes": "Ownership and encumbrances require document review."
+  },
+  "metadata": {
+    "created_at": "2026-08-14T09:05:00+03:00",
+    "updated_at": "2026-08-14T09:05:00+03:00",
+    "evidence_refs": ["evidence_house_001"],
+    "tags": ["synthetic"]
+  }
+}

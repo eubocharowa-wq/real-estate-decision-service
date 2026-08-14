@@ -1,0 +1,126 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://real-estate-decision-service.local/schemas/1.0/expert-request.schema.json",
+  "type": "object",
+  "properties": {
+    "schema_version": { "type": "string", "const": "1.0" },
+    "request_id": { "type": "string", "pattern": "^[a-z][a-z0-9:_-]*$" },
+    "user_id": { "type": "string", "pattern": "^[a-z][a-z0-9:_-]*$" },
+    "request_type": {
+      "type": "string",
+      "enum": [
+        "information_verification",
+        "document_review",
+        "choice_assistance",
+        "property_analysis",
+        "consultation",
+        "onsite_check",
+        "transaction_question"
+      ]
+    },
+    "user_request_id": {
+      "anyOf": [
+        { "type": "string", "pattern": "^[a-z][a-z0-9:_-]*$" },
+        { "type": "null" }
+      ]
+    },
+    "property_ids": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^[a-z][a-z0-9:_-]*$" }
+    },
+    "comparison_id": {
+      "anyOf": [
+        { "type": "string", "pattern": "^[a-z][a-z0-9:_-]*$" },
+        { "type": "null" }
+      ]
+    },
+    "questions": {
+      "minItems": 1,
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "priority": { "type": "string", "enum": ["urgent", "high", "normal"] },
+    "status": {
+      "type": "string",
+      "enum": [
+        "new",
+        "accepted",
+        "in_progress",
+        "waiting_for_user",
+        "waiting_for_source",
+        "completed",
+        "cancelled"
+      ]
+    },
+    "required_specialist": {
+      "type": "string",
+      "enum": [
+        "real_estate_expert",
+        "lawyer",
+        "mortgage_specialist",
+        "property_inspector",
+        "technical_specialist"
+      ]
+    },
+    "context": {
+      "type": "object",
+      "properties": {
+        "match_result_ids": {
+          "type": "array",
+          "items": { "type": "string", "pattern": "^[a-z][a-z0-9:_-]*$" }
+        },
+        "purchase_scenario_ids": {
+          "type": "array",
+          "items": { "type": "string", "pattern": "^[a-z][a-z0-9:_-]*$" }
+        },
+        "critical_unknowns": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "conflict_ids": {
+          "type": "array",
+          "items": { "type": "string", "pattern": "^[a-z][a-z0-9:_-]*$" }
+        },
+        "evidence_refs": {
+          "type": "array",
+          "items": { "type": "string", "pattern": "^[a-z][a-z0-9:_-]*$" }
+        },
+        "source_links": {
+          "type": "array",
+          "items": { "type": "string", "format": "uri" }
+        }
+      },
+      "required": [
+        "match_result_ids",
+        "purchase_scenario_ids",
+        "critical_unknowns",
+        "conflict_ids",
+        "evidence_refs",
+        "source_links"
+      ],
+      "additionalProperties": false
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+    }
+  },
+  "required": [
+    "schema_version",
+    "request_id",
+    "user_id",
+    "request_type",
+    "user_request_id",
+    "property_ids",
+    "comparison_id",
+    "questions",
+    "priority",
+    "status",
+    "required_specialist",
+    "context",
+    "created_at"
+  ],
+  "additionalProperties": false,
+  "title": "ExpertRequest"
+}

@@ -1,0 +1,73 @@
+{
+  "schema_version": "1.0",
+  "identity": {
+    "property_id": "property_apartment_001",
+    "canonical_key": "ru-tula-project-a-building-1-unit-42",
+    "cadastral_number": null,
+    "source_unit_ids": ["unit-42"]
+  },
+  "property_type": "apartment",
+  "market_type": "new_build",
+  "location": {
+    "address": {
+      "country_code": "RU",
+      "region": "Tula Oblast",
+      "city": "Tula",
+      "locality": null,
+      "district": "Central District",
+      "street": "Example Street",
+      "house_number": "1",
+      "postal_code": null
+    },
+    "geo_point": { "latitude": 54.193, "longitude": 37.617 }
+  },
+  "physical": {
+    "total_area_m2": 58.4,
+    "living_area_m2": 32.1,
+    "kitchen_area_m2": 12.3,
+    "rooms": 2,
+    "bedrooms": 1,
+    "floor": 7,
+    "balcony": true,
+    "bathrooms": 1,
+    "layout_type": "kitchen-living-room-and-bedroom"
+  },
+  "building": {
+    "name": "Synthetic Residential Project A",
+    "building_type": "monolithic",
+    "floors_total": 17,
+    "built_year": null,
+    "elevator": true,
+    "freight_elevator": true
+  },
+  "condition": {
+    "finishing_type": "pre_finish",
+    "condition_description": "Pre-finish condition stated in the project specification.",
+    "ready_for_living": false
+  },
+  "land": { "area_sotka": null, "category": null, "permitted_use": null },
+  "utilities": {
+    "electricity": "planned",
+    "water": "planned",
+    "gas": "absent",
+    "sewerage": "planned",
+    "heating": "planned",
+    "internet": "unknown"
+  },
+  "timeline": {
+    "planned_commissioning_date": "2027-06-30",
+    "handover_date": "2027-09-30",
+    "move_in_possible_date": "2027-10-31"
+  },
+  "ownership": {
+    "ownership_type": "developer",
+    "encumbrance_status": "unknown",
+    "ownership_notes": null
+  },
+  "metadata": {
+    "created_at": "2026-08-14T09:00:00+03:00",
+    "updated_at": "2026-08-14T09:00:00+03:00",
+    "evidence_refs": ["evidence_property_001"],
+    "tags": ["synthetic"]
+  }
+}

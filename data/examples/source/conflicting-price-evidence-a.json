@@ -1,0 +1,19 @@
+{
+  "schema_version": "1.0",
+  "evidence_id": "evidence_price_conflict_a",
+  "entity_type": "offer",
+  "entity_id": "offer_secondary_001",
+  "field": "listing_price",
+  "value": { "amount": "6250000.00", "currency": "RUB" },
+  "raw_value": "6 250 000 RUB",
+  "source_id": "source_classified_001",
+  "snapshot_id": "snapshot_offer_secondary_001",
+  "source_url": "https://example.invalid/offers/secondary-001",
+  "collected_at": "2026-08-14T08:30:00+03:00",
+  "verification_status": "conflicting",
+  "freshness_status": "fresh",
+  "extraction_confidence": 0.99,
+  "evidence_type": "secondary_source",
+  "evidence_text": "The listed price is 6 250 000 RUB.",
+  "evidence_reference": "snapshot:text:price"
+}

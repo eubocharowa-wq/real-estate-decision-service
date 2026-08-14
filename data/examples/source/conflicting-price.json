@@ -1,0 +1,13 @@
+{
+  "schema_version": "1.0",
+  "conflict_id": "conflict_price_001",
+  "entity_id": "offer_secondary_001",
+  "field": "listing_price",
+  "evidence_ids": ["evidence_price_conflict_a", "evidence_price_conflict_b"],
+  "severity": "significant",
+  "status": "open",
+  "resolved_value": null,
+  "resolution_reason": null,
+  "resolved_by": null,
+  "resolved_at": null
+}

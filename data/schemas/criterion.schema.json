@@ -1,0 +1,153 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://real-estate-decision-service.local/schemas/1.0/criterion.schema.json",
+  "type": "object",
+  "properties": {
+    "schema_version": { "type": "string", "const": "1.0" },
+    "criterion_id": { "type": "string", "pattern": "^[a-z][a-z0-9:_-]*$" },
+    "category": {
+      "type": "string",
+      "enum": [
+        "finance",
+        "property",
+        "timeline",
+        "location",
+        "infrastructure",
+        "house",
+        "data",
+        "transaction",
+        "custom"
+      ]
+    },
+    "field": { "type": "string", "minLength": 1 },
+    "operator": {
+      "type": "string",
+      "enum": [
+        "eq",
+        "neq",
+        "in",
+        "not_in",
+        "lte",
+        "gte",
+        "between",
+        "within_distance",
+        "within_time",
+        "exists",
+        "absent",
+        "before",
+        "after",
+        "one_of",
+        "boolean",
+        "custom"
+      ]
+    },
+    "target": { "$ref": "#/$defs/__schema0" },
+    "unit": {
+      "anyOf": [{ "type": "string", "minLength": 1 }, { "type": "null" }]
+    },
+    "priority": {
+      "type": "string",
+      "enum": ["must", "preferred", "neutral", "avoid", "exclude", "unknown"]
+    },
+    "weight": {
+      "anyOf": [
+        { "type": "integer", "minimum": 1, "maximum": 5 },
+        { "type": "null" }
+      ]
+    },
+    "tolerance": { "$ref": "#/$defs/__schema1" },
+    "fit_function": {
+      "anyOf": [{ "type": "string", "minLength": 1 }, { "type": "null" }]
+    },
+    "criterion_group_id": {
+      "anyOf": [
+        { "type": "string", "pattern": "^[a-z][a-z0-9:_-]*$" },
+        { "type": "null" }
+      ]
+    },
+    "applicable_property_types": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": ["apartment", "apartments", "house", "townhouse", "land"]
+      }
+    },
+    "source_requirement": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "authoritative",
+          "primary",
+          "secondary",
+          "user_provided",
+          "unknown"
+        ]
+      }
+    },
+    "freshness_requirement": {
+      "anyOf": [
+        {
+          "type": "string",
+          "enum": ["fresh", "aging", "stale", "expired", "unknown"]
+        },
+        { "type": "null" }
+      ]
+    },
+    "critical_if_unknown": { "type": "boolean" },
+    "user_expression": {
+      "anyOf": [{ "type": "string", "minLength": 1 }, { "type": "null" }]
+    }
+  },
+  "required": [
+    "schema_version",
+    "criterion_id",
+    "category",
+    "field",
+    "operator",
+    "target",
+    "unit",
+    "priority",
+    "weight",
+    "tolerance",
+    "fit_function",
+    "criterion_group_id",
+    "applicable_property_types",
+    "source_requirement",
+    "freshness_requirement",
+    "critical_if_unknown",
+    "user_expression"
+  ],
+  "additionalProperties": false,
+  "title": "Criterion",
+  "$defs": {
+    "__schema0": {
+      "anyOf": [
+        { "type": "string" },
+        { "type": "number" },
+        { "type": "boolean" },
+        { "type": "null" },
+        { "type": "array", "items": { "$ref": "#/$defs/__schema0" } },
+        {
+          "type": "object",
+          "propertyNames": { "type": "string" },
+          "additionalProperties": { "$ref": "#/$defs/__schema0" }
+        }
+      ]
+    },
+    "__schema1": {
+      "anyOf": [
+        { "type": "string" },
+        { "type": "number" },
+        { "type": "boolean" },
+        { "type": "null" },
+        { "type": "array", "items": { "$ref": "#/$defs/__schema1" } },
+        {
+          "type": "object",
+          "propertyNames": { "type": "string" },
+          "additionalProperties": { "$ref": "#/$defs/__schema1" }
+        }
+      ]
+    }
+  }
+}

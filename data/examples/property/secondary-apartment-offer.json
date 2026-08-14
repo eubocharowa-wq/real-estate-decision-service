@@ -1,0 +1,33 @@
+{
+  "schema_version": "1.0",
+  "offer_id": "offer_secondary_001",
+  "property_id": "property_apartment_secondary_001",
+  "seller": {
+    "seller_type": "owner",
+    "seller_id": null,
+    "name": null
+  },
+  "source_reference": {
+    "source_id": "source_classified_001",
+    "snapshot_id": "snapshot_offer_secondary_001",
+    "source_url": "https://example.invalid/offers/secondary-001",
+    "evidence_ids": ["evidence_offer_secondary_price_001"]
+  },
+  "listing_price": { "amount": "6250000.00", "currency": "RUB" },
+  "price_from": false,
+  "availability": "available",
+  "published_at": "2026-08-13T12:00:00+03:00",
+  "updated_at": "2026-08-14T08:30:00+03:00",
+  "expires_at": null,
+  "mandatory_extras": [],
+  "commercial_terms": {
+    "reservation_terms": null,
+    "payment_terms": "Sale terms require confirmation with the owner.",
+    "notes": []
+  },
+  "financing_offer_ids": [],
+  "promotion_ids": [],
+  "verification_status": "claimed",
+  "freshness_status": "fresh",
+  "evidence_refs": ["evidence_offer_secondary_price_001"]
+}

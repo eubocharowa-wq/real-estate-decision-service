@@ -1,0 +1,76 @@
+{
+  "schema_version": "1.0",
+  "identity": {
+    "property_id": "property_apartment_secondary_001",
+    "canonical_key": "ru-tula-example-avenue-10-unit-24",
+    "cadastral_number": null,
+    "source_unit_ids": ["classified-unit-24", "agency-unit-24"]
+  },
+  "property_type": "apartment",
+  "market_type": "secondary",
+  "location": {
+    "address": {
+      "country_code": "RU",
+      "region": "Tula Oblast",
+      "city": "Tula",
+      "locality": null,
+      "district": "Soviet District",
+      "street": "Example Avenue",
+      "house_number": "10",
+      "postal_code": null
+    },
+    "geo_point": null
+  },
+  "physical": {
+    "total_area_m2": 61.2,
+    "living_area_m2": 38.4,
+    "kitchen_area_m2": 10.1,
+    "rooms": 2,
+    "bedrooms": 2,
+    "floor": 5,
+    "balcony": null,
+    "bathrooms": 1,
+    "layout_type": null
+  },
+  "building": {
+    "name": null,
+    "building_type": "brick",
+    "floors_total": 9,
+    "built_year": 1998,
+    "elevator": true,
+    "freight_elevator": false
+  },
+  "condition": {
+    "finishing_type": "renovated",
+    "condition_description": "Condition is claimed by the source and requires inspection.",
+    "ready_for_living": null
+  },
+  "land": { "area_sotka": null, "category": null, "permitted_use": null },
+  "utilities": {
+    "electricity": "connected",
+    "water": "connected",
+    "gas": "connected",
+    "sewerage": "connected",
+    "heating": "connected",
+    "internet": "unknown"
+  },
+  "timeline": {
+    "planned_commissioning_date": null,
+    "handover_date": null,
+    "move_in_possible_date": null
+  },
+  "ownership": {
+    "ownership_type": "private",
+    "encumbrance_status": "unknown",
+    "ownership_notes": null
+  },
+  "metadata": {
+    "created_at": "2026-08-14T09:10:00+03:00",
+    "updated_at": "2026-08-14T09:10:00+03:00",
+    "evidence_refs": [
+      "evidence_offer_secondary_price_001",
+      "evidence_offer_secondary_price_002"
+    ],
+    "tags": ["synthetic", "dedup-example"]
+  }
+}

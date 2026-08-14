@@ -1,0 +1,40 @@
+{
+  "schema_version": "1.0",
+  "eligibility_id": "eligibility_property_001_family",
+  "property_id": "property_apartment_001",
+  "offer_id": "offer_price_from_001",
+  "program_id": "program_family_mortgage_001",
+  "financing_offer_id": "financing_offer_zero_down_001",
+  "eligibility_status": "claimed",
+  "initial_payment": {
+    "amount": { "amount": "0.00", "currency": "RUB" },
+    "percent": "0",
+    "zero_payment_status": "claimed"
+  },
+  "rate_structure": {
+    "advertised_rate_percent": "0.1",
+    "nominal_rate_percent": null,
+    "rate_from": true,
+    "periods": [
+      {
+        "from_month": 1,
+        "to_month": 12,
+        "rate_percent": "0.1",
+        "conditions": ["Introductory period only."]
+      }
+    ],
+    "after_introductory_period_rate_percent": "8.0",
+    "conditions": ["Applicability to this property is only claimed."]
+  },
+  "monthly_payment": null,
+  "applicability_evidence_refs": ["evidence_zero_down_claim_001"],
+  "checked_at": "2026-08-14T10:00:00+03:00",
+  "source_reference": {
+    "source_id": "source_developer_001",
+    "snapshot_id": "snapshot_developer_001",
+    "source_url": "https://example.invalid/project-a/promo",
+    "evidence_ids": ["evidence_zero_down_claim_001"]
+  },
+  "verification_status": "claimed",
+  "freshness_status": "fresh"
+}

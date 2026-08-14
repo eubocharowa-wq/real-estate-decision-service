@@ -1,0 +1,214 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://real-estate-decision-service.local/schemas/1.0/offer.schema.json",
+  "type": "object",
+  "properties": {
+    "schema_version": { "type": "string", "const": "1.0" },
+    "offer_id": { "type": "string", "pattern": "^[a-z][a-z0-9:_-]*$" },
+    "property_id": { "type": "string", "pattern": "^[a-z][a-z0-9:_-]*$" },
+    "seller": {
+      "type": "object",
+      "properties": {
+        "seller_type": {
+          "type": "string",
+          "enum": ["developer", "owner", "agency", "bank", "other", "unknown"]
+        },
+        "seller_id": {
+          "anyOf": [
+            { "type": "string", "pattern": "^[a-z][a-z0-9:_-]*$" },
+            { "type": "null" }
+          ]
+        },
+        "name": {
+          "anyOf": [{ "type": "string", "minLength": 1 }, { "type": "null" }]
+        }
+      },
+      "required": ["seller_type", "seller_id", "name"],
+      "additionalProperties": false
+    },
+    "source_reference": {
+      "type": "object",
+      "properties": {
+        "source_id": { "type": "string", "pattern": "^[a-z][a-z0-9:_-]*$" },
+        "snapshot_id": {
+          "anyOf": [
+            { "type": "string", "pattern": "^[a-z][a-z0-9:_-]*$" },
+            { "type": "null" }
+          ]
+        },
+        "source_url": {
+          "anyOf": [{ "type": "string", "format": "uri" }, { "type": "null" }]
+        },
+        "evidence_ids": {
+          "type": "array",
+          "items": { "type": "string", "pattern": "^[a-z][a-z0-9:_-]*$" }
+        }
+      },
+      "required": ["source_id", "snapshot_id", "source_url", "evidence_ids"],
+      "additionalProperties": false,
+      "title": "SourceReference"
+    },
+    "listing_price": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "amount": {
+              "type": "string",
+              "pattern": "^(0|[1-9]\\d*)(\\.\\d+)?$",
+              "description": "A base-unit monetary amount encoded as a decimal string to avoid binary floating-point loss."
+            },
+            "currency": { "type": "string", "pattern": "^[A-Z]{3}$" }
+          },
+          "required": ["amount", "currency"],
+          "additionalProperties": false,
+          "title": "Money"
+        },
+        { "type": "null" }
+      ]
+    },
+    "price_from": { "anyOf": [{ "type": "boolean" }, { "type": "null" }] },
+    "availability": {
+      "type": "string",
+      "enum": [
+        "available",
+        "reserved",
+        "sold",
+        "temporarily_unavailable",
+        "unknown"
+      ]
+    },
+    "published_at": {
+      "anyOf": [
+        {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+        },
+        { "type": "null" }
+      ]
+    },
+    "updated_at": {
+      "anyOf": [
+        {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+        },
+        { "type": "null" }
+      ]
+    },
+    "expires_at": {
+      "anyOf": [
+        {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+        },
+        { "type": "null" }
+      ]
+    },
+    "mandatory_extras": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "cost": {
+            "type": "object",
+            "properties": {
+              "amount": {
+                "type": "string",
+                "pattern": "^(0|[1-9]\\d*)(\\.\\d+)?$",
+                "description": "A base-unit monetary amount encoded as a decimal string to avoid binary floating-point loss."
+              },
+              "currency": { "type": "string", "pattern": "^[A-Z]{3}$" }
+            },
+            "required": ["amount", "currency"],
+            "additionalProperties": false,
+            "title": "Money"
+          },
+          "verification_status": {
+            "type": "string",
+            "enum": [
+              "confirmed",
+              "claimed",
+              "unconfirmed",
+              "conflicting",
+              "stale",
+              "unknown"
+            ]
+          }
+        },
+        "required": ["name", "cost", "verification_status"],
+        "additionalProperties": false
+      }
+    },
+    "commercial_terms": {
+      "type": "object",
+      "properties": {
+        "reservation_terms": {
+          "anyOf": [{ "type": "string", "minLength": 1 }, { "type": "null" }]
+        },
+        "payment_terms": {
+          "anyOf": [{ "type": "string", "minLength": 1 }, { "type": "null" }]
+        },
+        "notes": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        }
+      },
+      "required": ["reservation_terms", "payment_terms", "notes"],
+      "additionalProperties": false
+    },
+    "financing_offer_ids": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^[a-z][a-z0-9:_-]*$" }
+    },
+    "promotion_ids": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^[a-z][a-z0-9:_-]*$" }
+    },
+    "verification_status": {
+      "type": "string",
+      "enum": [
+        "confirmed",
+        "claimed",
+        "unconfirmed",
+        "conflicting",
+        "stale",
+        "unknown"
+      ]
+    },
+    "freshness_status": {
+      "type": "string",
+      "enum": ["fresh", "aging", "stale", "expired", "unknown"]
+    },
+    "evidence_refs": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^[a-z][a-z0-9:_-]*$" }
+    }
+  },
+  "required": [
+    "schema_version",
+    "offer_id",
+    "property_id",
+    "seller",
+    "source_reference",
+    "listing_price",
+    "price_from",
+    "availability",
+    "published_at",
+    "updated_at",
+    "expires_at",
+    "mandatory_extras",
+    "commercial_terms",
+    "financing_offer_ids",
+    "promotion_ids",
+    "verification_status",
+    "freshness_status",
+    "evidence_refs"
+  ],
+  "additionalProperties": false,
+  "title": "Offer"
+}

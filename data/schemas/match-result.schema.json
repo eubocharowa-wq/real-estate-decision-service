@@ -1,0 +1,226 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://real-estate-decision-service.local/schemas/1.0/match-result.schema.json",
+  "type": "object",
+  "properties": {
+    "schema_version": { "type": "string", "const": "1.0" },
+    "match_result_id": { "type": "string", "pattern": "^[a-z][a-z0-9:_-]*$" },
+    "user_request_id": { "type": "string", "pattern": "^[a-z][a-z0-9:_-]*$" },
+    "property_id": { "type": "string", "pattern": "^[a-z][a-z0-9:_-]*$" },
+    "purchase_scenario_id": {
+      "anyOf": [
+        { "type": "string", "pattern": "^[a-z][a-z0-9:_-]*$" },
+        { "type": "null" }
+      ]
+    },
+    "eligibility_status": {
+      "type": "string",
+      "enum": [
+        "eligible",
+        "eligible_with_unknowns",
+        "possible_match",
+        "hard_fail",
+        "insufficient_data",
+        "unavailable"
+      ]
+    },
+    "match_score": { "type": "number", "minimum": 0, "maximum": 100 },
+    "property_fit_score": { "type": "number", "minimum": 0, "maximum": 100 },
+    "financing_fit_score": { "type": "number", "minimum": 0, "maximum": 100 },
+    "data_confidence_score": { "type": "number", "minimum": 0, "maximum": 100 },
+    "data_completeness_score": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100
+    },
+    "ranking_score": {
+      "type": "number",
+      "description": "An internal ordering value. Its range is intentionally not fixed by the domain contract."
+    },
+    "criteria_results": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "schema_version": { "type": "string", "const": "1.0" },
+          "criterion_id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9:_-]*$"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "matched",
+              "partially_matched",
+              "not_matched",
+              "unknown",
+              "conflicting",
+              "not_applicable",
+              "hard_failed"
+            ]
+          },
+          "actual": { "$ref": "#/$defs/__schema0" },
+          "target": { "$ref": "#/$defs/__schema1" },
+          "fit": {
+            "anyOf": [
+              { "type": "number", "minimum": 0, "maximum": 1 },
+              { "type": "null" }
+            ]
+          },
+          "margin": { "$ref": "#/$defs/__schema2" },
+          "verification_status": {
+            "type": "string",
+            "enum": [
+              "confirmed",
+              "claimed",
+              "unconfirmed",
+              "conflicting",
+              "stale",
+              "unknown"
+            ]
+          },
+          "freshness_status": {
+            "type": "string",
+            "enum": ["fresh", "aging", "stale", "expired", "unknown"]
+          },
+          "evidence_refs": {
+            "type": "array",
+            "items": { "type": "string", "pattern": "^[a-z][a-z0-9:_-]*$" }
+          },
+          "unknown_reason": {
+            "anyOf": [{ "type": "string", "minLength": 1 }, { "type": "null" }]
+          },
+          "explanation_data": {
+            "type": "object",
+            "propertyNames": { "type": "string" },
+            "additionalProperties": { "$ref": "#/$defs/__schema3" }
+          }
+        },
+        "required": [
+          "schema_version",
+          "criterion_id",
+          "status",
+          "actual",
+          "target",
+          "fit",
+          "margin",
+          "verification_status",
+          "freshness_status",
+          "evidence_refs",
+          "unknown_reason",
+          "explanation_data"
+        ],
+        "additionalProperties": false,
+        "title": "CriterionEvaluationResult"
+      }
+    },
+    "hard_failures": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^[a-z][a-z0-9:_-]*$" }
+    },
+    "compromises": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "strengths": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "unknown_critical": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "recommended_actions": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "algorithm_version": { "type": "string", "minLength": 1 },
+    "calculated_at": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+    }
+  },
+  "required": [
+    "schema_version",
+    "match_result_id",
+    "user_request_id",
+    "property_id",
+    "purchase_scenario_id",
+    "eligibility_status",
+    "match_score",
+    "property_fit_score",
+    "financing_fit_score",
+    "data_confidence_score",
+    "data_completeness_score",
+    "ranking_score",
+    "criteria_results",
+    "hard_failures",
+    "compromises",
+    "strengths",
+    "unknown_critical",
+    "recommended_actions",
+    "algorithm_version",
+    "calculated_at"
+  ],
+  "additionalProperties": false,
+  "title": "MatchResult",
+  "$defs": {
+    "__schema0": {
+      "anyOf": [
+        { "type": "string" },
+        { "type": "number" },
+        { "type": "boolean" },
+        { "type": "null" },
+        { "type": "array", "items": { "$ref": "#/$defs/__schema0" } },
+        {
+          "type": "object",
+          "propertyNames": { "type": "string" },
+          "additionalProperties": { "$ref": "#/$defs/__schema0" }
+        }
+      ]
+    },
+    "__schema1": {
+      "anyOf": [
+        { "type": "string" },
+        { "type": "number" },
+        { "type": "boolean" },
+        { "type": "null" },
+        { "type": "array", "items": { "$ref": "#/$defs/__schema1" } },
+        {
+          "type": "object",
+          "propertyNames": { "type": "string" },
+          "additionalProperties": { "$ref": "#/$defs/__schema1" }
+        }
+      ]
+    },
+    "__schema2": {
+      "anyOf": [
+        { "type": "string" },
+        { "type": "number" },
+        { "type": "boolean" },
+        { "type": "null" },
+        { "type": "array", "items": { "$ref": "#/$defs/__schema2" } },
+        {
+          "type": "object",
+          "propertyNames": { "type": "string" },
+          "additionalProperties": { "$ref": "#/$defs/__schema2" }
+        }
+      ]
+    },
+    "__schema3": {
+      "anyOf": [
+        { "type": "string" },
+        { "type": "number" },
+        { "type": "boolean" },
+        { "type": "null" },
+        { "type": "array", "items": { "$ref": "#/$defs/__schema3" } },
+        {
+          "type": "object",
+          "propertyNames": { "type": "string" },
+          "additionalProperties": { "$ref": "#/$defs/__schema3" }
+        }
+      ]
+    }
+  }
+}

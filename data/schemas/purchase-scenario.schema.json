@@ -1,0 +1,251 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://real-estate-decision-service.local/schemas/1.0/purchase-scenario.schema.json",
+  "type": "object",
+  "properties": {
+    "schema_version": { "type": "string", "const": "1.0" },
+    "scenario_id": { "type": "string", "pattern": "^[a-z][a-z0-9:_-]*$" },
+    "property_id": { "type": "string", "pattern": "^[a-z][a-z0-9:_-]*$" },
+    "offer_id": { "type": "string", "pattern": "^[a-z][a-z0-9:_-]*$" },
+    "financing_program_id": {
+      "anyOf": [
+        { "type": "string", "pattern": "^[a-z][a-z0-9:_-]*$" },
+        { "type": "null" }
+      ]
+    },
+    "financing_offer_id": {
+      "anyOf": [
+        { "type": "string", "pattern": "^[a-z][a-z0-9:_-]*$" },
+        { "type": "null" }
+      ]
+    },
+    "promotion_id": {
+      "anyOf": [
+        { "type": "string", "pattern": "^[a-z][a-z0-9:_-]*$" },
+        { "type": "null" }
+      ]
+    },
+    "entry_cash": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "amount": {
+              "type": "string",
+              "pattern": "^(0|[1-9]\\d*)(\\.\\d+)?$",
+              "description": "A base-unit monetary amount encoded as a decimal string to avoid binary floating-point loss."
+            },
+            "currency": { "type": "string", "pattern": "^[A-Z]{3}$" }
+          },
+          "required": ["amount", "currency"],
+          "additionalProperties": false,
+          "title": "Money"
+        },
+        { "type": "null" }
+      ]
+    },
+    "initial_payment": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "amount": {
+              "type": "string",
+              "pattern": "^(0|[1-9]\\d*)(\\.\\d+)?$",
+              "description": "A base-unit monetary amount encoded as a decimal string to avoid binary floating-point loss."
+            },
+            "currency": { "type": "string", "pattern": "^[A-Z]{3}$" }
+          },
+          "required": ["amount", "currency"],
+          "additionalProperties": false,
+          "title": "Money"
+        },
+        { "type": "null" }
+      ]
+    },
+    "loan_amount": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "amount": {
+              "type": "string",
+              "pattern": "^(0|[1-9]\\d*)(\\.\\d+)?$",
+              "description": "A base-unit monetary amount encoded as a decimal string to avoid binary floating-point loss."
+            },
+            "currency": { "type": "string", "pattern": "^[A-Z]{3}$" }
+          },
+          "required": ["amount", "currency"],
+          "additionalProperties": false,
+          "title": "Money"
+        },
+        { "type": "null" }
+      ]
+    },
+    "monthly_payment": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "amount": {
+              "type": "string",
+              "pattern": "^(0|[1-9]\\d*)(\\.\\d+)?$",
+              "description": "A base-unit monetary amount encoded as a decimal string to avoid binary floating-point loss."
+            },
+            "currency": { "type": "string", "pattern": "^[A-Z]{3}$" }
+          },
+          "required": ["amount", "currency"],
+          "additionalProperties": false,
+          "title": "Money"
+        },
+        { "type": "null" }
+      ]
+    },
+    "total_payment": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "amount": {
+              "type": "string",
+              "pattern": "^(0|[1-9]\\d*)(\\.\\d+)?$",
+              "description": "A base-unit monetary amount encoded as a decimal string to avoid binary floating-point loss."
+            },
+            "currency": { "type": "string", "pattern": "^[A-Z]{3}$" }
+          },
+          "required": ["amount", "currency"],
+          "additionalProperties": false,
+          "title": "Money"
+        },
+        { "type": "null" }
+      ]
+    },
+    "mandatory_costs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "amount": {
+            "type": "object",
+            "properties": {
+              "amount": {
+                "type": "string",
+                "pattern": "^(0|[1-9]\\d*)(\\.\\d+)?$",
+                "description": "A base-unit monetary amount encoded as a decimal string to avoid binary floating-point loss."
+              },
+              "currency": { "type": "string", "pattern": "^[A-Z]{3}$" }
+            },
+            "required": ["amount", "currency"],
+            "additionalProperties": false,
+            "title": "Money"
+          },
+          "evidence_refs": {
+            "type": "array",
+            "items": { "type": "string", "pattern": "^[a-z][a-z0-9:_-]*$" }
+          }
+        },
+        "required": ["name", "amount", "evidence_refs"],
+        "additionalProperties": false
+      }
+    },
+    "estimated_total_entry_cost": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "amount": {
+              "type": "string",
+              "pattern": "^(0|[1-9]\\d*)(\\.\\d+)?$",
+              "description": "A base-unit monetary amount encoded as a decimal string to avoid binary floating-point loss."
+            },
+            "currency": { "type": "string", "pattern": "^[A-Z]{3}$" }
+          },
+          "required": ["amount", "currency"],
+          "additionalProperties": false,
+          "title": "Money"
+        },
+        { "type": "null" }
+      ]
+    },
+    "assumptions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "assumption": { "type": "string", "minLength": 1 },
+          "verification_status": {
+            "type": "string",
+            "enum": [
+              "confirmed",
+              "claimed",
+              "unconfirmed",
+              "conflicting",
+              "stale",
+              "unknown"
+            ]
+          },
+          "evidence_refs": {
+            "type": "array",
+            "items": { "type": "string", "pattern": "^[a-z][a-z0-9:_-]*$" }
+          }
+        },
+        "required": ["assumption", "verification_status", "evidence_refs"],
+        "additionalProperties": false
+      }
+    },
+    "terms_compatibility_status": {
+      "type": "string",
+      "enum": ["confirmed", "claimed", "unconfirmed", "conflicting", "unknown"]
+    },
+    "compatibility_evidence_refs": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^[a-z][a-z0-9:_-]*$" }
+    },
+    "verification_status": {
+      "type": "string",
+      "enum": [
+        "confirmed",
+        "claimed",
+        "unconfirmed",
+        "conflicting",
+        "stale",
+        "unknown"
+      ]
+    },
+    "freshness_status": {
+      "type": "string",
+      "enum": ["fresh", "aging", "stale", "expired", "unknown"]
+    },
+    "calculated_at": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+    }
+  },
+  "required": [
+    "schema_version",
+    "scenario_id",
+    "property_id",
+    "offer_id",
+    "financing_program_id",
+    "financing_offer_id",
+    "promotion_id",
+    "entry_cash",
+    "initial_payment",
+    "loan_amount",
+    "monthly_payment",
+    "total_payment",
+    "mandatory_costs",
+    "estimated_total_entry_cost",
+    "assumptions",
+    "terms_compatibility_status",
+    "compatibility_evidence_refs",
+    "verification_status",
+    "freshness_status",
+    "calculated_at"
+  ],
+  "additionalProperties": false,
+  "title": "PurchaseScenario",
+  "description": "A scenario is anchored to one Offer; compatibility must be evidenced and terms from unrelated offers must not be combined."
+}

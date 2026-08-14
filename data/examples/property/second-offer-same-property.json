@@ -1,0 +1,33 @@
+{
+  "schema_version": "1.0",
+  "offer_id": "offer_secondary_002",
+  "property_id": "property_apartment_secondary_001",
+  "seller": {
+    "seller_type": "agency",
+    "seller_id": "seller_agency_001",
+    "name": "Synthetic Agency"
+  },
+  "source_reference": {
+    "source_id": "source_agency_001",
+    "snapshot_id": "snapshot_offer_secondary_002",
+    "source_url": "https://example.invalid/offers/secondary-002",
+    "evidence_ids": ["evidence_offer_secondary_price_002"]
+  },
+  "listing_price": { "amount": "6350000.00", "currency": "RUB" },
+  "price_from": false,
+  "availability": "unknown",
+  "published_at": "2026-08-12T10:00:00+03:00",
+  "updated_at": null,
+  "expires_at": null,
+  "mandatory_extras": [],
+  "commercial_terms": {
+    "reservation_terms": null,
+    "payment_terms": null,
+    "notes": ["The physical property is shared with offer_secondary_001."]
+  },
+  "financing_offer_ids": [],
+  "promotion_ids": [],
+  "verification_status": "unconfirmed",
+  "freshness_status": "aging",
+  "evidence_refs": ["evidence_offer_secondary_price_002"]
+}

@@ -1,0 +1,147 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://real-estate-decision-service.local/schemas/1.0/source.schema.json",
+  "type": "object",
+  "properties": {
+    "schema_version": { "type": "string", "const": "1.0" },
+    "source_id": { "type": "string", "pattern": "^[a-z][a-z0-9:_-]*$" },
+    "source_type": {
+      "type": "string",
+      "enum": [
+        "developer_site",
+        "project_site",
+        "classified",
+        "agency_site",
+        "bank_site",
+        "government",
+        "registry",
+        "map_service",
+        "poi_provider",
+        "user_link",
+        "manual_expert",
+        "partner_feed",
+        "api",
+        "other"
+      ]
+    },
+    "name": { "type": "string", "minLength": 1 },
+    "domain": {
+      "anyOf": [{ "type": "string", "minLength": 1 }, { "type": "null" }]
+    },
+    "base_url": {
+      "anyOf": [{ "type": "string", "format": "uri" }, { "type": "null" }]
+    },
+    "coverage": {
+      "type": "object",
+      "properties": {
+        "country_codes": {
+          "type": "array",
+          "items": { "type": "string", "pattern": "^[A-Z]{2}$" }
+        },
+        "regions": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "property_types": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["apartment", "apartments", "house", "townhouse", "land"]
+          }
+        }
+      },
+      "required": ["country_codes", "regions", "property_types"],
+      "additionalProperties": false
+    },
+    "collection_method": {
+      "type": "string",
+      "enum": [
+        "api",
+        "feed",
+        "http_fetch",
+        "browser_agent",
+        "openclaw",
+        "manual",
+        "user_submission",
+        "import",
+        "partner_connector"
+      ]
+    },
+    "trust_level": {
+      "type": "string",
+      "enum": [
+        "authoritative",
+        "primary",
+        "secondary",
+        "user_provided",
+        "unknown"
+      ]
+    },
+    "status": {
+      "type": "string",
+      "enum": ["active", "degraded", "blocked", "inactive", "unknown"]
+    },
+    "policy_metadata": {
+      "type": "object",
+      "properties": {
+        "access_status": {
+          "type": "string",
+          "enum": ["approved", "restricted", "pending", "prohibited", "unknown"]
+        },
+        "storage_rights": {
+          "anyOf": [{ "type": "boolean" }, { "type": "null" }]
+        },
+        "display_rights": {
+          "anyOf": [{ "type": "boolean" }, { "type": "null" }]
+        },
+        "refresh_rights": {
+          "anyOf": [{ "type": "boolean" }, { "type": "null" }]
+        },
+        "reviewed_at": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "date-time",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+            },
+            { "type": "null" }
+          ]
+        },
+        "notes": {
+          "anyOf": [{ "type": "string", "minLength": 1 }, { "type": "null" }]
+        }
+      },
+      "required": [
+        "access_status",
+        "storage_rights",
+        "display_rights",
+        "refresh_rights",
+        "reviewed_at",
+        "notes"
+      ],
+      "additionalProperties": false
+    },
+    "upstream_source_id": {
+      "anyOf": [
+        { "type": "string", "pattern": "^[a-z][a-z0-9:_-]*$" },
+        { "type": "null" }
+      ]
+    }
+  },
+  "required": [
+    "schema_version",
+    "source_id",
+    "source_type",
+    "name",
+    "domain",
+    "base_url",
+    "coverage",
+    "collection_method",
+    "trust_level",
+    "status",
+    "policy_metadata",
+    "upstream_source_id"
+  ],
+  "additionalProperties": false,
+  "title": "Source"
+}

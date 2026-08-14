@@ -1,0 +1,63 @@
+{
+  "schema_version": "1.0",
+  "financing_offer_id": "financing_offer_zero_down_001",
+  "program_id": "program_family_mortgage_001",
+  "provider": {
+    "provider_id": "provider_developer_001",
+    "provider_type": "developer",
+    "name": "Synthetic Developer"
+  },
+  "rate_structure": {
+    "advertised_rate_percent": "0.1",
+    "nominal_rate_percent": null,
+    "rate_from": true,
+    "periods": [
+      {
+        "from_month": 1,
+        "to_month": 12,
+        "rate_percent": "0.1",
+        "conditions": ["Introductory period only."]
+      },
+      {
+        "from_month": 13,
+        "to_month": null,
+        "rate_percent": "8.0",
+        "conditions": ["Subject to provider and borrower confirmation."]
+      }
+    ],
+    "after_introductory_period_rate_percent": "8.0",
+    "conditions": [
+      "Advertised terms are not confirmation for a specific property or borrower."
+    ]
+  },
+  "initial_payment": {
+    "amount": { "amount": "0.00", "currency": "RUB" },
+    "percent": "0",
+    "zero_payment_status": "claimed"
+  },
+  "loan_amount": {
+    "minimum": null,
+    "maximum": null
+  },
+  "term": {
+    "minimum_months": 12,
+    "maximum_months": 360
+  },
+  "mandatory_services": [],
+  "price_impact": {
+    "kind": "unknown",
+    "amount": null,
+    "percent": null,
+    "description": "The effect on property price is not confirmed."
+  },
+  "validity": { "from": "2026-08-01", "to": "2026-08-31" },
+  "source_reference": {
+    "source_id": "source_developer_001",
+    "snapshot_id": "snapshot_developer_001",
+    "source_url": "https://example.invalid/project-a/promo",
+    "evidence_ids": ["evidence_zero_down_claim_001"]
+  },
+  "verification_status": "claimed",
+  "freshness_status": "fresh",
+  "evidence_refs": ["evidence_zero_down_claim_001"]
+}

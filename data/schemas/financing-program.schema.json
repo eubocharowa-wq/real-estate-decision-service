@@ -1,0 +1,243 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://real-estate-decision-service.local/schemas/1.0/financing-program.schema.json",
+  "type": "object",
+  "properties": {
+    "schema_version": { "type": "string", "const": "1.0" },
+    "program_id": { "type": "string", "pattern": "^[a-z][a-z0-9:_-]*$" },
+    "program_type": {
+      "type": "string",
+      "enum": [
+        "mortgage",
+        "family_mortgage",
+        "subsidized_mortgage",
+        "installment",
+        "cash_program",
+        "other"
+      ]
+    },
+    "provider": {
+      "type": "object",
+      "properties": {
+        "provider_id": {
+          "anyOf": [
+            { "type": "string", "pattern": "^[a-z][a-z0-9:_-]*$" },
+            { "type": "null" }
+          ]
+        },
+        "provider_type": {
+          "type": "string",
+          "enum": ["bank", "developer", "government", "partner", "other"]
+        },
+        "name": { "type": "string", "minLength": 1 }
+      },
+      "required": ["provider_id", "provider_type", "name"],
+      "additionalProperties": false
+    },
+    "rule_version": { "type": "string", "minLength": 1 },
+    "effective_from": {
+      "anyOf": [
+        {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+        },
+        { "type": "null" }
+      ]
+    },
+    "effective_until": {
+      "anyOf": [
+        {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+        },
+        { "type": "null" }
+      ]
+    },
+    "borrower_rules": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "rule_id": { "type": "string", "pattern": "^[a-z][a-z0-9:_-]*$" },
+          "field": { "type": "string", "minLength": 1 },
+          "operator": {
+            "type": "string",
+            "enum": [
+              "eq",
+              "neq",
+              "in",
+              "not_in",
+              "lte",
+              "gte",
+              "between",
+              "within_distance",
+              "within_time",
+              "exists",
+              "absent",
+              "before",
+              "after",
+              "one_of",
+              "boolean",
+              "custom"
+            ]
+          },
+          "value": { "$ref": "#/$defs/__schema0" },
+          "description": {
+            "anyOf": [{ "type": "string", "minLength": 1 }, { "type": "null" }]
+          }
+        },
+        "required": ["rule_id", "field", "operator", "value", "description"],
+        "additionalProperties": false
+      }
+    },
+    "property_rules": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "rule_id": { "type": "string", "pattern": "^[a-z][a-z0-9:_-]*$" },
+          "field": { "type": "string", "minLength": 1 },
+          "operator": {
+            "type": "string",
+            "enum": [
+              "eq",
+              "neq",
+              "in",
+              "not_in",
+              "lte",
+              "gte",
+              "between",
+              "within_distance",
+              "within_time",
+              "exists",
+              "absent",
+              "before",
+              "after",
+              "one_of",
+              "boolean",
+              "custom"
+            ]
+          },
+          "value": { "$ref": "#/$defs/__schema0" },
+          "description": {
+            "anyOf": [{ "type": "string", "minLength": 1 }, { "type": "null" }]
+          }
+        },
+        "required": ["rule_id", "field", "operator", "value", "description"],
+        "additionalProperties": false
+      }
+    },
+    "financial_rules": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "rule_id": { "type": "string", "pattern": "^[a-z][a-z0-9:_-]*$" },
+          "field": { "type": "string", "minLength": 1 },
+          "operator": {
+            "type": "string",
+            "enum": [
+              "eq",
+              "neq",
+              "in",
+              "not_in",
+              "lte",
+              "gte",
+              "between",
+              "within_distance",
+              "within_time",
+              "exists",
+              "absent",
+              "before",
+              "after",
+              "one_of",
+              "boolean",
+              "custom"
+            ]
+          },
+          "value": { "$ref": "#/$defs/__schema0" },
+          "description": {
+            "anyOf": [{ "type": "string", "minLength": 1 }, { "type": "null" }]
+          }
+        },
+        "required": ["rule_id", "field", "operator", "value", "description"],
+        "additionalProperties": false
+      }
+    },
+    "source_references": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "source_id": { "type": "string", "pattern": "^[a-z][a-z0-9:_-]*$" },
+          "snapshot_id": {
+            "anyOf": [
+              { "type": "string", "pattern": "^[a-z][a-z0-9:_-]*$" },
+              { "type": "null" }
+            ]
+          },
+          "source_url": {
+            "anyOf": [{ "type": "string", "format": "uri" }, { "type": "null" }]
+          },
+          "evidence_ids": {
+            "type": "array",
+            "items": { "type": "string", "pattern": "^[a-z][a-z0-9:_-]*$" }
+          }
+        },
+        "required": ["source_id", "snapshot_id", "source_url", "evidence_ids"],
+        "additionalProperties": false,
+        "title": "SourceReference"
+      }
+    },
+    "verification_status": {
+      "type": "string",
+      "enum": [
+        "confirmed",
+        "claimed",
+        "unconfirmed",
+        "conflicting",
+        "stale",
+        "unknown"
+      ]
+    },
+    "freshness_status": {
+      "type": "string",
+      "enum": ["fresh", "aging", "stale", "expired", "unknown"]
+    }
+  },
+  "required": [
+    "schema_version",
+    "program_id",
+    "program_type",
+    "provider",
+    "rule_version",
+    "effective_from",
+    "effective_until",
+    "borrower_rules",
+    "property_rules",
+    "financial_rules",
+    "source_references",
+    "verification_status",
+    "freshness_status"
+  ],
+  "additionalProperties": false,
+  "title": "FinancingProgram",
+  "$defs": {
+    "__schema0": {
+      "anyOf": [
+        { "type": "string" },
+        { "type": "number" },
+        { "type": "boolean" },
+        { "type": "null" },
+        { "type": "array", "items": { "$ref": "#/$defs/__schema0" } },
+        {
+          "type": "object",
+          "propertyNames": { "type": "string" },
+          "additionalProperties": { "$ref": "#/$defs/__schema0" }
+        }
+      ]
+    }
+  }
+}

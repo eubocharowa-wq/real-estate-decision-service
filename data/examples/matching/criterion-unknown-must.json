@@ -1,0 +1,19 @@
+{
+  "schema_version": "1.0",
+  "criterion_id": "criterion_unknown_family_mortgage",
+  "category": "finance",
+  "field": "family_mortgage",
+  "operator": "boolean",
+  "target": true,
+  "unit": null,
+  "priority": "must",
+  "weight": null,
+  "tolerance": null,
+  "fit_function": null,
+  "criterion_group_id": null,
+  "applicable_property_types": ["apartment", "house"],
+  "source_requirement": ["authoritative", "primary"],
+  "freshness_requirement": "fresh",
+  "critical_if_unknown": true,
+  "user_expression": "Family mortgage is mandatory; its applicability to a candidate may be unknown."
+}

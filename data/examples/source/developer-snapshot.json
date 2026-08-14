@@ -1,0 +1,11 @@
+{
+  "schema_version": "1.0",
+  "snapshot_id": "snapshot_developer_001",
+  "source_id": "source_developer_001",
+  "url": "https://example.invalid/project-a",
+  "collected_at": "2026-08-14T08:00:00+03:00",
+  "content_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "status": "collected",
+  "structured_payload_reference": "fixtures/raw/project-a.json",
+  "raw_reference": null
+}

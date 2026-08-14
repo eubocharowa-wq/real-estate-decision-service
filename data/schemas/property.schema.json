@@ -1,0 +1,423 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://real-estate-decision-service.local/schemas/1.0/property.schema.json",
+  "type": "object",
+  "properties": {
+    "schema_version": { "type": "string", "const": "1.0" },
+    "identity": {
+      "type": "object",
+      "properties": {
+        "property_id": { "type": "string", "pattern": "^[a-z][a-z0-9:_-]*$" },
+        "canonical_key": {
+          "anyOf": [{ "type": "string", "minLength": 1 }, { "type": "null" }]
+        },
+        "cadastral_number": {
+          "anyOf": [{ "type": "string", "minLength": 1 }, { "type": "null" }]
+        },
+        "source_unit_ids": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        }
+      },
+      "required": [
+        "property_id",
+        "canonical_key",
+        "cadastral_number",
+        "source_unit_ids"
+      ],
+      "additionalProperties": false
+    },
+    "property_type": {
+      "type": "string",
+      "enum": ["apartment", "apartments", "house", "townhouse", "land"]
+    },
+    "market_type": {
+      "type": "string",
+      "enum": ["new_build", "secondary", "suburban", "unknown"]
+    },
+    "location": {
+      "type": "object",
+      "properties": {
+        "address": {
+          "type": "object",
+          "properties": {
+            "country_code": {
+              "anyOf": [
+                { "type": "string", "pattern": "^[A-Z]{2}$" },
+                { "type": "null" }
+              ]
+            },
+            "region": {
+              "anyOf": [
+                { "type": "string", "minLength": 1 },
+                { "type": "null" }
+              ]
+            },
+            "city": {
+              "anyOf": [
+                { "type": "string", "minLength": 1 },
+                { "type": "null" }
+              ]
+            },
+            "locality": {
+              "anyOf": [
+                { "type": "string", "minLength": 1 },
+                { "type": "null" }
+              ]
+            },
+            "district": {
+              "anyOf": [
+                { "type": "string", "minLength": 1 },
+                { "type": "null" }
+              ]
+            },
+            "street": {
+              "anyOf": [
+                { "type": "string", "minLength": 1 },
+                { "type": "null" }
+              ]
+            },
+            "house_number": {
+              "anyOf": [
+                { "type": "string", "minLength": 1 },
+                { "type": "null" }
+              ]
+            },
+            "postal_code": {
+              "anyOf": [
+                { "type": "string", "minLength": 1 },
+                { "type": "null" }
+              ]
+            }
+          },
+          "required": [
+            "country_code",
+            "region",
+            "city",
+            "locality",
+            "district",
+            "street",
+            "house_number",
+            "postal_code"
+          ],
+          "additionalProperties": false,
+          "title": "Address"
+        },
+        "geo_point": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "latitude": { "type": "number", "minimum": -90, "maximum": 90 },
+                "longitude": {
+                  "type": "number",
+                  "minimum": -180,
+                  "maximum": 180
+                }
+              },
+              "required": ["latitude", "longitude"],
+              "additionalProperties": false,
+              "title": "GeoPoint"
+            },
+            { "type": "null" }
+          ]
+        }
+      },
+      "required": ["address", "geo_point"],
+      "additionalProperties": false
+    },
+    "physical": {
+      "type": "object",
+      "properties": {
+        "total_area_m2": {
+          "anyOf": [
+            { "type": "number", "exclusiveMinimum": 0 },
+            { "type": "null" }
+          ]
+        },
+        "living_area_m2": {
+          "anyOf": [
+            { "type": "number", "exclusiveMinimum": 0 },
+            { "type": "null" }
+          ]
+        },
+        "kitchen_area_m2": {
+          "anyOf": [
+            { "type": "number", "exclusiveMinimum": 0 },
+            { "type": "null" }
+          ]
+        },
+        "rooms": {
+          "anyOf": [
+            { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
+            { "type": "null" }
+          ]
+        },
+        "bedrooms": {
+          "anyOf": [
+            { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
+            { "type": "null" }
+          ]
+        },
+        "floor": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            },
+            { "type": "null" }
+          ]
+        },
+        "balcony": { "anyOf": [{ "type": "boolean" }, { "type": "null" }] },
+        "bathrooms": {
+          "anyOf": [
+            { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
+            { "type": "null" }
+          ]
+        },
+        "layout_type": {
+          "anyOf": [{ "type": "string", "minLength": 1 }, { "type": "null" }]
+        }
+      },
+      "required": [
+        "total_area_m2",
+        "living_area_m2",
+        "kitchen_area_m2",
+        "rooms",
+        "bedrooms",
+        "floor",
+        "balcony",
+        "bathrooms",
+        "layout_type"
+      ],
+      "additionalProperties": false
+    },
+    "building": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "anyOf": [{ "type": "string", "minLength": 1 }, { "type": "null" }]
+        },
+        "building_type": {
+          "anyOf": [{ "type": "string", "minLength": 1 }, { "type": "null" }]
+        },
+        "floors_total": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            },
+            { "type": "null" }
+          ]
+        },
+        "built_year": {
+          "anyOf": [
+            { "type": "integer", "minimum": 1000, "maximum": 9999 },
+            { "type": "null" }
+          ]
+        },
+        "elevator": { "anyOf": [{ "type": "boolean" }, { "type": "null" }] },
+        "freight_elevator": {
+          "anyOf": [{ "type": "boolean" }, { "type": "null" }]
+        }
+      },
+      "required": [
+        "name",
+        "building_type",
+        "floors_total",
+        "built_year",
+        "elevator",
+        "freight_elevator"
+      ],
+      "additionalProperties": false
+    },
+    "condition": {
+      "type": "object",
+      "properties": {
+        "finishing_type": {
+          "type": "string",
+          "enum": [
+            "shell",
+            "pre_finish",
+            "finished",
+            "renovated",
+            "needs_renovation",
+            "unknown"
+          ]
+        },
+        "condition_description": {
+          "anyOf": [{ "type": "string", "minLength": 1 }, { "type": "null" }]
+        },
+        "ready_for_living": {
+          "anyOf": [{ "type": "boolean" }, { "type": "null" }]
+        }
+      },
+      "required": [
+        "finishing_type",
+        "condition_description",
+        "ready_for_living"
+      ],
+      "additionalProperties": false
+    },
+    "land": {
+      "type": "object",
+      "properties": {
+        "area_sotka": {
+          "anyOf": [
+            { "type": "number", "exclusiveMinimum": 0 },
+            { "type": "null" }
+          ]
+        },
+        "category": {
+          "anyOf": [{ "type": "string", "minLength": 1 }, { "type": "null" }]
+        },
+        "permitted_use": {
+          "anyOf": [{ "type": "string", "minLength": 1 }, { "type": "null" }]
+        }
+      },
+      "required": ["area_sotka", "category", "permitted_use"],
+      "additionalProperties": false
+    },
+    "utilities": {
+      "type": "object",
+      "properties": {
+        "electricity": {
+          "type": "string",
+          "enum": ["connected", "available", "planned", "absent", "unknown"]
+        },
+        "water": {
+          "type": "string",
+          "enum": ["connected", "available", "planned", "absent", "unknown"]
+        },
+        "gas": {
+          "type": "string",
+          "enum": ["connected", "available", "planned", "absent", "unknown"]
+        },
+        "sewerage": {
+          "type": "string",
+          "enum": ["connected", "available", "planned", "absent", "unknown"]
+        },
+        "heating": {
+          "type": "string",
+          "enum": ["connected", "available", "planned", "absent", "unknown"]
+        },
+        "internet": {
+          "type": "string",
+          "enum": ["connected", "available", "planned", "absent", "unknown"]
+        }
+      },
+      "required": [
+        "electricity",
+        "water",
+        "gas",
+        "sewerage",
+        "heating",
+        "internet"
+      ],
+      "additionalProperties": false
+    },
+    "timeline": {
+      "type": "object",
+      "properties": {
+        "planned_commissioning_date": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "date",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+            },
+            { "type": "null" }
+          ]
+        },
+        "handover_date": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "date",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+            },
+            { "type": "null" }
+          ]
+        },
+        "move_in_possible_date": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "date",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+            },
+            { "type": "null" }
+          ]
+        }
+      },
+      "required": [
+        "planned_commissioning_date",
+        "handover_date",
+        "move_in_possible_date"
+      ],
+      "additionalProperties": false
+    },
+    "ownership": {
+      "type": "object",
+      "properties": {
+        "ownership_type": {
+          "type": "string",
+          "enum": ["private", "shared", "developer", "government", "unknown"]
+        },
+        "encumbrance_status": {
+          "type": "string",
+          "enum": ["none", "present", "claimed_none", "unknown"]
+        },
+        "ownership_notes": {
+          "anyOf": [{ "type": "string", "minLength": 1 }, { "type": "null" }]
+        }
+      },
+      "required": ["ownership_type", "encumbrance_status", "ownership_notes"],
+      "additionalProperties": false
+    },
+    "metadata": {
+      "type": "object",
+      "properties": {
+        "created_at": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+        },
+        "updated_at": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+        },
+        "evidence_refs": {
+          "type": "array",
+          "items": { "type": "string", "pattern": "^[a-z][a-z0-9:_-]*$" }
+        },
+        "tags": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        }
+      },
+      "required": ["created_at", "updated_at", "evidence_refs", "tags"],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "schema_version",
+    "identity",
+    "property_type",
+    "market_type",
+    "location",
+    "physical",
+    "building",
+    "condition",
+    "land",
+    "utilities",
+    "timeline",
+    "ownership",
+    "metadata"
+  ],
+  "additionalProperties": false,
+  "title": "Property"
+}
