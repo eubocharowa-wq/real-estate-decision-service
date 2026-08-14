@@ -198,23 +198,31 @@ const eligibilityActual = (
     }
     if (scenario && definition.key === "financing_program") {
       const hasProgram = scenario.financing_program_id !== null;
+      const isFamilyCriterion = criterion.field === "family_mortgage";
+      const programType = context.financingProgram?.program_type;
       const value =
         typeof criterion.target === "boolean"
-          ? hasProgram
+          ? isFamilyCriterion
+            ? programType === undefined
+              ? null
+              : programType === "family_mortgage"
+            : hasProgram
           : hasProgram
-            ? (context.financingProgram?.program_type ??
-              scenario.financing_program_id)
+            ? (programType ?? scenario.financing_program_id)
             : false;
       return {
         value: asJson(value),
         verificationStatus: scenario.verification_status,
         freshnessStatus: scenario.freshness_status,
         evidenceRefs: scenario.compatibility_evidence_refs,
-        exact: scenario.terms_compatibility_status === "confirmed",
+        exact:
+          value !== null && scenario.terms_compatibility_status === "confirmed",
         unknownReason:
-          scenario.terms_compatibility_status === "confirmed"
-            ? null
-            : "SCENARIO_TERMS_NOT_CONFIRMED",
+          value === null
+            ? "FINANCING_PROGRAM_TYPE_MISSING"
+            : scenario.terms_compatibility_status === "confirmed"
+              ? null
+              : "SCENARIO_TERMS_NOT_CONFIRMED",
       };
     }
     return {
@@ -240,19 +248,29 @@ const eligibilityActual = (
     if (zeroStatus === "unknown") unknownReason = "ZERO_PAYMENT_UNKNOWN";
   } else {
     const status = eligibility.eligibility_status;
+    const isFamilyCriterion = criterion.field === "family_mortgage";
+    const programType = context.financingProgram?.program_type;
     if (status === "confirmed") {
       value =
         typeof criterion.target === "boolean"
-          ? true
-          : asJson(
-              context.financingProgram?.program_type ??
-                eligibility.program_id ??
-                true,
-            );
+          ? isFamilyCriterion
+            ? programType === undefined
+              ? null
+              : programType === "family_mortgage"
+            : true
+          : asJson(programType ?? eligibility.program_id ?? true);
+      if (value === null) unknownReason = "FINANCING_PROGRAM_TYPE_MISSING";
     } else if (status === "not_eligible") {
       value = false;
     } else if (status === "claimed" || status === "likely") {
-      value = typeof criterion.target === "boolean" ? true : criterion.target;
+      value =
+        typeof criterion.target === "boolean"
+          ? isFamilyCriterion
+            ? programType === undefined
+              ? null
+              : programType === "family_mortgage"
+            : true
+          : criterion.target;
       unknownReason = "FINANCING_APPLICABILITY_CLAIMED";
     } else {
       value = null;
@@ -264,9 +282,9 @@ const eligibilityActual = (
     verificationStatus: eligibility.verification_status,
     freshnessStatus: eligibility.freshness_status,
     evidenceRefs: eligibility.applicability_evidence_refs,
-    exact: ["confirmed", "not_eligible"].includes(
-      eligibility.eligibility_status,
-    ),
+    exact:
+      value !== null &&
+      ["confirmed", "not_eligible"].includes(eligibility.eligibility_status),
     unknownReason,
   };
 };
