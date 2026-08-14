@@ -1,0 +1,134 @@
+[
+  {
+    "schema_version": "1.0",
+    "promotion_id": "promo_zero_down_price_increase",
+    "title": "Synthetic zero-down with price increase",
+    "provider": {
+      "provider_id": null,
+      "provider_type": "developer",
+      "name": "Developer Alpha"
+    },
+    "valid_from": "2026-08-01T00:00:00.000Z",
+    "valid_until": "2026-12-31T23:59:59.000Z",
+    "eligible_property_refs": ["prop_nb_001"],
+    "eligible_offer_refs": ["offer_nb_001_agency"],
+    "price_impact": {
+      "kind": "increase",
+      "amount": { "amount": "300000.00", "currency": "RUB" },
+      "percent": null,
+      "description": "Only compatible with the higher-price agency Offer."
+    },
+    "financing_impact": {
+      "financing_offer_ids": ["finoffer_family_zero_confirmed"],
+      "description": "Confirmed for this synthetic Offer only."
+    },
+    "conditions": [
+      "Do not combine with the lower price from offer_nb_001_primary."
+    ],
+    "source_reference": {
+      "source_id": "src_dev_alpha",
+      "snapshot_id": null,
+      "source_url": "https://src-dev-alpha.example/fixture",
+      "evidence_ids": []
+    },
+    "verification_status": "confirmed",
+    "freshness_status": "fresh",
+    "evidence_refs": []
+  },
+  {
+    "schema_version": "1.0",
+    "promotion_id": "promo_zero_down_claimed",
+    "title": "Synthetic claimed zero-down banner",
+    "provider": {
+      "provider_id": null,
+      "provider_type": "developer",
+      "name": "Developer Alpha"
+    },
+    "valid_from": "2026-08-01T00:00:00.000Z",
+    "valid_until": "2026-10-31T23:59:59.000Z",
+    "eligible_property_refs": ["prop_nb_002"],
+    "eligible_offer_refs": ["offer_nb_002_primary"],
+    "price_impact": {
+      "kind": "unknown",
+      "amount": null,
+      "percent": null,
+      "description": "Property applicability is unknown."
+    },
+    "financing_impact": {
+      "financing_offer_ids": ["finoffer_family_zero_claimed"],
+      "description": "Claimed, not confirmed for the unit."
+    },
+    "conditions": ["Requires property-specific confirmation."],
+    "source_reference": {
+      "source_id": "src_dev_alpha",
+      "snapshot_id": null,
+      "source_url": "https://src-dev-alpha.example/fixture",
+      "evidence_ids": []
+    },
+    "verification_status": "claimed",
+    "freshness_status": "fresh",
+    "evidence_refs": []
+  },
+  {
+    "schema_version": "1.0",
+    "promotion_id": "promo_discount_active",
+    "title": "Synthetic discount from preserved old price",
+    "provider": {
+      "provider_id": null,
+      "provider_type": "developer",
+      "name": "Developer Alpha"
+    },
+    "valid_from": "2026-08-01T00:00:00.000Z",
+    "valid_until": "2026-09-30T23:59:59.000Z",
+    "eligible_property_refs": ["prop_nb_005"],
+    "eligible_offer_refs": ["offer_nb_005_primary"],
+    "price_impact": {
+      "kind": "decrease",
+      "amount": { "amount": "200000.00", "currency": "RUB" },
+      "percent": null,
+      "description": "Old price is retained in evidence; current discount is explicit."
+    },
+    "financing_impact": { "financing_offer_ids": [], "description": null },
+    "conditions": ["Synthetic fixed-date promotion."],
+    "source_reference": {
+      "source_id": "src_dev_alpha",
+      "snapshot_id": null,
+      "source_url": "https://src-dev-alpha.example/fixture",
+      "evidence_ids": ["evidence_offer_nb_005_old_price"]
+    },
+    "verification_status": "confirmed",
+    "freshness_status": "fresh",
+    "evidence_refs": ["evidence_offer_nb_005_old_price"]
+  },
+  {
+    "schema_version": "1.0",
+    "promotion_id": "promo_expired_not_active",
+    "title": "Expired synthetic promotion",
+    "provider": {
+      "provider_id": null,
+      "provider_type": "developer",
+      "name": "Developer Alpha"
+    },
+    "valid_from": "2025-01-01T00:00:00.000Z",
+    "valid_until": "2025-12-31T23:59:59.000Z",
+    "eligible_property_refs": [],
+    "eligible_offer_refs": [],
+    "price_impact": {
+      "kind": "decrease",
+      "amount": { "amount": "100000.00", "currency": "RUB" },
+      "percent": null,
+      "description": "Expired and unused."
+    },
+    "financing_impact": { "financing_offer_ids": [], "description": null },
+    "conditions": ["Must never be used by an active PurchaseScenario."],
+    "source_reference": {
+      "source_id": "src_dev_alpha",
+      "snapshot_id": null,
+      "source_url": "https://src-dev-alpha.example/fixture",
+      "evidence_ids": []
+    },
+    "verification_status": "stale",
+    "freshness_status": "expired",
+    "evidence_refs": []
+  }
+]

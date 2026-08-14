@@ -1,0 +1,336 @@
+[
+  {
+    "schema_version": "1.0",
+    "eligibility_id": "elig_nb_001_standard",
+    "property_id": "prop_nb_001",
+    "offer_id": "offer_nb_001_primary",
+    "program_id": "finprog_standard_b",
+    "financing_offer_id": "finoffer_standard_no_zero",
+    "eligibility_status": "confirmed",
+    "initial_payment": {
+      "amount": { "amount": "1000000.00", "currency": "RUB" },
+      "percent": "20.00",
+      "zero_payment_status": "not_available"
+    },
+    "rate_structure": null,
+    "monthly_payment": null,
+    "applicability_evidence_refs": [
+      "evidence_elig_nb_001_standard_applicability"
+    ],
+    "checked_at": "2026-08-15T00:00:00.000Z",
+    "source_reference": {
+      "source_id": "src_bank_gamma",
+      "snapshot_id": null,
+      "source_url": "https://src-bank-gamma.example/fixture",
+      "evidence_ids": ["evidence_elig_nb_001_standard_applicability"]
+    },
+    "verification_status": "confirmed",
+    "freshness_status": "fresh"
+  },
+  {
+    "schema_version": "1.0",
+    "eligibility_id": "elig_nb_001_family",
+    "property_id": "prop_nb_001",
+    "offer_id": "offer_nb_001_agency",
+    "program_id": "finprog_family_a",
+    "financing_offer_id": "finoffer_family_zero_confirmed",
+    "eligibility_status": "confirmed",
+    "initial_payment": {
+      "amount": { "amount": "0.00", "currency": "RUB" },
+      "percent": "0",
+      "zero_payment_status": "available"
+    },
+    "rate_structure": null,
+    "monthly_payment": null,
+    "applicability_evidence_refs": [
+      "evidence_elig_nb_001_family_applicability"
+    ],
+    "checked_at": "2026-08-15T00:00:00.000Z",
+    "source_reference": {
+      "source_id": "src_bank_gamma",
+      "snapshot_id": null,
+      "source_url": "https://src-bank-gamma.example/fixture",
+      "evidence_ids": ["evidence_elig_nb_001_family_applicability"]
+    },
+    "verification_status": "confirmed",
+    "freshness_status": "fresh"
+  },
+  {
+    "schema_version": "1.0",
+    "eligibility_id": "elig_nb_002_family",
+    "property_id": "prop_nb_002",
+    "offer_id": "offer_nb_002_primary",
+    "program_id": "finprog_family_a",
+    "financing_offer_id": "finoffer_family_zero_claimed",
+    "eligibility_status": "claimed",
+    "initial_payment": {
+      "amount": { "amount": "0.00", "currency": "RUB" },
+      "percent": "0",
+      "zero_payment_status": "claimed"
+    },
+    "rate_structure": null,
+    "monthly_payment": null,
+    "applicability_evidence_refs": [
+      "evidence_elig_nb_002_family_applicability"
+    ],
+    "checked_at": "2026-08-15T00:00:00.000Z",
+    "source_reference": {
+      "source_id": "src_dev_alpha",
+      "snapshot_id": null,
+      "source_url": "https://src-dev-alpha.example/fixture",
+      "evidence_ids": ["evidence_elig_nb_002_family_applicability"]
+    },
+    "verification_status": "claimed",
+    "freshness_status": "fresh"
+  },
+  {
+    "schema_version": "1.0",
+    "eligibility_id": "elig_nb_003_staged",
+    "property_id": "prop_nb_003",
+    "offer_id": "offer_nb_003_primary",
+    "program_id": "finprog_family_a",
+    "financing_offer_id": "finoffer_staged_rate",
+    "eligibility_status": "confirmed",
+    "initial_payment": {
+      "amount": { "amount": "1000000.00", "currency": "RUB" },
+      "percent": "20.00",
+      "zero_payment_status": "not_available"
+    },
+    "rate_structure": null,
+    "monthly_payment": null,
+    "applicability_evidence_refs": [
+      "evidence_elig_nb_003_staged_applicability"
+    ],
+    "checked_at": "2026-08-15T00:00:00.000Z",
+    "source_reference": {
+      "source_id": "src_bank_gamma",
+      "snapshot_id": null,
+      "source_url": "https://src-bank-gamma.example/fixture",
+      "evidence_ids": ["evidence_elig_nb_003_staged_applicability"]
+    },
+    "verification_status": "confirmed",
+    "freshness_status": "fresh"
+  },
+  {
+    "schema_version": "1.0",
+    "eligibility_id": "elig_nb_004_unknown",
+    "property_id": "prop_nb_004",
+    "offer_id": "offer_nb_004_primary",
+    "program_id": "finprog_family_a",
+    "financing_offer_id": "finoffer_family_zero_claimed",
+    "eligibility_status": "unknown",
+    "initial_payment": {
+      "amount": null,
+      "percent": null,
+      "zero_payment_status": "unknown"
+    },
+    "rate_structure": null,
+    "monthly_payment": null,
+    "applicability_evidence_refs": [
+      "evidence_elig_nb_004_unknown_applicability"
+    ],
+    "checked_at": null,
+    "source_reference": {
+      "source_id": "src_dev_alpha",
+      "snapshot_id": null,
+      "source_url": "https://src-dev-alpha.example/fixture",
+      "evidence_ids": ["evidence_elig_nb_004_unknown_applicability"]
+    },
+    "verification_status": "unknown",
+    "freshness_status": "unknown"
+  },
+  {
+    "schema_version": "1.0",
+    "eligibility_id": "elig_nb_005_family",
+    "property_id": "prop_nb_005",
+    "offer_id": "offer_nb_005_primary",
+    "program_id": "finprog_family_a",
+    "financing_offer_id": "finoffer_family_zero_confirmed",
+    "eligibility_status": "confirmed",
+    "initial_payment": {
+      "amount": { "amount": "0.00", "currency": "RUB" },
+      "percent": "0",
+      "zero_payment_status": "available"
+    },
+    "rate_structure": null,
+    "monthly_payment": null,
+    "applicability_evidence_refs": [
+      "evidence_elig_nb_005_family_applicability"
+    ],
+    "checked_at": "2026-08-15T00:00:00.000Z",
+    "source_reference": {
+      "source_id": "src_bank_gamma",
+      "snapshot_id": null,
+      "source_url": "https://src-bank-gamma.example/fixture",
+      "evidence_ids": ["evidence_elig_nb_005_family_applicability"]
+    },
+    "verification_status": "confirmed",
+    "freshness_status": "fresh"
+  },
+  {
+    "schema_version": "1.0",
+    "eligibility_id": "elig_nb_006_not",
+    "property_id": "prop_nb_006",
+    "offer_id": "offer_nb_006_primary",
+    "program_id": "finprog_family_a",
+    "financing_offer_id": null,
+    "eligibility_status": "not_eligible",
+    "initial_payment": {
+      "amount": { "amount": "1000000.00", "currency": "RUB" },
+      "percent": "20.00",
+      "zero_payment_status": "not_available"
+    },
+    "rate_structure": null,
+    "monthly_payment": null,
+    "applicability_evidence_refs": ["evidence_elig_nb_006_not_applicability"],
+    "checked_at": "2026-08-15T00:00:00.000Z",
+    "source_reference": {
+      "source_id": "src_bank_gamma",
+      "snapshot_id": null,
+      "source_url": "https://src-bank-gamma.example/fixture",
+      "evidence_ids": ["evidence_elig_nb_006_not_applicability"]
+    },
+    "verification_status": "confirmed",
+    "freshness_status": "fresh"
+  },
+  {
+    "schema_version": "1.0",
+    "eligibility_id": "elig_nb_007_standard",
+    "property_id": "prop_nb_007",
+    "offer_id": "offer_nb_007_primary",
+    "program_id": "finprog_standard_b",
+    "financing_offer_id": "finoffer_standard_no_zero",
+    "eligibility_status": "likely",
+    "initial_payment": {
+      "amount": { "amount": "1000000.00", "currency": "RUB" },
+      "percent": "20.00",
+      "zero_payment_status": "not_available"
+    },
+    "rate_structure": null,
+    "monthly_payment": null,
+    "applicability_evidence_refs": [
+      "evidence_elig_nb_007_standard_applicability"
+    ],
+    "checked_at": "2026-08-15T00:00:00.000Z",
+    "source_reference": {
+      "source_id": "src_dev_alpha",
+      "snapshot_id": null,
+      "source_url": "https://src-dev-alpha.example/fixture",
+      "evidence_ids": ["evidence_elig_nb_007_standard_applicability"]
+    },
+    "verification_status": "unconfirmed",
+    "freshness_status": "fresh"
+  },
+  {
+    "schema_version": "1.0",
+    "eligibility_id": "elig_nb_008_installment",
+    "property_id": "prop_nb_008",
+    "offer_id": "offer_nb_008_primary",
+    "program_id": "finprog_installment_c",
+    "financing_offer_id": "finoffer_installment_balloon",
+    "eligibility_status": "confirmed",
+    "initial_payment": {
+      "amount": { "amount": "1000000.00", "currency": "RUB" },
+      "percent": "20.00",
+      "zero_payment_status": "not_available"
+    },
+    "rate_structure": null,
+    "monthly_payment": null,
+    "applicability_evidence_refs": [
+      "evidence_elig_nb_008_installment_applicability"
+    ],
+    "checked_at": "2026-08-15T00:00:00.000Z",
+    "source_reference": {
+      "source_id": "src_bank_gamma",
+      "snapshot_id": null,
+      "source_url": "https://src-bank-gamma.example/fixture",
+      "evidence_ids": ["evidence_elig_nb_008_installment_applicability"]
+    },
+    "verification_status": "confirmed",
+    "freshness_status": "fresh"
+  },
+  {
+    "schema_version": "1.0",
+    "eligibility_id": "elig_sec_001_standard",
+    "property_id": "prop_sec_001",
+    "offer_id": "offer_sec_001_primary",
+    "program_id": "finprog_standard_b",
+    "financing_offer_id": "finoffer_standard_no_zero",
+    "eligibility_status": "confirmed",
+    "initial_payment": {
+      "amount": { "amount": "1000000.00", "currency": "RUB" },
+      "percent": "20.00",
+      "zero_payment_status": "not_available"
+    },
+    "rate_structure": null,
+    "monthly_payment": null,
+    "applicability_evidence_refs": [
+      "evidence_elig_sec_001_standard_applicability"
+    ],
+    "checked_at": "2026-08-15T00:00:00.000Z",
+    "source_reference": {
+      "source_id": "src_bank_gamma",
+      "snapshot_id": null,
+      "source_url": "https://src-bank-gamma.example/fixture",
+      "evidence_ids": ["evidence_elig_sec_001_standard_applicability"]
+    },
+    "verification_status": "confirmed",
+    "freshness_status": "fresh"
+  },
+  {
+    "schema_version": "1.0",
+    "eligibility_id": "elig_sec_002_standard",
+    "property_id": "prop_sec_002",
+    "offer_id": "offer_sec_002_primary",
+    "program_id": "finprog_standard_b",
+    "financing_offer_id": "finoffer_standard_no_zero",
+    "eligibility_status": "needs_confirmation",
+    "initial_payment": {
+      "amount": { "amount": "1000000.00", "currency": "RUB" },
+      "percent": "20.00",
+      "zero_payment_status": "not_available"
+    },
+    "rate_structure": null,
+    "monthly_payment": null,
+    "applicability_evidence_refs": [
+      "evidence_elig_sec_002_standard_applicability"
+    ],
+    "checked_at": "2026-08-15T00:00:00.000Z",
+    "source_reference": {
+      "source_id": "src_dev_alpha",
+      "snapshot_id": null,
+      "source_url": "https://src-dev-alpha.example/fixture",
+      "evidence_ids": ["evidence_elig_sec_002_standard_applicability"]
+    },
+    "verification_status": "unconfirmed",
+    "freshness_status": "fresh"
+  },
+  {
+    "schema_version": "1.0",
+    "eligibility_id": "elig_house_001_standard",
+    "property_id": "prop_house_001",
+    "offer_id": "offer_house_001_primary",
+    "program_id": "finprog_standard_b",
+    "financing_offer_id": "finoffer_standard_no_zero",
+    "eligibility_status": "likely",
+    "initial_payment": {
+      "amount": { "amount": "1000000.00", "currency": "RUB" },
+      "percent": "20.00",
+      "zero_payment_status": "not_available"
+    },
+    "rate_structure": null,
+    "monthly_payment": null,
+    "applicability_evidence_refs": [
+      "evidence_elig_house_001_standard_applicability"
+    ],
+    "checked_at": "2026-08-15T00:00:00.000Z",
+    "source_reference": {
+      "source_id": "src_dev_alpha",
+      "snapshot_id": null,
+      "source_url": "https://src-dev-alpha.example/fixture",
+      "evidence_ids": ["evidence_elig_house_001_standard_applicability"]
+    },
+    "verification_status": "unconfirmed",
+    "freshness_status": "fresh"
+  }
+]

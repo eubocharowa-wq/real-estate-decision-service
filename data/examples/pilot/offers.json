@@ -1,0 +1,1802 @@
+[
+  {
+    "schema_version": "1.0",
+    "offer_id": "offer_nb_001_primary",
+    "property_id": "prop_nb_001",
+    "seller": {
+      "seller_type": "developer",
+      "seller_id": null,
+      "name": "Developer Alpha"
+    },
+    "source_reference": {
+      "source_id": "src_dev_alpha",
+      "snapshot_id": null,
+      "source_url": "https://src-dev-alpha.example/fixture",
+      "evidence_ids": [
+        "evidence_offer_nb_001_primary_price",
+        "evidence_offer_nb_001_primary_availability"
+      ]
+    },
+    "listing_price": { "amount": "4350000.00", "currency": "RUB" },
+    "price_from": false,
+    "availability": "available",
+    "published_at": "2026-08-01T00:00:00.000Z",
+    "updated_at": "2026-08-15T00:00:00.000Z",
+    "expires_at": null,
+    "mandatory_extras": [],
+    "commercial_terms": {
+      "reservation_terms": null,
+      "payment_terms": null,
+      "notes": []
+    },
+    "financing_offer_ids": ["finoffer_standard_no_zero"],
+    "promotion_ids": [],
+    "verification_status": "conflicting",
+    "freshness_status": "fresh",
+    "evidence_refs": [
+      "evidence_offer_nb_001_primary_price",
+      "evidence_offer_nb_001_primary_availability"
+    ]
+  },
+  {
+    "schema_version": "1.0",
+    "offer_id": "offer_nb_002_primary",
+    "property_id": "prop_nb_002",
+    "seller": {
+      "seller_type": "developer",
+      "seller_id": null,
+      "name": "Developer Alpha"
+    },
+    "source_reference": {
+      "source_id": "src_dev_alpha",
+      "snapshot_id": null,
+      "source_url": "https://src-dev-alpha.example/fixture",
+      "evidence_ids": [
+        "evidence_offer_nb_002_primary_price",
+        "evidence_offer_nb_002_primary_availability"
+      ]
+    },
+    "listing_price": { "amount": "4525000.00", "currency": "RUB" },
+    "price_from": false,
+    "availability": "available",
+    "published_at": "2026-08-01T00:00:00.000Z",
+    "updated_at": "2026-08-15T00:00:00.000Z",
+    "expires_at": null,
+    "mandatory_extras": [],
+    "commercial_terms": {
+      "reservation_terms": null,
+      "payment_terms": null,
+      "notes": []
+    },
+    "financing_offer_ids": ["finoffer_family_zero_claimed"],
+    "promotion_ids": ["promo_zero_down_claimed"],
+    "verification_status": "conflicting",
+    "freshness_status": "fresh",
+    "evidence_refs": [
+      "evidence_offer_nb_002_primary_price",
+      "evidence_offer_nb_002_primary_availability"
+    ]
+  },
+  {
+    "schema_version": "1.0",
+    "offer_id": "offer_nb_003_primary",
+    "property_id": "prop_nb_003",
+    "seller": {
+      "seller_type": "developer",
+      "seller_id": null,
+      "name": "Developer Alpha"
+    },
+    "source_reference": {
+      "source_id": "src_dev_alpha",
+      "snapshot_id": null,
+      "source_url": "https://src-dev-alpha.example/fixture",
+      "evidence_ids": [
+        "evidence_offer_nb_003_primary_price",
+        "evidence_offer_nb_003_primary_availability"
+      ]
+    },
+    "listing_price": { "amount": "4700000.00", "currency": "RUB" },
+    "price_from": false,
+    "availability": "available",
+    "published_at": "2026-08-01T00:00:00.000Z",
+    "updated_at": "2026-08-15T00:00:00.000Z",
+    "expires_at": null,
+    "mandatory_extras": [],
+    "commercial_terms": {
+      "reservation_terms": null,
+      "payment_terms": null,
+      "notes": []
+    },
+    "financing_offer_ids": ["finoffer_staged_rate"],
+    "promotion_ids": [],
+    "verification_status": "confirmed",
+    "freshness_status": "fresh",
+    "evidence_refs": [
+      "evidence_offer_nb_003_primary_price",
+      "evidence_offer_nb_003_primary_availability"
+    ]
+  },
+  {
+    "schema_version": "1.0",
+    "offer_id": "offer_nb_004_primary",
+    "property_id": "prop_nb_004",
+    "seller": {
+      "seller_type": "developer",
+      "seller_id": null,
+      "name": "Developer Alpha"
+    },
+    "source_reference": {
+      "source_id": "src_dev_alpha",
+      "snapshot_id": null,
+      "source_url": "https://src-dev-alpha.example/fixture",
+      "evidence_ids": [
+        "evidence_offer_nb_004_primary_price",
+        "evidence_offer_nb_004_primary_availability"
+      ]
+    },
+    "listing_price": { "amount": "4875000.00", "currency": "RUB" },
+    "price_from": false,
+    "availability": "available",
+    "published_at": "2026-08-01T00:00:00.000Z",
+    "updated_at": "2026-08-15T00:00:00.000Z",
+    "expires_at": null,
+    "mandatory_extras": [],
+    "commercial_terms": {
+      "reservation_terms": null,
+      "payment_terms": null,
+      "notes": []
+    },
+    "financing_offer_ids": ["finoffer_family_zero_claimed"],
+    "promotion_ids": [],
+    "verification_status": "confirmed",
+    "freshness_status": "fresh",
+    "evidence_refs": [
+      "evidence_offer_nb_004_primary_price",
+      "evidence_offer_nb_004_primary_availability"
+    ]
+  },
+  {
+    "schema_version": "1.0",
+    "offer_id": "offer_nb_005_primary",
+    "property_id": "prop_nb_005",
+    "seller": {
+      "seller_type": "developer",
+      "seller_id": null,
+      "name": "Developer Alpha"
+    },
+    "source_reference": {
+      "source_id": "src_dev_alpha",
+      "snapshot_id": null,
+      "source_url": "https://src-dev-alpha.example/fixture",
+      "evidence_ids": [
+        "evidence_offer_nb_005_primary_price",
+        "evidence_offer_nb_005_primary_availability"
+      ]
+    },
+    "listing_price": { "amount": "5050000.00", "currency": "RUB" },
+    "price_from": false,
+    "availability": "available",
+    "published_at": "2026-08-01T00:00:00.000Z",
+    "updated_at": "2026-08-15T00:00:00.000Z",
+    "expires_at": null,
+    "mandatory_extras": [],
+    "commercial_terms": {
+      "reservation_terms": null,
+      "payment_terms": null,
+      "notes": ["old_price_preserved_in_promotion_evidence"]
+    },
+    "financing_offer_ids": ["finoffer_family_zero_confirmed"],
+    "promotion_ids": ["promo_discount_active"],
+    "verification_status": "confirmed",
+    "freshness_status": "fresh",
+    "evidence_refs": [
+      "evidence_offer_nb_005_primary_price",
+      "evidence_offer_nb_005_primary_availability"
+    ]
+  },
+  {
+    "schema_version": "1.0",
+    "offer_id": "offer_nb_006_primary",
+    "property_id": "prop_nb_006",
+    "seller": {
+      "seller_type": "developer",
+      "seller_id": null,
+      "name": "Developer Alpha"
+    },
+    "source_reference": {
+      "source_id": "src_dev_alpha",
+      "snapshot_id": null,
+      "source_url": "https://src-dev-alpha.example/fixture",
+      "evidence_ids": [
+        "evidence_offer_nb_006_primary_price",
+        "evidence_offer_nb_006_primary_availability"
+      ]
+    },
+    "listing_price": { "amount": "5225000.00", "currency": "RUB" },
+    "price_from": false,
+    "availability": "available",
+    "published_at": "2026-08-01T00:00:00.000Z",
+    "updated_at": "2026-08-15T00:00:00.000Z",
+    "expires_at": null,
+    "mandatory_extras": [],
+    "commercial_terms": {
+      "reservation_terms": null,
+      "payment_terms": null,
+      "notes": []
+    },
+    "financing_offer_ids": ["finoffer_standard_no_zero"],
+    "promotion_ids": [],
+    "verification_status": "confirmed",
+    "freshness_status": "fresh",
+    "evidence_refs": [
+      "evidence_offer_nb_006_primary_price",
+      "evidence_offer_nb_006_primary_availability"
+    ]
+  },
+  {
+    "schema_version": "1.0",
+    "offer_id": "offer_nb_007_primary",
+    "property_id": "prop_nb_007",
+    "seller": {
+      "seller_type": "developer",
+      "seller_id": null,
+      "name": "Developer Alpha"
+    },
+    "source_reference": {
+      "source_id": "src_dev_alpha",
+      "snapshot_id": null,
+      "source_url": "https://src-dev-alpha.example/fixture",
+      "evidence_ids": [
+        "evidence_offer_nb_007_primary_price",
+        "evidence_offer_nb_007_primary_availability"
+      ]
+    },
+    "listing_price": { "amount": "5400000.00", "currency": "RUB" },
+    "price_from": false,
+    "availability": "available",
+    "published_at": "2026-08-01T00:00:00.000Z",
+    "updated_at": "2026-08-15T00:00:00.000Z",
+    "expires_at": null,
+    "mandatory_extras": [
+      {
+        "name": "Mandatory storage room",
+        "cost": { "amount": "250000.00", "currency": "RUB" },
+        "verification_status": "confirmed"
+      }
+    ],
+    "commercial_terms": {
+      "reservation_terms": null,
+      "payment_terms": null,
+      "notes": []
+    },
+    "financing_offer_ids": ["finoffer_standard_no_zero"],
+    "promotion_ids": [],
+    "verification_status": "confirmed",
+    "freshness_status": "fresh",
+    "evidence_refs": [
+      "evidence_offer_nb_007_primary_price",
+      "evidence_offer_nb_007_primary_availability"
+    ]
+  },
+  {
+    "schema_version": "1.0",
+    "offer_id": "offer_nb_008_primary",
+    "property_id": "prop_nb_008",
+    "seller": {
+      "seller_type": "developer",
+      "seller_id": null,
+      "name": "Developer Alpha"
+    },
+    "source_reference": {
+      "source_id": "src_dev_alpha",
+      "snapshot_id": null,
+      "source_url": "https://src-dev-alpha.example/fixture",
+      "evidence_ids": [
+        "evidence_offer_nb_008_primary_price",
+        "evidence_offer_nb_008_primary_availability"
+      ]
+    },
+    "listing_price": { "amount": "5575000.00", "currency": "RUB" },
+    "price_from": false,
+    "availability": "available",
+    "published_at": "2026-08-01T00:00:00.000Z",
+    "updated_at": "2026-08-15T00:00:00.000Z",
+    "expires_at": null,
+    "mandatory_extras": [],
+    "commercial_terms": {
+      "reservation_terms": null,
+      "payment_terms": null,
+      "notes": []
+    },
+    "financing_offer_ids": ["finoffer_installment_balloon"],
+    "promotion_ids": [],
+    "verification_status": "confirmed",
+    "freshness_status": "fresh",
+    "evidence_refs": [
+      "evidence_offer_nb_008_primary_price",
+      "evidence_offer_nb_008_primary_availability"
+    ]
+  },
+  {
+    "schema_version": "1.0",
+    "offer_id": "offer_nb_009_primary",
+    "property_id": "prop_nb_009",
+    "seller": {
+      "seller_type": "developer",
+      "seller_id": null,
+      "name": "Developer Alpha"
+    },
+    "source_reference": {
+      "source_id": "src_dev_alpha",
+      "snapshot_id": null,
+      "source_url": "https://src-dev-alpha.example/fixture",
+      "evidence_ids": [
+        "evidence_offer_nb_009_primary_price",
+        "evidence_offer_nb_009_primary_availability"
+      ]
+    },
+    "listing_price": { "amount": "5750000.00", "currency": "RUB" },
+    "price_from": false,
+    "availability": "available",
+    "published_at": "2026-04-01T00:00:00.000Z",
+    "updated_at": "2026-05-01T00:00:00.000Z",
+    "expires_at": null,
+    "mandatory_extras": [],
+    "commercial_terms": {
+      "reservation_terms": null,
+      "payment_terms": null,
+      "notes": []
+    },
+    "financing_offer_ids": [],
+    "promotion_ids": [],
+    "verification_status": "stale",
+    "freshness_status": "stale",
+    "evidence_refs": [
+      "evidence_offer_nb_009_primary_price",
+      "evidence_offer_nb_009_primary_availability"
+    ]
+  },
+  {
+    "schema_version": "1.0",
+    "offer_id": "offer_nb_010_primary",
+    "property_id": "prop_nb_010",
+    "seller": {
+      "seller_type": "developer",
+      "seller_id": null,
+      "name": "Developer Alpha"
+    },
+    "source_reference": {
+      "source_id": "src_dev_alpha",
+      "snapshot_id": null,
+      "source_url": "https://src-dev-alpha.example/fixture",
+      "evidence_ids": [
+        "evidence_offer_nb_010_primary_price",
+        "evidence_offer_nb_010_primary_availability"
+      ]
+    },
+    "listing_price": { "amount": "5925000.00", "currency": "RUB" },
+    "price_from": false,
+    "availability": "reserved",
+    "published_at": "2026-08-01T00:00:00.000Z",
+    "updated_at": "2026-08-15T00:00:00.000Z",
+    "expires_at": null,
+    "mandatory_extras": [],
+    "commercial_terms": {
+      "reservation_terms": "Synthetic reservation through 2026-08-20.",
+      "payment_terms": null,
+      "notes": []
+    },
+    "financing_offer_ids": [],
+    "promotion_ids": [],
+    "verification_status": "confirmed",
+    "freshness_status": "fresh",
+    "evidence_refs": [
+      "evidence_offer_nb_010_primary_price",
+      "evidence_offer_nb_010_primary_availability"
+    ]
+  },
+  {
+    "schema_version": "1.0",
+    "offer_id": "offer_nb_011_primary",
+    "property_id": "prop_nb_011",
+    "seller": {
+      "seller_type": "developer",
+      "seller_id": null,
+      "name": "Developer Alpha"
+    },
+    "source_reference": {
+      "source_id": "src_dev_alpha",
+      "snapshot_id": null,
+      "source_url": "https://src-dev-alpha.example/fixture",
+      "evidence_ids": [
+        "evidence_offer_nb_011_primary_price",
+        "evidence_offer_nb_011_primary_availability"
+      ]
+    },
+    "listing_price": { "amount": "6100000.00", "currency": "RUB" },
+    "price_from": false,
+    "availability": "sold",
+    "published_at": "2026-08-01T00:00:00.000Z",
+    "updated_at": "2026-08-15T00:00:00.000Z",
+    "expires_at": null,
+    "mandatory_extras": [],
+    "commercial_terms": {
+      "reservation_terms": null,
+      "payment_terms": null,
+      "notes": []
+    },
+    "financing_offer_ids": [],
+    "promotion_ids": [],
+    "verification_status": "confirmed",
+    "freshness_status": "fresh",
+    "evidence_refs": [
+      "evidence_offer_nb_011_primary_price",
+      "evidence_offer_nb_011_primary_availability"
+    ]
+  },
+  {
+    "schema_version": "1.0",
+    "offer_id": "offer_nb_012_primary",
+    "property_id": "prop_nb_012",
+    "seller": {
+      "seller_type": "developer",
+      "seller_id": null,
+      "name": "Developer Alpha"
+    },
+    "source_reference": {
+      "source_id": "src_dev_alpha",
+      "snapshot_id": null,
+      "source_url": "https://src-dev-alpha.example/fixture",
+      "evidence_ids": [
+        "evidence_offer_nb_012_primary_price",
+        "evidence_offer_nb_012_primary_availability"
+      ]
+    },
+    "listing_price": { "amount": "6275000.00", "currency": "RUB" },
+    "price_from": false,
+    "availability": "temporarily_unavailable",
+    "published_at": "2026-08-01T00:00:00.000Z",
+    "updated_at": "2026-08-15T00:00:00.000Z",
+    "expires_at": null,
+    "mandatory_extras": [],
+    "commercial_terms": {
+      "reservation_terms": null,
+      "payment_terms": null,
+      "notes": []
+    },
+    "financing_offer_ids": [],
+    "promotion_ids": [],
+    "verification_status": "confirmed",
+    "freshness_status": "fresh",
+    "evidence_refs": [
+      "evidence_offer_nb_012_primary_price",
+      "evidence_offer_nb_012_primary_availability"
+    ]
+  },
+  {
+    "schema_version": "1.0",
+    "offer_id": "offer_nb_013_primary",
+    "property_id": "prop_nb_013",
+    "seller": {
+      "seller_type": "developer",
+      "seller_id": null,
+      "name": "Developer Alpha"
+    },
+    "source_reference": {
+      "source_id": "src_dev_alpha",
+      "snapshot_id": null,
+      "source_url": "https://src-dev-alpha.example/fixture",
+      "evidence_ids": [
+        "evidence_offer_nb_013_primary_price",
+        "evidence_offer_nb_013_primary_availability"
+      ]
+    },
+    "listing_price": { "amount": "6450000.00", "currency": "RUB" },
+    "price_from": false,
+    "availability": "unknown",
+    "published_at": "2026-08-01T00:00:00.000Z",
+    "updated_at": "2026-08-15T00:00:00.000Z",
+    "expires_at": null,
+    "mandatory_extras": [],
+    "commercial_terms": {
+      "reservation_terms": null,
+      "payment_terms": null,
+      "notes": []
+    },
+    "financing_offer_ids": [],
+    "promotion_ids": [],
+    "verification_status": "unknown",
+    "freshness_status": "unknown",
+    "evidence_refs": [
+      "evidence_offer_nb_013_primary_price",
+      "evidence_offer_nb_013_primary_availability"
+    ]
+  },
+  {
+    "schema_version": "1.0",
+    "offer_id": "offer_nb_014_primary",
+    "property_id": "prop_nb_014",
+    "seller": {
+      "seller_type": "developer",
+      "seller_id": null,
+      "name": "Developer Alpha"
+    },
+    "source_reference": {
+      "source_id": "src_dev_alpha",
+      "snapshot_id": null,
+      "source_url": "https://src-dev-alpha.example/fixture",
+      "evidence_ids": [
+        "evidence_offer_nb_014_primary_price",
+        "evidence_offer_nb_014_primary_availability"
+      ]
+    },
+    "listing_price": { "amount": "6625000.00", "currency": "RUB" },
+    "price_from": false,
+    "availability": "available",
+    "published_at": "2026-08-01T00:00:00.000Z",
+    "updated_at": "2026-08-15T00:00:00.000Z",
+    "expires_at": null,
+    "mandatory_extras": [],
+    "commercial_terms": {
+      "reservation_terms": null,
+      "payment_terms": null,
+      "notes": []
+    },
+    "financing_offer_ids": [],
+    "promotion_ids": [],
+    "verification_status": "confirmed",
+    "freshness_status": "fresh",
+    "evidence_refs": [
+      "evidence_offer_nb_014_primary_price",
+      "evidence_offer_nb_014_primary_availability"
+    ]
+  },
+  {
+    "schema_version": "1.0",
+    "offer_id": "offer_sec_001_primary",
+    "property_id": "prop_sec_001",
+    "seller": {
+      "seller_type": "owner",
+      "seller_id": null,
+      "name": "Synthetic Owner"
+    },
+    "source_reference": {
+      "source_id": "src_market_beta",
+      "snapshot_id": null,
+      "source_url": "https://src-market-beta.example/fixture",
+      "evidence_ids": [
+        "evidence_offer_sec_001_primary_price",
+        "evidence_offer_sec_001_primary_availability"
+      ]
+    },
+    "listing_price": { "amount": "4100000.00", "currency": "RUB" },
+    "price_from": false,
+    "availability": "available",
+    "published_at": "2026-08-01T00:00:00.000Z",
+    "updated_at": "2026-08-15T00:00:00.000Z",
+    "expires_at": null,
+    "mandatory_extras": [],
+    "commercial_terms": {
+      "reservation_terms": null,
+      "payment_terms": null,
+      "notes": []
+    },
+    "financing_offer_ids": ["finoffer_standard_no_zero"],
+    "promotion_ids": [],
+    "verification_status": "conflicting",
+    "freshness_status": "fresh",
+    "evidence_refs": [
+      "evidence_offer_sec_001_primary_price",
+      "evidence_offer_sec_001_primary_availability"
+    ]
+  },
+  {
+    "schema_version": "1.0",
+    "offer_id": "offer_sec_002_primary",
+    "property_id": "prop_sec_002",
+    "seller": {
+      "seller_type": "owner",
+      "seller_id": null,
+      "name": "Synthetic Owner"
+    },
+    "source_reference": {
+      "source_id": "src_market_beta",
+      "snapshot_id": null,
+      "source_url": "https://src-market-beta.example/fixture",
+      "evidence_ids": [
+        "evidence_offer_sec_002_primary_price",
+        "evidence_offer_sec_002_primary_availability"
+      ]
+    },
+    "listing_price": { "amount": "4290000.00", "currency": "RUB" },
+    "price_from": false,
+    "availability": "available",
+    "published_at": "2026-08-01T00:00:00.000Z",
+    "updated_at": "2026-08-15T00:00:00.000Z",
+    "expires_at": null,
+    "mandatory_extras": [],
+    "commercial_terms": {
+      "reservation_terms": null,
+      "payment_terms": null,
+      "notes": []
+    },
+    "financing_offer_ids": ["finoffer_standard_no_zero"],
+    "promotion_ids": [],
+    "verification_status": "confirmed",
+    "freshness_status": "fresh",
+    "evidence_refs": [
+      "evidence_offer_sec_002_primary_price",
+      "evidence_offer_sec_002_primary_availability"
+    ]
+  },
+  {
+    "schema_version": "1.0",
+    "offer_id": "offer_sec_003_primary",
+    "property_id": "prop_sec_003",
+    "seller": {
+      "seller_type": "owner",
+      "seller_id": null,
+      "name": "Synthetic Owner"
+    },
+    "source_reference": {
+      "source_id": "src_market_beta",
+      "snapshot_id": null,
+      "source_url": "https://src-market-beta.example/fixture",
+      "evidence_ids": [
+        "evidence_offer_sec_003_primary_price",
+        "evidence_offer_sec_003_primary_availability"
+      ]
+    },
+    "listing_price": { "amount": "4480000.00", "currency": "RUB" },
+    "price_from": false,
+    "availability": "available",
+    "published_at": "2026-08-01T00:00:00.000Z",
+    "updated_at": "2026-08-15T00:00:00.000Z",
+    "expires_at": null,
+    "mandatory_extras": [],
+    "commercial_terms": {
+      "reservation_terms": null,
+      "payment_terms": null,
+      "notes": []
+    },
+    "financing_offer_ids": [],
+    "promotion_ids": [],
+    "verification_status": "confirmed",
+    "freshness_status": "fresh",
+    "evidence_refs": [
+      "evidence_offer_sec_003_primary_price",
+      "evidence_offer_sec_003_primary_availability"
+    ]
+  },
+  {
+    "schema_version": "1.0",
+    "offer_id": "offer_sec_004_primary",
+    "property_id": "prop_sec_004",
+    "seller": {
+      "seller_type": "owner",
+      "seller_id": null,
+      "name": "Synthetic Owner"
+    },
+    "source_reference": {
+      "source_id": "src_market_beta",
+      "snapshot_id": null,
+      "source_url": "https://src-market-beta.example/fixture",
+      "evidence_ids": [
+        "evidence_offer_sec_004_primary_price",
+        "evidence_offer_sec_004_primary_availability"
+      ]
+    },
+    "listing_price": { "amount": "4670000.00", "currency": "RUB" },
+    "price_from": false,
+    "availability": "available",
+    "published_at": "2026-08-01T00:00:00.000Z",
+    "updated_at": "2026-08-15T00:00:00.000Z",
+    "expires_at": null,
+    "mandatory_extras": [],
+    "commercial_terms": {
+      "reservation_terms": null,
+      "payment_terms": null,
+      "notes": []
+    },
+    "financing_offer_ids": [],
+    "promotion_ids": [],
+    "verification_status": "confirmed",
+    "freshness_status": "fresh",
+    "evidence_refs": [
+      "evidence_offer_sec_004_primary_price",
+      "evidence_offer_sec_004_primary_availability"
+    ]
+  },
+  {
+    "schema_version": "1.0",
+    "offer_id": "offer_sec_005_primary",
+    "property_id": "prop_sec_005",
+    "seller": {
+      "seller_type": "owner",
+      "seller_id": null,
+      "name": "Synthetic Owner"
+    },
+    "source_reference": {
+      "source_id": "src_market_beta",
+      "snapshot_id": null,
+      "source_url": "https://src-market-beta.example/fixture",
+      "evidence_ids": [
+        "evidence_offer_sec_005_primary_price",
+        "evidence_offer_sec_005_primary_availability"
+      ]
+    },
+    "listing_price": { "amount": "4860000.00", "currency": "RUB" },
+    "price_from": false,
+    "availability": "available",
+    "published_at": "2026-08-01T00:00:00.000Z",
+    "updated_at": "2026-08-15T00:00:00.000Z",
+    "expires_at": null,
+    "mandatory_extras": [],
+    "commercial_terms": {
+      "reservation_terms": null,
+      "payment_terms": null,
+      "notes": []
+    },
+    "financing_offer_ids": [],
+    "promotion_ids": [],
+    "verification_status": "confirmed",
+    "freshness_status": "fresh",
+    "evidence_refs": [
+      "evidence_offer_sec_005_primary_price",
+      "evidence_offer_sec_005_primary_availability"
+    ]
+  },
+  {
+    "schema_version": "1.0",
+    "offer_id": "offer_sec_006_primary",
+    "property_id": "prop_sec_006",
+    "seller": {
+      "seller_type": "owner",
+      "seller_id": null,
+      "name": "Synthetic Owner"
+    },
+    "source_reference": {
+      "source_id": "src_market_beta",
+      "snapshot_id": null,
+      "source_url": "https://src-market-beta.example/fixture",
+      "evidence_ids": [
+        "evidence_offer_sec_006_primary_price",
+        "evidence_offer_sec_006_primary_availability"
+      ]
+    },
+    "listing_price": { "amount": "5050000.00", "currency": "RUB" },
+    "price_from": false,
+    "availability": "unknown",
+    "published_at": "2026-04-01T00:00:00.000Z",
+    "updated_at": "2026-05-01T00:00:00.000Z",
+    "expires_at": "2026-06-01T00:00:00.000Z",
+    "mandatory_extras": [],
+    "commercial_terms": {
+      "reservation_terms": null,
+      "payment_terms": null,
+      "notes": ["listing_removed", "removal_is_not_sale_confirmation"]
+    },
+    "financing_offer_ids": [],
+    "promotion_ids": [],
+    "verification_status": "stale",
+    "freshness_status": "expired",
+    "evidence_refs": [
+      "evidence_offer_sec_006_primary_price",
+      "evidence_offer_sec_006_primary_availability"
+    ]
+  },
+  {
+    "schema_version": "1.0",
+    "offer_id": "offer_sec_007_primary",
+    "property_id": "prop_sec_007",
+    "seller": {
+      "seller_type": "owner",
+      "seller_id": null,
+      "name": "Synthetic Owner"
+    },
+    "source_reference": {
+      "source_id": "src_market_beta",
+      "snapshot_id": null,
+      "source_url": "https://src-market-beta.example/fixture",
+      "evidence_ids": [
+        "evidence_offer_sec_007_primary_price",
+        "evidence_offer_sec_007_primary_availability"
+      ]
+    },
+    "listing_price": { "amount": "5240000.00", "currency": "RUB" },
+    "price_from": false,
+    "availability": "available",
+    "published_at": "2026-08-01T00:00:00.000Z",
+    "updated_at": "2026-08-15T00:00:00.000Z",
+    "expires_at": null,
+    "mandatory_extras": [],
+    "commercial_terms": {
+      "reservation_terms": null,
+      "payment_terms": null,
+      "notes": []
+    },
+    "financing_offer_ids": [],
+    "promotion_ids": [],
+    "verification_status": "confirmed",
+    "freshness_status": "fresh",
+    "evidence_refs": [
+      "evidence_offer_sec_007_primary_price",
+      "evidence_offer_sec_007_primary_availability"
+    ]
+  },
+  {
+    "schema_version": "1.0",
+    "offer_id": "offer_sec_008_primary",
+    "property_id": "prop_sec_008",
+    "seller": {
+      "seller_type": "owner",
+      "seller_id": null,
+      "name": "Synthetic Owner"
+    },
+    "source_reference": {
+      "source_id": "src_market_beta",
+      "snapshot_id": null,
+      "source_url": "https://src-market-beta.example/fixture",
+      "evidence_ids": [
+        "evidence_offer_sec_008_primary_price",
+        "evidence_offer_sec_008_primary_availability"
+      ]
+    },
+    "listing_price": { "amount": "5430000.00", "currency": "RUB" },
+    "price_from": false,
+    "availability": "available",
+    "published_at": "2026-08-01T00:00:00.000Z",
+    "updated_at": "2026-08-15T00:00:00.000Z",
+    "expires_at": null,
+    "mandatory_extras": [],
+    "commercial_terms": {
+      "reservation_terms": null,
+      "payment_terms": null,
+      "notes": []
+    },
+    "financing_offer_ids": [],
+    "promotion_ids": [],
+    "verification_status": "confirmed",
+    "freshness_status": "fresh",
+    "evidence_refs": [
+      "evidence_offer_sec_008_primary_price",
+      "evidence_offer_sec_008_primary_availability"
+    ]
+  },
+  {
+    "schema_version": "1.0",
+    "offer_id": "offer_sec_009_primary",
+    "property_id": "prop_sec_009",
+    "seller": {
+      "seller_type": "owner",
+      "seller_id": null,
+      "name": "Synthetic Owner"
+    },
+    "source_reference": {
+      "source_id": "src_market_beta",
+      "snapshot_id": null,
+      "source_url": "https://src-market-beta.example/fixture",
+      "evidence_ids": [
+        "evidence_offer_sec_009_primary_price",
+        "evidence_offer_sec_009_primary_availability"
+      ]
+    },
+    "listing_price": { "amount": "5620000.00", "currency": "RUB" },
+    "price_from": false,
+    "availability": "available",
+    "published_at": "2026-04-01T00:00:00.000Z",
+    "updated_at": "2026-05-01T00:00:00.000Z",
+    "expires_at": null,
+    "mandatory_extras": [],
+    "commercial_terms": {
+      "reservation_terms": null,
+      "payment_terms": null,
+      "notes": []
+    },
+    "financing_offer_ids": [],
+    "promotion_ids": [],
+    "verification_status": "stale",
+    "freshness_status": "stale",
+    "evidence_refs": [
+      "evidence_offer_sec_009_primary_price",
+      "evidence_offer_sec_009_primary_availability"
+    ]
+  },
+  {
+    "schema_version": "1.0",
+    "offer_id": "offer_sec_010_primary",
+    "property_id": "prop_sec_010",
+    "seller": {
+      "seller_type": "owner",
+      "seller_id": null,
+      "name": "Synthetic Owner"
+    },
+    "source_reference": {
+      "source_id": "src_market_beta",
+      "snapshot_id": null,
+      "source_url": "https://src-market-beta.example/fixture",
+      "evidence_ids": [
+        "evidence_offer_sec_010_primary_price",
+        "evidence_offer_sec_010_primary_availability"
+      ]
+    },
+    "listing_price": { "amount": "5810000.00", "currency": "RUB" },
+    "price_from": false,
+    "availability": "available",
+    "published_at": "2026-08-01T00:00:00.000Z",
+    "updated_at": "2026-08-15T00:00:00.000Z",
+    "expires_at": null,
+    "mandatory_extras": [],
+    "commercial_terms": {
+      "reservation_terms": null,
+      "payment_terms": null,
+      "notes": []
+    },
+    "financing_offer_ids": [],
+    "promotion_ids": [],
+    "verification_status": "confirmed",
+    "freshness_status": "aging",
+    "evidence_refs": [
+      "evidence_offer_sec_010_primary_price",
+      "evidence_offer_sec_010_primary_availability"
+    ]
+  },
+  {
+    "schema_version": "1.0",
+    "offer_id": "offer_sec_011_primary",
+    "property_id": "prop_sec_011",
+    "seller": {
+      "seller_type": "owner",
+      "seller_id": null,
+      "name": "Synthetic Owner"
+    },
+    "source_reference": {
+      "source_id": "src_market_beta",
+      "snapshot_id": null,
+      "source_url": "https://src-market-beta.example/fixture",
+      "evidence_ids": [
+        "evidence_offer_sec_011_primary_price",
+        "evidence_offer_sec_011_primary_availability"
+      ]
+    },
+    "listing_price": { "amount": "6000000.00", "currency": "RUB" },
+    "price_from": false,
+    "availability": "available",
+    "published_at": "2026-08-01T00:00:00.000Z",
+    "updated_at": "2026-08-15T00:00:00.000Z",
+    "expires_at": null,
+    "mandatory_extras": [],
+    "commercial_terms": {
+      "reservation_terms": null,
+      "payment_terms": null,
+      "notes": []
+    },
+    "financing_offer_ids": [],
+    "promotion_ids": [],
+    "verification_status": "confirmed",
+    "freshness_status": "fresh",
+    "evidence_refs": [
+      "evidence_offer_sec_011_primary_price",
+      "evidence_offer_sec_011_primary_availability"
+    ]
+  },
+  {
+    "schema_version": "1.0",
+    "offer_id": "offer_sec_012_primary",
+    "property_id": "prop_sec_012",
+    "seller": {
+      "seller_type": "owner",
+      "seller_id": null,
+      "name": "Synthetic Owner"
+    },
+    "source_reference": {
+      "source_id": "src_market_beta",
+      "snapshot_id": null,
+      "source_url": "https://src-market-beta.example/fixture",
+      "evidence_ids": [
+        "evidence_offer_sec_012_primary_price",
+        "evidence_offer_sec_012_primary_availability"
+      ]
+    },
+    "listing_price": { "amount": "6190000.00", "currency": "RUB" },
+    "price_from": false,
+    "availability": "available",
+    "published_at": "2026-08-01T00:00:00.000Z",
+    "updated_at": "2026-08-15T00:00:00.000Z",
+    "expires_at": null,
+    "mandatory_extras": [],
+    "commercial_terms": {
+      "reservation_terms": null,
+      "payment_terms": null,
+      "notes": []
+    },
+    "financing_offer_ids": [],
+    "promotion_ids": [],
+    "verification_status": "confirmed",
+    "freshness_status": "fresh",
+    "evidence_refs": [
+      "evidence_offer_sec_012_primary_price",
+      "evidence_offer_sec_012_primary_availability"
+    ]
+  },
+  {
+    "schema_version": "1.0",
+    "offer_id": "offer_house_001_primary",
+    "property_id": "prop_house_001",
+    "seller": {
+      "seller_type": "agency",
+      "seller_id": null,
+      "name": "Agency Eta"
+    },
+    "source_reference": {
+      "source_id": "src_agency_eta",
+      "snapshot_id": null,
+      "source_url": "https://src-agency-eta.example/fixture",
+      "evidence_ids": [
+        "evidence_offer_house_001_primary_price",
+        "evidence_offer_house_001_primary_availability"
+      ]
+    },
+    "listing_price": { "amount": "5900000.00", "currency": "RUB" },
+    "price_from": false,
+    "availability": "available",
+    "published_at": "2026-08-01T00:00:00.000Z",
+    "updated_at": "2026-08-15T00:00:00.000Z",
+    "expires_at": null,
+    "mandatory_extras": [],
+    "commercial_terms": {
+      "reservation_terms": null,
+      "payment_terms": null,
+      "notes": []
+    },
+    "financing_offer_ids": ["finoffer_standard_no_zero"],
+    "promotion_ids": [],
+    "verification_status": "conflicting",
+    "freshness_status": "fresh",
+    "evidence_refs": [
+      "evidence_offer_house_001_primary_price",
+      "evidence_offer_house_001_primary_availability"
+    ]
+  },
+  {
+    "schema_version": "1.0",
+    "offer_id": "offer_house_002_primary",
+    "property_id": "prop_house_002",
+    "seller": {
+      "seller_type": "agency",
+      "seller_id": null,
+      "name": "Agency Eta"
+    },
+    "source_reference": {
+      "source_id": "src_agency_eta",
+      "snapshot_id": null,
+      "source_url": "https://src-agency-eta.example/fixture",
+      "evidence_ids": [
+        "evidence_offer_house_002_primary_price",
+        "evidence_offer_house_002_primary_availability"
+      ]
+    },
+    "listing_price": { "amount": "6180000.00", "currency": "RUB" },
+    "price_from": false,
+    "availability": "available",
+    "published_at": "2026-08-01T00:00:00.000Z",
+    "updated_at": "2026-08-15T00:00:00.000Z",
+    "expires_at": null,
+    "mandatory_extras": [],
+    "commercial_terms": {
+      "reservation_terms": null,
+      "payment_terms": null,
+      "notes": []
+    },
+    "financing_offer_ids": [],
+    "promotion_ids": [],
+    "verification_status": "confirmed",
+    "freshness_status": "fresh",
+    "evidence_refs": [
+      "evidence_offer_house_002_primary_price",
+      "evidence_offer_house_002_primary_availability"
+    ]
+  },
+  {
+    "schema_version": "1.0",
+    "offer_id": "offer_house_003_primary",
+    "property_id": "prop_house_003",
+    "seller": {
+      "seller_type": "agency",
+      "seller_id": null,
+      "name": "Agency Eta"
+    },
+    "source_reference": {
+      "source_id": "src_agency_eta",
+      "snapshot_id": null,
+      "source_url": "https://src-agency-eta.example/fixture",
+      "evidence_ids": [
+        "evidence_offer_house_003_primary_price",
+        "evidence_offer_house_003_primary_availability"
+      ]
+    },
+    "listing_price": { "amount": "6460000.00", "currency": "RUB" },
+    "price_from": false,
+    "availability": "available",
+    "published_at": "2026-08-01T00:00:00.000Z",
+    "updated_at": "2026-08-15T00:00:00.000Z",
+    "expires_at": null,
+    "mandatory_extras": [],
+    "commercial_terms": {
+      "reservation_terms": null,
+      "payment_terms": null,
+      "notes": []
+    },
+    "financing_offer_ids": [],
+    "promotion_ids": [],
+    "verification_status": "confirmed",
+    "freshness_status": "fresh",
+    "evidence_refs": [
+      "evidence_offer_house_003_primary_price",
+      "evidence_offer_house_003_primary_availability"
+    ]
+  },
+  {
+    "schema_version": "1.0",
+    "offer_id": "offer_house_004_primary",
+    "property_id": "prop_house_004",
+    "seller": {
+      "seller_type": "agency",
+      "seller_id": null,
+      "name": "Agency Eta"
+    },
+    "source_reference": {
+      "source_id": "src_agency_eta",
+      "snapshot_id": null,
+      "source_url": "https://src-agency-eta.example/fixture",
+      "evidence_ids": [
+        "evidence_offer_house_004_primary_price",
+        "evidence_offer_house_004_primary_availability"
+      ]
+    },
+    "listing_price": { "amount": "6740000.00", "currency": "RUB" },
+    "price_from": false,
+    "availability": "available",
+    "published_at": "2026-04-01T00:00:00.000Z",
+    "updated_at": "2026-05-01T00:00:00.000Z",
+    "expires_at": null,
+    "mandatory_extras": [],
+    "commercial_terms": {
+      "reservation_terms": null,
+      "payment_terms": null,
+      "notes": []
+    },
+    "financing_offer_ids": [],
+    "promotion_ids": [],
+    "verification_status": "stale",
+    "freshness_status": "stale",
+    "evidence_refs": [
+      "evidence_offer_house_004_primary_price",
+      "evidence_offer_house_004_primary_availability"
+    ]
+  },
+  {
+    "schema_version": "1.0",
+    "offer_id": "offer_house_005_primary",
+    "property_id": "prop_house_005",
+    "seller": {
+      "seller_type": "agency",
+      "seller_id": null,
+      "name": "Agency Eta"
+    },
+    "source_reference": {
+      "source_id": "src_agency_eta",
+      "snapshot_id": null,
+      "source_url": "https://src-agency-eta.example/fixture",
+      "evidence_ids": [
+        "evidence_offer_house_005_primary_price",
+        "evidence_offer_house_005_primary_availability"
+      ]
+    },
+    "listing_price": { "amount": "7020000.00", "currency": "RUB" },
+    "price_from": false,
+    "availability": "available",
+    "published_at": "2026-08-01T00:00:00.000Z",
+    "updated_at": "2026-08-15T00:00:00.000Z",
+    "expires_at": null,
+    "mandatory_extras": [],
+    "commercial_terms": {
+      "reservation_terms": null,
+      "payment_terms": null,
+      "notes": []
+    },
+    "financing_offer_ids": [],
+    "promotion_ids": [],
+    "verification_status": "confirmed",
+    "freshness_status": "fresh",
+    "evidence_refs": [
+      "evidence_offer_house_005_primary_price",
+      "evidence_offer_house_005_primary_availability"
+    ]
+  },
+  {
+    "schema_version": "1.0",
+    "offer_id": "offer_th_001_primary",
+    "property_id": "prop_th_001",
+    "seller": {
+      "seller_type": "agency",
+      "seller_id": null,
+      "name": "Agency Eta"
+    },
+    "source_reference": {
+      "source_id": "src_agency_eta",
+      "snapshot_id": null,
+      "source_url": "https://src-agency-eta.example/fixture",
+      "evidence_ids": [
+        "evidence_offer_th_001_primary_price",
+        "evidence_offer_th_001_primary_availability"
+      ]
+    },
+    "listing_price": { "amount": "7300000.00", "currency": "RUB" },
+    "price_from": false,
+    "availability": "available",
+    "published_at": "2026-08-01T00:00:00.000Z",
+    "updated_at": "2026-08-15T00:00:00.000Z",
+    "expires_at": null,
+    "mandatory_extras": [],
+    "commercial_terms": {
+      "reservation_terms": null,
+      "payment_terms": null,
+      "notes": []
+    },
+    "financing_offer_ids": [],
+    "promotion_ids": [],
+    "verification_status": "conflicting",
+    "freshness_status": "fresh",
+    "evidence_refs": [
+      "evidence_offer_th_001_primary_price",
+      "evidence_offer_th_001_primary_availability"
+    ]
+  },
+  {
+    "schema_version": "1.0",
+    "offer_id": "offer_th_002_primary",
+    "property_id": "prop_th_002",
+    "seller": {
+      "seller_type": "agency",
+      "seller_id": null,
+      "name": "Agency Eta"
+    },
+    "source_reference": {
+      "source_id": "src_agency_eta",
+      "snapshot_id": null,
+      "source_url": "https://src-agency-eta.example/fixture",
+      "evidence_ids": [
+        "evidence_offer_th_002_primary_price",
+        "evidence_offer_th_002_primary_availability"
+      ]
+    },
+    "listing_price": { "amount": "7580000.00", "currency": "RUB" },
+    "price_from": false,
+    "availability": "available",
+    "published_at": "2026-08-01T00:00:00.000Z",
+    "updated_at": "2026-08-15T00:00:00.000Z",
+    "expires_at": null,
+    "mandatory_extras": [],
+    "commercial_terms": {
+      "reservation_terms": null,
+      "payment_terms": null,
+      "notes": []
+    },
+    "financing_offer_ids": [],
+    "promotion_ids": [],
+    "verification_status": "confirmed",
+    "freshness_status": "fresh",
+    "evidence_refs": [
+      "evidence_offer_th_002_primary_price",
+      "evidence_offer_th_002_primary_availability"
+    ]
+  },
+  {
+    "schema_version": "1.0",
+    "offer_id": "offer_land_001_primary",
+    "property_id": "prop_land_001",
+    "seller": {
+      "seller_type": "agency",
+      "seller_id": null,
+      "name": "Agency Eta"
+    },
+    "source_reference": {
+      "source_id": "src_user_fixture",
+      "snapshot_id": null,
+      "source_url": "https://src-user-fixture.example/fixture",
+      "evidence_ids": [
+        "evidence_offer_land_001_primary_price",
+        "evidence_offer_land_001_primary_availability"
+      ]
+    },
+    "listing_price": { "amount": "2325000.00", "currency": "RUB" },
+    "price_from": false,
+    "availability": "available",
+    "published_at": "2026-08-01T00:00:00.000Z",
+    "updated_at": "2026-08-15T00:00:00.000Z",
+    "expires_at": null,
+    "mandatory_extras": [],
+    "commercial_terms": {
+      "reservation_terms": null,
+      "payment_terms": null,
+      "notes": []
+    },
+    "financing_offer_ids": [],
+    "promotion_ids": [],
+    "verification_status": "confirmed",
+    "freshness_status": "fresh",
+    "evidence_refs": [
+      "evidence_offer_land_001_primary_price",
+      "evidence_offer_land_001_primary_availability"
+    ]
+  },
+  {
+    "schema_version": "1.0",
+    "offer_id": "offer_land_002_primary",
+    "property_id": "prop_land_002",
+    "seller": {
+      "seller_type": "agency",
+      "seller_id": null,
+      "name": "Agency Eta"
+    },
+    "source_reference": {
+      "source_id": "src_user_fixture",
+      "snapshot_id": null,
+      "source_url": "https://src-user-fixture.example/fixture",
+      "evidence_ids": [
+        "evidence_offer_land_002_primary_price",
+        "evidence_offer_land_002_primary_availability"
+      ]
+    },
+    "listing_price": { "amount": "2350000.00", "currency": "RUB" },
+    "price_from": false,
+    "availability": "available",
+    "published_at": "2026-04-01T00:00:00.000Z",
+    "updated_at": "2026-05-01T00:00:00.000Z",
+    "expires_at": null,
+    "mandatory_extras": [],
+    "commercial_terms": {
+      "reservation_terms": null,
+      "payment_terms": null,
+      "notes": []
+    },
+    "financing_offer_ids": [],
+    "promotion_ids": [],
+    "verification_status": "stale",
+    "freshness_status": "stale",
+    "evidence_refs": [
+      "evidence_offer_land_002_primary_price",
+      "evidence_offer_land_002_primary_availability"
+    ]
+  },
+  {
+    "schema_version": "1.0",
+    "offer_id": "offer_special_template_001_primary",
+    "property_id": "prop_special_template_001",
+    "seller": {
+      "seller_type": "developer",
+      "seller_id": null,
+      "name": "Developer Alpha"
+    },
+    "source_reference": {
+      "source_id": "src_dev_alpha",
+      "snapshot_id": null,
+      "source_url": "https://src-dev-alpha.example/fixture",
+      "evidence_ids": [
+        "evidence_offer_special_template_001_primary_price",
+        "evidence_offer_special_template_001_primary_availability"
+      ]
+    },
+    "listing_price": { "amount": "3900000.00", "currency": "RUB" },
+    "price_from": true,
+    "availability": "unknown",
+    "published_at": "2026-08-01T00:00:00.000Z",
+    "updated_at": "2026-08-15T00:00:00.000Z",
+    "expires_at": null,
+    "mandatory_extras": [],
+    "commercial_terms": {
+      "reservation_terms": null,
+      "payment_terms": null,
+      "notes": []
+    },
+    "financing_offer_ids": [],
+    "promotion_ids": [],
+    "verification_status": "claimed",
+    "freshness_status": "fresh",
+    "evidence_refs": [
+      "evidence_offer_special_template_001_primary_price",
+      "evidence_offer_special_template_001_primary_availability"
+    ]
+  },
+  {
+    "schema_version": "1.0",
+    "offer_id": "offer_nb_001_agency",
+    "property_id": "prop_nb_001",
+    "seller": {
+      "seller_type": "agency",
+      "seller_id": null,
+      "name": "Agency Eta"
+    },
+    "source_reference": {
+      "source_id": "src_agency_eta",
+      "snapshot_id": null,
+      "source_url": "https://src-agency-eta.example/fixture",
+      "evidence_ids": [
+        "evidence_offer_nb_001_agency_price",
+        "evidence_offer_nb_001_agency_availability"
+      ]
+    },
+    "listing_price": { "amount": "5180000.00", "currency": "RUB" },
+    "price_from": false,
+    "availability": "available",
+    "published_at": "2026-08-01T00:00:00.000Z",
+    "updated_at": "2026-08-15T00:00:00.000Z",
+    "expires_at": null,
+    "mandatory_extras": [],
+    "commercial_terms": {
+      "reservation_terms": null,
+      "payment_terms": null,
+      "notes": []
+    },
+    "financing_offer_ids": ["finoffer_family_zero_confirmed"],
+    "promotion_ids": ["promo_zero_down_price_increase"],
+    "verification_status": "conflicting",
+    "freshness_status": "fresh",
+    "evidence_refs": [
+      "evidence_offer_nb_001_agency_price",
+      "evidence_offer_nb_001_agency_availability"
+    ]
+  },
+  {
+    "schema_version": "1.0",
+    "offer_id": "offer_nb_002_agency",
+    "property_id": "prop_nb_002",
+    "seller": {
+      "seller_type": "agency",
+      "seller_id": null,
+      "name": "Agency Eta"
+    },
+    "source_reference": {
+      "source_id": "src_agency_eta",
+      "snapshot_id": null,
+      "source_url": "https://src-agency-eta.example/fixture",
+      "evidence_ids": [
+        "evidence_offer_nb_002_agency_price",
+        "evidence_offer_nb_002_agency_availability"
+      ]
+    },
+    "listing_price": { "amount": "4980000.00", "currency": "RUB" },
+    "price_from": false,
+    "availability": "available",
+    "published_at": "2026-08-01T00:00:00.000Z",
+    "updated_at": "2026-08-15T00:00:00.000Z",
+    "expires_at": null,
+    "mandatory_extras": [],
+    "commercial_terms": {
+      "reservation_terms": null,
+      "payment_terms": null,
+      "notes": []
+    },
+    "financing_offer_ids": [],
+    "promotion_ids": [],
+    "verification_status": "conflicting",
+    "freshness_status": "fresh",
+    "evidence_refs": [
+      "evidence_offer_nb_002_agency_price",
+      "evidence_offer_nb_002_agency_availability"
+    ]
+  },
+  {
+    "schema_version": "1.0",
+    "offer_id": "offer_nb_003_agency",
+    "property_id": "prop_nb_003",
+    "seller": {
+      "seller_type": "agency",
+      "seller_id": null,
+      "name": "Agency Eta"
+    },
+    "source_reference": {
+      "source_id": "src_agency_eta",
+      "snapshot_id": null,
+      "source_url": "https://src-agency-eta.example/fixture",
+      "evidence_ids": [
+        "evidence_offer_nb_003_agency_price",
+        "evidence_offer_nb_003_agency_availability"
+      ]
+    },
+    "listing_price": { "amount": "4920000.00", "currency": "RUB" },
+    "price_from": false,
+    "availability": "available",
+    "published_at": "2026-08-01T00:00:00.000Z",
+    "updated_at": "2026-08-15T00:00:00.000Z",
+    "expires_at": null,
+    "mandatory_extras": [],
+    "commercial_terms": {
+      "reservation_terms": null,
+      "payment_terms": null,
+      "notes": []
+    },
+    "financing_offer_ids": [],
+    "promotion_ids": [],
+    "verification_status": "claimed",
+    "freshness_status": "fresh",
+    "evidence_refs": [
+      "evidence_offer_nb_003_agency_price",
+      "evidence_offer_nb_003_agency_availability"
+    ]
+  },
+  {
+    "schema_version": "1.0",
+    "offer_id": "offer_sec_001_agency",
+    "property_id": "prop_sec_001",
+    "seller": {
+      "seller_type": "agency",
+      "seller_id": null,
+      "name": "Agency Eta"
+    },
+    "source_reference": {
+      "source_id": "src_agency_eta",
+      "snapshot_id": null,
+      "source_url": "https://src-agency-eta.example/fixture",
+      "evidence_ids": [
+        "evidence_offer_sec_001_agency_price",
+        "evidence_offer_sec_001_agency_availability"
+      ]
+    },
+    "listing_price": { "amount": "4690000.00", "currency": "RUB" },
+    "price_from": false,
+    "availability": "available",
+    "published_at": "2026-08-01T00:00:00.000Z",
+    "updated_at": "2026-08-15T00:00:00.000Z",
+    "expires_at": null,
+    "mandatory_extras": [],
+    "commercial_terms": {
+      "reservation_terms": null,
+      "payment_terms": null,
+      "notes": []
+    },
+    "financing_offer_ids": [],
+    "promotion_ids": [],
+    "verification_status": "conflicting",
+    "freshness_status": "fresh",
+    "evidence_refs": [
+      "evidence_offer_sec_001_agency_price",
+      "evidence_offer_sec_001_agency_availability"
+    ]
+  },
+  {
+    "schema_version": "1.0",
+    "offer_id": "offer_sec_002_classified",
+    "property_id": "prop_sec_002",
+    "seller": {
+      "seller_type": "other",
+      "seller_id": null,
+      "name": "Marketplace Beta"
+    },
+    "source_reference": {
+      "source_id": "src_market_beta",
+      "snapshot_id": null,
+      "source_url": "https://src-market-beta.example/fixture",
+      "evidence_ids": [
+        "evidence_offer_sec_002_classified_price",
+        "evidence_offer_sec_002_classified_availability"
+      ]
+    },
+    "listing_price": { "amount": "4640000.00", "currency": "RUB" },
+    "price_from": false,
+    "availability": "available",
+    "published_at": "2026-08-01T00:00:00.000Z",
+    "updated_at": "2026-08-15T00:00:00.000Z",
+    "expires_at": null,
+    "mandatory_extras": [],
+    "commercial_terms": {
+      "reservation_terms": null,
+      "payment_terms": null,
+      "notes": []
+    },
+    "financing_offer_ids": [],
+    "promotion_ids": [],
+    "verification_status": "claimed",
+    "freshness_status": "fresh",
+    "evidence_refs": [
+      "evidence_offer_sec_002_classified_price",
+      "evidence_offer_sec_002_classified_availability"
+    ]
+  },
+  {
+    "schema_version": "1.0",
+    "offer_id": "offer_house_001_classified",
+    "property_id": "prop_house_001",
+    "seller": {
+      "seller_type": "other",
+      "seller_id": null,
+      "name": "Marketplace Beta"
+    },
+    "source_reference": {
+      "source_id": "src_market_beta",
+      "snapshot_id": null,
+      "source_url": "https://src-market-beta.example/fixture",
+      "evidence_ids": [
+        "evidence_offer_house_001_classified_price",
+        "evidence_offer_house_001_classified_availability"
+      ]
+    },
+    "listing_price": { "amount": "6520000.00", "currency": "RUB" },
+    "price_from": false,
+    "availability": "available",
+    "published_at": "2026-08-01T00:00:00.000Z",
+    "updated_at": "2026-08-15T00:00:00.000Z",
+    "expires_at": null,
+    "mandatory_extras": [],
+    "commercial_terms": {
+      "reservation_terms": null,
+      "payment_terms": null,
+      "notes": []
+    },
+    "financing_offer_ids": [],
+    "promotion_ids": [],
+    "verification_status": "conflicting",
+    "freshness_status": "fresh",
+    "evidence_refs": [
+      "evidence_offer_house_001_classified_price",
+      "evidence_offer_house_001_classified_availability"
+    ]
+  },
+  {
+    "schema_version": "1.0",
+    "offer_id": "offer_house_002_classified",
+    "property_id": "prop_house_002",
+    "seller": {
+      "seller_type": "other",
+      "seller_id": null,
+      "name": "Marketplace Beta"
+    },
+    "source_reference": {
+      "source_id": "src_market_beta",
+      "snapshot_id": null,
+      "source_url": "https://src-market-beta.example/fixture",
+      "evidence_ids": [
+        "evidence_offer_house_002_classified_price",
+        "evidence_offer_house_002_classified_availability"
+      ]
+    },
+    "listing_price": { "amount": "7010000.00", "currency": "RUB" },
+    "price_from": false,
+    "availability": "available",
+    "published_at": "2026-08-01T00:00:00.000Z",
+    "updated_at": "2026-08-15T00:00:00.000Z",
+    "expires_at": null,
+    "mandatory_extras": [],
+    "commercial_terms": {
+      "reservation_terms": null,
+      "payment_terms": null,
+      "notes": []
+    },
+    "financing_offer_ids": [],
+    "promotion_ids": [],
+    "verification_status": "claimed",
+    "freshness_status": "fresh",
+    "evidence_refs": [
+      "evidence_offer_house_002_classified_price",
+      "evidence_offer_house_002_classified_availability"
+    ]
+  },
+  {
+    "schema_version": "1.0",
+    "offer_id": "offer_th_001_classified",
+    "property_id": "prop_th_001",
+    "seller": {
+      "seller_type": "other",
+      "seller_id": null,
+      "name": "Marketplace Beta"
+    },
+    "source_reference": {
+      "source_id": "src_market_beta",
+      "snapshot_id": null,
+      "source_url": "https://src-market-beta.example/fixture",
+      "evidence_ids": [
+        "evidence_offer_th_001_classified_price",
+        "evidence_offer_th_001_classified_availability"
+      ]
+    },
+    "listing_price": { "amount": "7480000.00", "currency": "RUB" },
+    "price_from": false,
+    "availability": "available",
+    "published_at": "2026-08-01T00:00:00.000Z",
+    "updated_at": "2026-08-15T00:00:00.000Z",
+    "expires_at": null,
+    "mandatory_extras": [],
+    "commercial_terms": {
+      "reservation_terms": null,
+      "payment_terms": null,
+      "notes": []
+    },
+    "financing_offer_ids": [],
+    "promotion_ids": [],
+    "verification_status": "conflicting",
+    "freshness_status": "fresh",
+    "evidence_refs": [
+      "evidence_offer_th_001_classified_price",
+      "evidence_offer_th_001_classified_availability"
+    ]
+  },
+  {
+    "schema_version": "1.0",
+    "offer_id": "offer_nb_005_project",
+    "property_id": "prop_nb_005",
+    "seller": {
+      "seller_type": "other",
+      "seller_id": null,
+      "name": "Marketplace Beta"
+    },
+    "source_reference": {
+      "source_id": "src_project_delta",
+      "snapshot_id": null,
+      "source_url": "https://src-project-delta.example/fixture",
+      "evidence_ids": [
+        "evidence_offer_nb_005_project_price",
+        "evidence_offer_nb_005_project_availability"
+      ]
+    },
+    "listing_price": { "amount": "5460000.00", "currency": "RUB" },
+    "price_from": false,
+    "availability": "available",
+    "published_at": "2026-08-01T00:00:00.000Z",
+    "updated_at": "2026-08-15T00:00:00.000Z",
+    "expires_at": null,
+    "mandatory_extras": [],
+    "commercial_terms": {
+      "reservation_terms": null,
+      "payment_terms": null,
+      "notes": []
+    },
+    "financing_offer_ids": [],
+    "promotion_ids": [],
+    "verification_status": "claimed",
+    "freshness_status": "fresh",
+    "evidence_refs": [
+      "evidence_offer_nb_005_project_price",
+      "evidence_offer_nb_005_project_availability"
+    ]
+  },
+  {
+    "schema_version": "1.0",
+    "offer_id": "offer_sec_004_agency",
+    "property_id": "prop_sec_004",
+    "seller": {
+      "seller_type": "agency",
+      "seller_id": null,
+      "name": "Agency Eta"
+    },
+    "source_reference": {
+      "source_id": "src_agency_eta",
+      "snapshot_id": null,
+      "source_url": "https://src-agency-eta.example/fixture",
+      "evidence_ids": [
+        "evidence_offer_sec_004_agency_price",
+        "evidence_offer_sec_004_agency_availability"
+      ]
+    },
+    "listing_price": { "amount": "5120000.00", "currency": "RUB" },
+    "price_from": false,
+    "availability": "available",
+    "published_at": "2026-08-01T00:00:00.000Z",
+    "updated_at": "2026-08-15T00:00:00.000Z",
+    "expires_at": null,
+    "mandatory_extras": [],
+    "commercial_terms": {
+      "reservation_terms": null,
+      "payment_terms": null,
+      "notes": []
+    },
+    "financing_offer_ids": [],
+    "promotion_ids": [],
+    "verification_status": "claimed",
+    "freshness_status": "fresh",
+    "evidence_refs": [
+      "evidence_offer_sec_004_agency_price",
+      "evidence_offer_sec_004_agency_availability"
+    ]
+  }
+]

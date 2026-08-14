@@ -11,6 +11,9 @@
     "typecheck": "next typegen && tsc --noEmit",
     "schemas:generate": "node --import tsx scripts/generate-schemas.ts",
     "schemas:check": "node --import tsx scripts/generate-schemas.ts --check",
+    "fixtures:generate": "node --import tsx scripts/generate-pilot-fixtures.ts",
+    "fixtures:check": "node --import tsx scripts/generate-pilot-fixtures.ts --check",
+    "fixtures:validate": "node --import tsx scripts/validate-pilot-fixtures.ts",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
   },

@@ -1,0 +1,58 @@
+[
+  {
+    "cluster_id": "cluster_nb_001",
+    "property_id": "prop_nb_001",
+    "offer_ids": ["offer_nb_001_primary", "offer_nb_001_agency"],
+    "expected_relation": "same_property",
+    "strong_identifiers": ["canonical unit", "unit number"]
+  },
+  {
+    "cluster_id": "cluster_nb_002",
+    "property_id": "prop_nb_002",
+    "offer_ids": ["offer_nb_002_primary", "offer_nb_002_agency"],
+    "expected_relation": "same_property",
+    "strong_identifiers": ["canonical unit", "unit number"]
+  },
+  {
+    "cluster_id": "cluster_nb_003",
+    "property_id": "prop_nb_003",
+    "offer_ids": ["offer_nb_003_primary", "offer_nb_003_agency"],
+    "expected_relation": "same_property",
+    "strong_identifiers": ["canonical unit", "unit number"]
+  },
+  {
+    "cluster_id": "cluster_sec_001",
+    "property_id": "prop_sec_001",
+    "offer_ids": ["offer_sec_001_primary", "offer_sec_001_agency"],
+    "expected_relation": "same_property",
+    "strong_identifiers": ["address", "floor", "area"]
+  },
+  {
+    "cluster_id": "cluster_sec_002",
+    "property_id": "prop_sec_002",
+    "offer_ids": ["offer_sec_002_primary", "offer_sec_002_classified"],
+    "expected_relation": "same_property",
+    "strong_identifiers": ["address", "floor", "area"]
+  },
+  {
+    "cluster_id": "cluster_house_001",
+    "property_id": "prop_house_001",
+    "offer_ids": ["offer_house_001_primary", "offer_house_001_classified"],
+    "expected_relation": "same_property",
+    "strong_identifiers": ["address", "geo point"]
+  },
+  {
+    "cluster_id": "cluster_house_002",
+    "property_id": "prop_house_002",
+    "offer_ids": ["offer_house_002_primary", "offer_house_002_classified"],
+    "expected_relation": "same_property",
+    "strong_identifiers": ["address", "geo point"]
+  },
+  {
+    "cluster_id": "cluster_th_001",
+    "property_id": "prop_th_001",
+    "offer_ids": ["offer_th_001_primary", "offer_th_001_classified"],
+    "expected_relation": "same_property",
+    "strong_identifiers": ["address", "geo point"]
+  }
+]

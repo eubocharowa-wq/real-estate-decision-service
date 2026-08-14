@@ -1,0 +1,250 @@
+[
+  {
+    "schema_version": "1.0",
+    "source_id": "src_dev_alpha",
+    "source_type": "developer_site",
+    "name": "Developer Alpha",
+    "domain": "src-dev-alpha.example",
+    "base_url": "https://src-dev-alpha.example",
+    "coverage": {
+      "country_codes": ["RU"],
+      "regions": ["Тестовая область"],
+      "property_types": [
+        "apartment",
+        "apartments",
+        "house",
+        "townhouse",
+        "land"
+      ]
+    },
+    "collection_method": "manual",
+    "trust_level": "primary",
+    "status": "active",
+    "policy_metadata": {
+      "access_status": "approved",
+      "storage_rights": true,
+      "display_rights": true,
+      "refresh_rights": true,
+      "reviewed_at": "2026-08-15T00:00:00.000Z",
+      "notes": "Synthetic test-only source; no external collection is performed."
+    },
+    "upstream_source_id": null
+  },
+  {
+    "schema_version": "1.0",
+    "source_id": "src_project_delta",
+    "source_type": "project_site",
+    "name": "Project Delta",
+    "domain": "src-project-delta.example",
+    "base_url": "https://src-project-delta.example",
+    "coverage": {
+      "country_codes": ["RU"],
+      "regions": ["Тестовая область"],
+      "property_types": [
+        "apartment",
+        "apartments",
+        "house",
+        "townhouse",
+        "land"
+      ]
+    },
+    "collection_method": "manual",
+    "trust_level": "primary",
+    "status": "active",
+    "policy_metadata": {
+      "access_status": "approved",
+      "storage_rights": true,
+      "display_rights": true,
+      "refresh_rights": true,
+      "reviewed_at": "2026-08-15T00:00:00.000Z",
+      "notes": "Synthetic test-only source; no external collection is performed."
+    },
+    "upstream_source_id": null
+  },
+  {
+    "schema_version": "1.0",
+    "source_id": "src_market_beta",
+    "source_type": "classified",
+    "name": "Marketplace Beta",
+    "domain": "src-market-beta.example",
+    "base_url": "https://src-market-beta.example",
+    "coverage": {
+      "country_codes": ["RU"],
+      "regions": ["Тестовая область"],
+      "property_types": [
+        "apartment",
+        "apartments",
+        "house",
+        "townhouse",
+        "land"
+      ]
+    },
+    "collection_method": "import",
+    "trust_level": "secondary",
+    "status": "active",
+    "policy_metadata": {
+      "access_status": "approved",
+      "storage_rights": true,
+      "display_rights": true,
+      "refresh_rights": true,
+      "reviewed_at": "2026-08-15T00:00:00.000Z",
+      "notes": "Synthetic test-only source; no external collection is performed."
+    },
+    "upstream_source_id": null
+  },
+  {
+    "schema_version": "1.0",
+    "source_id": "src_agency_eta",
+    "source_type": "agency_site",
+    "name": "Agency Eta",
+    "domain": "src-agency-eta.example",
+    "base_url": "https://src-agency-eta.example",
+    "coverage": {
+      "country_codes": ["RU"],
+      "regions": ["Тестовая область"],
+      "property_types": [
+        "apartment",
+        "apartments",
+        "house",
+        "townhouse",
+        "land"
+      ]
+    },
+    "collection_method": "import",
+    "trust_level": "secondary",
+    "status": "active",
+    "policy_metadata": {
+      "access_status": "approved",
+      "storage_rights": true,
+      "display_rights": true,
+      "refresh_rights": true,
+      "reviewed_at": "2026-08-15T00:00:00.000Z",
+      "notes": "Synthetic test-only source; no external collection is performed."
+    },
+    "upstream_source_id": null
+  },
+  {
+    "schema_version": "1.0",
+    "source_id": "src_bank_gamma",
+    "source_type": "bank_site",
+    "name": "Bank Gamma",
+    "domain": "src-bank-gamma.example",
+    "base_url": "https://src-bank-gamma.example",
+    "coverage": {
+      "country_codes": ["RU"],
+      "regions": ["Тестовая область"],
+      "property_types": [
+        "apartment",
+        "apartments",
+        "house",
+        "townhouse",
+        "land"
+      ]
+    },
+    "collection_method": "manual",
+    "trust_level": "primary",
+    "status": "active",
+    "policy_metadata": {
+      "access_status": "approved",
+      "storage_rights": true,
+      "display_rights": true,
+      "refresh_rights": true,
+      "reviewed_at": "2026-08-15T00:00:00.000Z",
+      "notes": "Synthetic test-only source; no external collection is performed."
+    },
+    "upstream_source_id": null
+  },
+  {
+    "schema_version": "1.0",
+    "source_id": "src_government_test",
+    "source_type": "government",
+    "name": "Synthetic Rules Authority",
+    "domain": "src-government-test.example",
+    "base_url": "https://src-government-test.example",
+    "coverage": {
+      "country_codes": ["RU"],
+      "regions": ["Тестовая область"],
+      "property_types": [
+        "apartment",
+        "apartments",
+        "house",
+        "townhouse",
+        "land"
+      ]
+    },
+    "collection_method": "manual",
+    "trust_level": "authoritative",
+    "status": "active",
+    "policy_metadata": {
+      "access_status": "approved",
+      "storage_rights": true,
+      "display_rights": true,
+      "refresh_rights": true,
+      "reviewed_at": "2026-08-15T00:00:00.000Z",
+      "notes": "Synthetic test-only source; no external collection is performed."
+    },
+    "upstream_source_id": null
+  },
+  {
+    "schema_version": "1.0",
+    "source_id": "src_user_fixture",
+    "source_type": "user_link",
+    "name": "User Fixture Link",
+    "domain": "src-user-fixture.example",
+    "base_url": "https://src-user-fixture.example",
+    "coverage": {
+      "country_codes": ["RU"],
+      "regions": ["Тестовая область"],
+      "property_types": [
+        "apartment",
+        "apartments",
+        "house",
+        "townhouse",
+        "land"
+      ]
+    },
+    "collection_method": "user_submission",
+    "trust_level": "user_provided",
+    "status": "active",
+    "policy_metadata": {
+      "access_status": "approved",
+      "storage_rights": true,
+      "display_rights": true,
+      "refresh_rights": true,
+      "reviewed_at": "2026-08-15T00:00:00.000Z",
+      "notes": "Synthetic test-only source; no external collection is performed."
+    },
+    "upstream_source_id": null
+  },
+  {
+    "schema_version": "1.0",
+    "source_id": "src_expert_fixture",
+    "source_type": "manual_expert",
+    "name": "Pilot Expert Fixture",
+    "domain": "src-expert-fixture.example",
+    "base_url": "https://src-expert-fixture.example",
+    "coverage": {
+      "country_codes": ["RU"],
+      "regions": ["Тестовая область"],
+      "property_types": [
+        "apartment",
+        "apartments",
+        "house",
+        "townhouse",
+        "land"
+      ]
+    },
+    "collection_method": "manual",
+    "trust_level": "primary",
+    "status": "active",
+    "policy_metadata": {
+      "access_status": "approved",
+      "storage_rights": true,
+      "display_rights": true,
+      "refresh_rights": true,
+      "reviewed_at": "2026-08-15T00:00:00.000Z",
+      "notes": "Synthetic test-only source; no external collection is performed."
+    },
+    "upstream_source_id": null
+  }
+]

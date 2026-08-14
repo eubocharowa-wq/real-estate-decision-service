@@ -1,0 +1,138 @@
+{
+  "schema_version": "1.0",
+  "user_request_id": "request_pilot_a",
+  "intent": "find",
+  "goal": {
+    "purpose": "own_residence",
+    "description": "Synthetic pilot benchmark request."
+  },
+  "location": {
+    "country_codes": ["RU"],
+    "regions": ["Тестовая область"],
+    "cities": ["Пилотск"],
+    "preferred_districts": [],
+    "excluded_districts": [],
+    "destination_addresses": []
+  },
+  "property": {
+    "allowed_property_types": ["apartment"],
+    "allowed_market_types": ["new_build", "secondary"],
+    "rooms_min": null,
+    "rooms_max": null
+  },
+  "budget": {
+    "purchase_price": {
+      "minimum": null,
+      "maximum": { "amount": "5000000.00", "currency": "RUB" }
+    },
+    "total_budget": null,
+    "renovation_budget": null
+  },
+  "financing": {
+    "purchase_methods": ["mortgage"],
+    "required_program_types": ["family_mortgage"],
+    "initial_payment_max": null,
+    "monthly_payment_max": null,
+    "financing_period": { "from": null, "to": null }
+  },
+  "timeline": {
+    "purchase_by": null,
+    "move_in_by": null,
+    "ready_now_required": null
+  },
+  "household": {
+    "adults_count": 2,
+    "children_count": null,
+    "pets_count": null,
+    "notes": null
+  },
+  "lifestyle": { "commute_modes": ["public_transport"], "notes": [] },
+  "infrastructure": [],
+  "property_features": [],
+  "must_have": [
+    {
+      "schema_version": "1.0",
+      "criterion_id": "criterion_a_budget",
+      "category": "finance",
+      "field": "listing_price",
+      "operator": "lte",
+      "target": { "amount": "5000000.00", "currency": "RUB" },
+      "unit": null,
+      "priority": "must",
+      "weight": null,
+      "tolerance": null,
+      "fit_function": null,
+      "criterion_group_id": null,
+      "applicable_property_types": ["apartment"],
+      "source_requirement": ["primary"],
+      "freshness_requirement": "fresh",
+      "critical_if_unknown": true,
+      "user_expression": "Synthetic request criterion: listing_price."
+    },
+    {
+      "schema_version": "1.0",
+      "criterion_id": "criterion_a_family",
+      "category": "finance",
+      "field": "family_mortgage",
+      "operator": "boolean",
+      "target": true,
+      "unit": null,
+      "priority": "must",
+      "weight": null,
+      "tolerance": null,
+      "fit_function": null,
+      "criterion_group_id": null,
+      "applicable_property_types": ["apartment"],
+      "source_requirement": ["primary"],
+      "freshness_requirement": "fresh",
+      "critical_if_unknown": true,
+      "user_expression": "Synthetic request criterion: family_mortgage."
+    },
+    {
+      "schema_version": "1.0",
+      "criterion_id": "criterion_a_first_floor",
+      "category": "property",
+      "field": "physical.floor",
+      "operator": "neq",
+      "target": 1,
+      "unit": null,
+      "priority": "exclude",
+      "weight": null,
+      "tolerance": null,
+      "fit_function": null,
+      "criterion_group_id": null,
+      "applicable_property_types": ["apartment"],
+      "source_requirement": ["primary"],
+      "freshness_requirement": "fresh",
+      "critical_if_unknown": true,
+      "user_expression": "Synthetic request criterion: physical.floor."
+    }
+  ],
+  "nice_to_have": [
+    {
+      "schema_version": "1.0",
+      "criterion_id": "criterion_a_zero",
+      "category": "finance",
+      "field": "zero_initial_payment",
+      "operator": "boolean",
+      "target": true,
+      "unit": null,
+      "priority": "preferred",
+      "weight": 4,
+      "tolerance": null,
+      "fit_function": "linear_preference_v1",
+      "criterion_group_id": null,
+      "applicable_property_types": ["apartment"],
+      "source_requirement": ["primary"],
+      "freshness_requirement": "fresh",
+      "critical_if_unknown": false,
+      "user_expression": "Synthetic request criterion: zero_initial_payment."
+    }
+  ],
+  "avoid": [],
+  "unknowns": [],
+  "source_links": [],
+  "clarifications": [],
+  "confidence": { "extraction_confidence": 1, "status": "high" },
+  "result_limit": 7
+}

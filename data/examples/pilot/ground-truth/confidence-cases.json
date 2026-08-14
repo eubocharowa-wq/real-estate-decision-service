@@ -1,0 +1,37 @@
+[
+  {
+    "case_id": "confidence_high_high",
+    "profile": "high_match_potential_high_confidence",
+    "property_id": "prop_nb_001",
+    "offer_ids": ["offer_nb_001_primary"],
+    "evidence_ids": [
+      "evidence_offer_nb_001_primary_price",
+      "evidence_offer_nb_001_primary_availability"
+    ],
+    "rationale": "Critical commercial fields are fresh and directly evidenced."
+  },
+  {
+    "case_id": "confidence_high_low",
+    "profile": "high_match_potential_low_confidence",
+    "property_id": "prop_nb_004",
+    "offer_ids": ["offer_nb_004_primary"],
+    "evidence_ids": ["evidence_elig_nb_004_unknown_applicability"],
+    "rationale": "Physical fit can be high while required financing applicability remains unknown."
+  },
+  {
+    "case_id": "confidence_medium_high",
+    "profile": "medium_match_potential_high_confidence",
+    "property_id": "prop_sec_003",
+    "offer_ids": ["offer_sec_003_primary"],
+    "evidence_ids": ["evidence_offer_sec_003_primary_price"],
+    "rationale": "Fresh data with a confirmed first-floor tradeoff."
+  },
+  {
+    "case_id": "confidence_hard_unknown",
+    "profile": "hard_critical_field_unknown",
+    "property_id": "prop_house_003",
+    "offer_ids": ["offer_house_003_primary"],
+    "evidence_ids": ["evidence_prop_house_003_timeline"],
+    "rationale": "Required gas and move-in facts are intentionally unknown."
+  }
+]

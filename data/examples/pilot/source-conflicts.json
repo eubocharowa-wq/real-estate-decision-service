@@ -1,0 +1,146 @@
+[
+  {
+    "schema_version": "1.0",
+    "conflict_id": "conflict_prop_nb_001_price",
+    "entity_id": "prop_nb_001",
+    "field": "listing_price",
+    "evidence_ids": [
+      "evidence_offer_nb_001_primary_price",
+      "evidence_offer_nb_001_agency_price"
+    ],
+    "severity": "significant",
+    "status": "open",
+    "resolved_value": null,
+    "resolution_reason": null,
+    "resolved_by": null,
+    "resolved_at": null
+  },
+  {
+    "schema_version": "1.0",
+    "conflict_id": "conflict_prop_nb_002_price",
+    "entity_id": "prop_nb_002",
+    "field": "listing_price",
+    "evidence_ids": [
+      "evidence_offer_nb_002_primary_price",
+      "evidence_offer_nb_002_agency_price"
+    ],
+    "severity": "significant",
+    "status": "open",
+    "resolved_value": null,
+    "resolution_reason": null,
+    "resolved_by": null,
+    "resolved_at": null
+  },
+  {
+    "schema_version": "1.0",
+    "conflict_id": "conflict_prop_sec_001_price",
+    "entity_id": "prop_sec_001",
+    "field": "listing_price",
+    "evidence_ids": [
+      "evidence_offer_sec_001_primary_price",
+      "evidence_offer_sec_001_agency_price"
+    ],
+    "severity": "significant",
+    "status": "open",
+    "resolved_value": null,
+    "resolution_reason": null,
+    "resolved_by": null,
+    "resolved_at": null
+  },
+  {
+    "schema_version": "1.0",
+    "conflict_id": "conflict_prop_house_001_price",
+    "entity_id": "prop_house_001",
+    "field": "listing_price",
+    "evidence_ids": [
+      "evidence_offer_house_001_primary_price",
+      "evidence_offer_house_001_classified_price"
+    ],
+    "severity": "significant",
+    "status": "open",
+    "resolved_value": null,
+    "resolution_reason": null,
+    "resolved_by": null,
+    "resolved_at": null
+  },
+  {
+    "schema_version": "1.0",
+    "conflict_id": "conflict_prop_th_001_price",
+    "entity_id": "prop_th_001",
+    "field": "listing_price",
+    "evidence_ids": [
+      "evidence_offer_th_001_primary_price",
+      "evidence_offer_th_001_classified_price"
+    ],
+    "severity": "significant",
+    "status": "open",
+    "resolved_value": null,
+    "resolution_reason": null,
+    "resolved_by": null,
+    "resolved_at": null
+  },
+  {
+    "schema_version": "1.0",
+    "conflict_id": "conflict_prop_nb_003_area",
+    "entity_id": "prop_nb_003",
+    "field": "physical.total_area_m2",
+    "evidence_ids": [
+      "evidence_conflict_prop_nb_003_area_a",
+      "evidence_conflict_prop_nb_003_area_b"
+    ],
+    "severity": "significant",
+    "status": "open",
+    "resolved_value": null,
+    "resolution_reason": null,
+    "resolved_by": null,
+    "resolved_at": null
+  },
+  {
+    "schema_version": "1.0",
+    "conflict_id": "conflict_prop_nb_007_handover",
+    "entity_id": "prop_nb_007",
+    "field": "timeline.handover_date",
+    "evidence_ids": [
+      "evidence_conflict_prop_nb_007_handover_a",
+      "evidence_conflict_prop_nb_007_handover_b"
+    ],
+    "severity": "significant",
+    "status": "open",
+    "resolved_value": null,
+    "resolution_reason": null,
+    "resolved_by": null,
+    "resolved_at": null
+  },
+  {
+    "schema_version": "1.0",
+    "conflict_id": "conflict_prop_sec_004_floor",
+    "entity_id": "prop_sec_004",
+    "field": "physical.floor",
+    "evidence_ids": [
+      "evidence_conflict_prop_sec_004_floor_a",
+      "evidence_conflict_prop_sec_004_floor_b"
+    ],
+    "severity": "significant",
+    "status": "open",
+    "resolved_value": null,
+    "resolution_reason": null,
+    "resolved_by": null,
+    "resolved_at": null
+  },
+  {
+    "schema_version": "1.0",
+    "conflict_id": "conflict_elig_nb_002_initial_payment",
+    "entity_id": "elig_nb_002_family",
+    "field": "initial_payment",
+    "evidence_ids": [
+      "evidence_elig_nb_002_initial_payment_a",
+      "evidence_elig_nb_002_initial_payment_b"
+    ],
+    "severity": "critical",
+    "status": "open",
+    "resolved_value": null,
+    "resolution_reason": null,
+    "resolved_by": null,
+    "resolved_at": null
+  }
+]

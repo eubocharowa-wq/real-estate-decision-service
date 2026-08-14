@@ -1,0 +1,104 @@
+[
+  {
+    "schema_version": "1.0",
+    "program_id": "finprog_family_a",
+    "program_type": "family_mortgage",
+    "provider": {
+      "provider_id": null,
+      "provider_type": "government",
+      "name": "Test Family Program A"
+    },
+    "rule_version": "synthetic-rules-v1",
+    "effective_from": "2026-01-01T00:00:00.000Z",
+    "effective_until": "2027-12-31T23:59:59.000Z",
+    "borrower_rules": [],
+    "property_rules": [
+      {
+        "rule_id": "rule_finprog_family_a_property_type",
+        "field": "property_type",
+        "operator": "in",
+        "value": ["apartment", "house", "townhouse"],
+        "description": "Synthetic test-only rule; not a current real-world mortgage rule."
+      }
+    ],
+    "financial_rules": [],
+    "source_references": [
+      {
+        "source_id": "src_government_test",
+        "snapshot_id": null,
+        "source_url": "https://src-government-test.example/fixture",
+        "evidence_ids": []
+      }
+    ],
+    "verification_status": "confirmed",
+    "freshness_status": "fresh"
+  },
+  {
+    "schema_version": "1.0",
+    "program_id": "finprog_standard_b",
+    "program_type": "mortgage",
+    "provider": {
+      "provider_id": null,
+      "provider_type": "bank",
+      "name": "Test Standard Mortgage B"
+    },
+    "rule_version": "synthetic-rules-v1",
+    "effective_from": "2026-01-01T00:00:00.000Z",
+    "effective_until": "2027-12-31T23:59:59.000Z",
+    "borrower_rules": [],
+    "property_rules": [
+      {
+        "rule_id": "rule_finprog_standard_b_property_type",
+        "field": "property_type",
+        "operator": "in",
+        "value": ["apartment", "house", "townhouse"],
+        "description": "Synthetic test-only rule; not a current real-world mortgage rule."
+      }
+    ],
+    "financial_rules": [],
+    "source_references": [
+      {
+        "source_id": "src_bank_gamma",
+        "snapshot_id": null,
+        "source_url": "https://src-bank-gamma.example/fixture",
+        "evidence_ids": []
+      }
+    ],
+    "verification_status": "confirmed",
+    "freshness_status": "fresh"
+  },
+  {
+    "schema_version": "1.0",
+    "program_id": "finprog_installment_c",
+    "program_type": "installment",
+    "provider": {
+      "provider_id": null,
+      "provider_type": "developer",
+      "name": "Test Installment C"
+    },
+    "rule_version": "synthetic-rules-v1",
+    "effective_from": "2026-01-01T00:00:00.000Z",
+    "effective_until": "2027-12-31T23:59:59.000Z",
+    "borrower_rules": [],
+    "property_rules": [
+      {
+        "rule_id": "rule_finprog_installment_c_property_type",
+        "field": "property_type",
+        "operator": "in",
+        "value": ["apartment"],
+        "description": "Synthetic test-only rule; not a current real-world mortgage rule."
+      }
+    ],
+    "financial_rules": [],
+    "source_references": [
+      {
+        "source_id": "src_dev_alpha",
+        "snapshot_id": null,
+        "source_url": "https://src-dev-alpha.example/fixture",
+        "evidence_ids": []
+      }
+    ],
+    "verification_status": "confirmed",
+    "freshness_status": "fresh"
+  }
+]

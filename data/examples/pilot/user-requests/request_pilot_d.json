@@ -1,0 +1,97 @@
+{
+  "schema_version": "1.0",
+  "user_request_id": "request_pilot_d",
+  "intent": "find",
+  "goal": {
+    "purpose": "own_residence",
+    "description": "Synthetic pilot benchmark request."
+  },
+  "location": {
+    "country_codes": ["RU"],
+    "regions": ["Тестовая область"],
+    "cities": ["Пилотск"],
+    "preferred_districts": [],
+    "excluded_districts": [],
+    "destination_addresses": []
+  },
+  "property": {
+    "allowed_property_types": ["apartment"],
+    "allowed_market_types": ["secondary"],
+    "rooms_min": null,
+    "rooms_max": null
+  },
+  "budget": {
+    "purchase_price": { "minimum": null, "maximum": null },
+    "total_budget": null,
+    "renovation_budget": null
+  },
+  "financing": {
+    "purchase_methods": ["cash", "mortgage"],
+    "required_program_types": [],
+    "initial_payment_max": null,
+    "monthly_payment_max": null,
+    "financing_period": { "from": null, "to": null }
+  },
+  "timeline": {
+    "purchase_by": null,
+    "move_in_by": null,
+    "ready_now_required": true
+  },
+  "household": {
+    "adults_count": 2,
+    "children_count": null,
+    "pets_count": null,
+    "notes": null
+  },
+  "lifestyle": { "commute_modes": ["public_transport"], "notes": [] },
+  "infrastructure": [],
+  "property_features": [],
+  "must_have": [
+    {
+      "schema_version": "1.0",
+      "criterion_id": "criterion_d_ready",
+      "category": "timeline",
+      "field": "condition.ready_for_living",
+      "operator": "boolean",
+      "target": true,
+      "unit": null,
+      "priority": "must",
+      "weight": null,
+      "tolerance": null,
+      "fit_function": null,
+      "criterion_group_id": null,
+      "applicable_property_types": ["apartment"],
+      "source_requirement": ["primary"],
+      "freshness_requirement": "fresh",
+      "critical_if_unknown": true,
+      "user_expression": "Synthetic request criterion: condition.ready_for_living."
+    }
+  ],
+  "nice_to_have": [
+    {
+      "schema_version": "1.0",
+      "criterion_id": "criterion_d_renovation",
+      "category": "property",
+      "field": "condition.finishing_type",
+      "operator": "neq",
+      "target": "needs_renovation",
+      "unit": null,
+      "priority": "preferred",
+      "weight": 4,
+      "tolerance": null,
+      "fit_function": "linear_preference_v1",
+      "criterion_group_id": null,
+      "applicable_property_types": ["apartment"],
+      "source_requirement": ["primary"],
+      "freshness_requirement": "fresh",
+      "critical_if_unknown": false,
+      "user_expression": "Synthetic request criterion: condition.finishing_type."
+    }
+  ],
+  "avoid": [],
+  "unknowns": [],
+  "source_links": [],
+  "clarifications": [],
+  "confidence": { "extraction_confidence": 1, "status": "high" },
+  "result_limit": 7
+}

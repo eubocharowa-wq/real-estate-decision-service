@@ -1,0 +1,359 @@
+{
+  "properties": {
+    "prop_nb_001": {
+      "purpose": "Concrete developer unit with controlled floor, finish and handover data.",
+      "fixture_tags": [
+        "new_build",
+        "commissioned",
+        "duplicate_cluster",
+        "highly_complete"
+      ]
+    },
+    "prop_nb_002": {
+      "purpose": "Concrete developer unit with controlled floor, finish and handover data.",
+      "fixture_tags": ["new_build", "commissioned", "duplicate_cluster"]
+    },
+    "prop_nb_003": {
+      "purpose": "Same layout and area in different units; must remain separate.",
+      "fixture_tags": ["new_build", "commissioned", "single_offer"]
+    },
+    "prop_nb_004": {
+      "purpose": "Same layout and area in different units; must remain separate.",
+      "fixture_tags": [
+        "new_build",
+        "commissioned",
+        "single_offer",
+        "partially_complete"
+      ]
+    },
+    "prop_nb_005": {
+      "purpose": "Concrete developer unit with controlled floor, finish and handover data.",
+      "fixture_tags": ["new_build", "under_construction", "single_offer"]
+    },
+    "prop_nb_006": {
+      "purpose": "Concrete developer unit with controlled floor, finish and handover data.",
+      "fixture_tags": ["new_build", "under_construction", "single_offer"]
+    },
+    "prop_nb_007": {
+      "purpose": "Concrete developer unit with controlled floor, finish and handover data.",
+      "fixture_tags": ["new_build", "under_construction", "single_offer"]
+    },
+    "prop_nb_008": {
+      "purpose": "Concrete developer unit with controlled floor, finish and handover data.",
+      "fixture_tags": ["new_build", "under_construction", "single_offer"]
+    },
+    "prop_nb_009": {
+      "purpose": "Concrete developer unit with controlled floor, finish and handover data.",
+      "fixture_tags": ["new_build", "under_construction", "single_offer"]
+    },
+    "prop_nb_010": {
+      "purpose": "Concrete developer unit with controlled floor, finish and handover data.",
+      "fixture_tags": ["new_build", "under_construction", "single_offer"]
+    },
+    "prop_nb_011": {
+      "purpose": "Concrete developer unit with controlled floor, finish and handover data.",
+      "fixture_tags": ["new_build", "under_construction", "single_offer"]
+    },
+    "prop_nb_012": {
+      "purpose": "Concrete developer unit with controlled floor, finish and handover data.",
+      "fixture_tags": ["new_build", "under_construction", "single_offer"]
+    },
+    "prop_nb_013": {
+      "purpose": "Concrete developer unit with controlled floor, finish and handover data.",
+      "fixture_tags": ["new_build", "under_construction", "single_offer"]
+    },
+    "prop_nb_014": {
+      "purpose": "Concrete developer unit with controlled floor, finish and handover data.",
+      "fixture_tags": ["new_build", "under_construction", "single_offer"]
+    },
+    "prop_sec_001": {
+      "purpose": "Secondary apartment covering owner/agency, condition and floor diversity.",
+      "fixture_tags": ["secondary", "middle_floor", "active_listing_case"]
+    },
+    "prop_sec_002": {
+      "purpose": "Secondary apartment covering owner/agency, condition and floor diversity.",
+      "fixture_tags": ["secondary", "middle_floor", "active_listing_case"]
+    },
+    "prop_sec_003": {
+      "purpose": "Secondary apartment covering owner/agency, condition and floor diversity.",
+      "fixture_tags": ["secondary", "first_floor", "active_listing_case"]
+    },
+    "prop_sec_004": {
+      "purpose": "Secondary apartment covering owner/agency, condition and floor diversity.",
+      "fixture_tags": ["secondary", "top_floor", "active_listing_case"]
+    },
+    "prop_sec_005": {
+      "purpose": "Secondary apartment with intentionally incomplete address detail.",
+      "fixture_tags": ["secondary", "middle_floor", "active_listing_case"]
+    },
+    "prop_sec_006": {
+      "purpose": "Secondary apartment covering owner/agency, condition and floor diversity.",
+      "fixture_tags": ["secondary", "middle_floor", "removed_listing_case"]
+    },
+    "prop_sec_007": {
+      "purpose": "Secondary apartment covering owner/agency, condition and floor diversity.",
+      "fixture_tags": ["secondary", "middle_floor", "active_listing_case"]
+    },
+    "prop_sec_008": {
+      "purpose": "Ready secondary apartment with uncertain seller move-out timeline.",
+      "fixture_tags": ["secondary", "middle_floor", "active_listing_case"]
+    },
+    "prop_sec_009": {
+      "purpose": "Secondary apartment covering owner/agency, condition and floor diversity.",
+      "fixture_tags": ["secondary", "middle_floor", "active_listing_case"]
+    },
+    "prop_sec_010": {
+      "purpose": "Secondary apartment covering owner/agency, condition and floor diversity.",
+      "fixture_tags": ["secondary", "middle_floor", "active_listing_case"]
+    },
+    "prop_sec_011": {
+      "purpose": "Secondary apartment covering owner/agency, condition and floor diversity.",
+      "fixture_tags": ["secondary", "middle_floor", "active_listing_case"]
+    },
+    "prop_sec_012": {
+      "purpose": "Secondary apartment covering owner/agency, condition and floor diversity.",
+      "fixture_tags": ["secondary", "middle_floor", "active_listing_case"]
+    },
+    "prop_house_001": {
+      "purpose": "House utility and readiness benchmark.",
+      "fixture_tags": ["house", "gas_connected", "road_access_known"]
+    },
+    "prop_house_002": {
+      "purpose": "House utility and readiness benchmark.",
+      "fixture_tags": ["house", "gas_available", "road_access_known"]
+    },
+    "prop_house_003": {
+      "purpose": "House utility and readiness benchmark.",
+      "fixture_tags": [
+        "house",
+        "gas_unknown",
+        "road_access_known",
+        "incomplete_document_evidence"
+      ]
+    },
+    "prop_house_004": {
+      "purpose": "House with large land, longer commute and a road access issue.",
+      "fixture_tags": ["house", "gas_planned", "road_access_issue"]
+    },
+    "prop_house_005": {
+      "purpose": "House utility and readiness benchmark.",
+      "fixture_tags": ["house", "gas_absent", "road_access_known"]
+    },
+    "prop_th_001": {
+      "purpose": "Townhouse case for cross-type and duplicate handling.",
+      "fixture_tags": ["townhouse", "duplicate_cluster"]
+    },
+    "prop_th_002": {
+      "purpose": "Townhouse case for cross-type and duplicate handling.",
+      "fixture_tags": ["townhouse", "under_construction"]
+    },
+    "prop_land_001": {
+      "purpose": "Land case where apartment-only fields are not applicable.",
+      "fixture_tags": ["land", "land_edge_case"]
+    },
+    "prop_land_002": {
+      "purpose": "Land case where apartment-only fields are not applicable.",
+      "fixture_tags": ["land", "sparse_property"]
+    },
+    "prop_special_template_001": {
+      "purpose": "Non-concrete inventory template; price_from must not become an exact unit price.",
+      "fixture_tags": [
+        "special",
+        "inventory_template",
+        "price_from",
+        "intentionally_incomplete"
+      ]
+    }
+  },
+  "offers": {
+    "offer_nb_001_primary": {
+      "purpose": "Offer participates in unresolved price conflict ground truth.",
+      "fixture_tags": ["primary_offer", "price_conflict"]
+    },
+    "offer_nb_002_primary": {
+      "purpose": "Offer participates in unresolved price conflict ground truth.",
+      "fixture_tags": ["primary_offer", "price_conflict"]
+    },
+    "offer_nb_003_primary": {
+      "purpose": "Scenario-driven commercial Offer.",
+      "fixture_tags": ["primary_offer"]
+    },
+    "offer_nb_004_primary": {
+      "purpose": "Scenario-driven commercial Offer.",
+      "fixture_tags": ["primary_offer"]
+    },
+    "offer_nb_005_primary": {
+      "purpose": "Scenario-driven commercial Offer.",
+      "fixture_tags": ["primary_offer"]
+    },
+    "offer_nb_006_primary": {
+      "purpose": "Scenario-driven commercial Offer.",
+      "fixture_tags": ["primary_offer"]
+    },
+    "offer_nb_007_primary": {
+      "purpose": "Scenario-driven commercial Offer.",
+      "fixture_tags": ["primary_offer"]
+    },
+    "offer_nb_008_primary": {
+      "purpose": "Scenario-driven commercial Offer.",
+      "fixture_tags": ["primary_offer"]
+    },
+    "offer_nb_009_primary": {
+      "purpose": "Scenario-driven commercial Offer.",
+      "fixture_tags": ["primary_offer", "stale_critical_fields"]
+    },
+    "offer_nb_010_primary": {
+      "purpose": "Scenario-driven commercial Offer.",
+      "fixture_tags": ["primary_offer"]
+    },
+    "offer_nb_011_primary": {
+      "purpose": "Scenario-driven commercial Offer.",
+      "fixture_tags": ["primary_offer"]
+    },
+    "offer_nb_012_primary": {
+      "purpose": "Scenario-driven commercial Offer.",
+      "fixture_tags": ["primary_offer"]
+    },
+    "offer_nb_013_primary": {
+      "purpose": "Scenario-driven commercial Offer.",
+      "fixture_tags": ["primary_offer"]
+    },
+    "offer_nb_014_primary": {
+      "purpose": "Scenario-driven commercial Offer.",
+      "fixture_tags": ["primary_offer"]
+    },
+    "offer_sec_001_primary": {
+      "purpose": "Offer participates in unresolved price conflict ground truth.",
+      "fixture_tags": ["primary_offer", "price_conflict"]
+    },
+    "offer_sec_002_primary": {
+      "purpose": "Scenario-driven commercial Offer.",
+      "fixture_tags": ["primary_offer"]
+    },
+    "offer_sec_003_primary": {
+      "purpose": "Scenario-driven commercial Offer.",
+      "fixture_tags": ["primary_offer"]
+    },
+    "offer_sec_004_primary": {
+      "purpose": "Scenario-driven commercial Offer.",
+      "fixture_tags": ["primary_offer"]
+    },
+    "offer_sec_005_primary": {
+      "purpose": "Scenario-driven commercial Offer.",
+      "fixture_tags": ["primary_offer"]
+    },
+    "offer_sec_006_primary": {
+      "purpose": "Removed listing represented as unknown availability, never inferred as sold.",
+      "fixture_tags": [
+        "primary_offer",
+        "listing_removed",
+        "not_confirmed_sold",
+        "stale_critical_fields"
+      ]
+    },
+    "offer_sec_007_primary": {
+      "purpose": "Scenario-driven commercial Offer.",
+      "fixture_tags": ["primary_offer"]
+    },
+    "offer_sec_008_primary": {
+      "purpose": "Scenario-driven commercial Offer.",
+      "fixture_tags": ["primary_offer"]
+    },
+    "offer_sec_009_primary": {
+      "purpose": "Scenario-driven commercial Offer.",
+      "fixture_tags": ["primary_offer", "stale_critical_fields"]
+    },
+    "offer_sec_010_primary": {
+      "purpose": "Scenario-driven commercial Offer.",
+      "fixture_tags": ["primary_offer"]
+    },
+    "offer_sec_011_primary": {
+      "purpose": "Scenario-driven commercial Offer.",
+      "fixture_tags": ["primary_offer"]
+    },
+    "offer_sec_012_primary": {
+      "purpose": "Scenario-driven commercial Offer.",
+      "fixture_tags": ["primary_offer"]
+    },
+    "offer_house_001_primary": {
+      "purpose": "Offer participates in unresolved price conflict ground truth.",
+      "fixture_tags": ["primary_offer", "price_conflict"]
+    },
+    "offer_house_002_primary": {
+      "purpose": "Scenario-driven commercial Offer.",
+      "fixture_tags": ["primary_offer"]
+    },
+    "offer_house_003_primary": {
+      "purpose": "Scenario-driven commercial Offer.",
+      "fixture_tags": ["primary_offer"]
+    },
+    "offer_house_004_primary": {
+      "purpose": "Scenario-driven commercial Offer.",
+      "fixture_tags": ["primary_offer", "stale_critical_fields"]
+    },
+    "offer_house_005_primary": {
+      "purpose": "Scenario-driven commercial Offer.",
+      "fixture_tags": ["primary_offer"]
+    },
+    "offer_th_001_primary": {
+      "purpose": "Offer participates in unresolved price conflict ground truth.",
+      "fixture_tags": ["primary_offer", "price_conflict"]
+    },
+    "offer_th_002_primary": {
+      "purpose": "Scenario-driven commercial Offer.",
+      "fixture_tags": ["primary_offer"]
+    },
+    "offer_land_001_primary": {
+      "purpose": "Scenario-driven commercial Offer.",
+      "fixture_tags": ["primary_offer"]
+    },
+    "offer_land_002_primary": {
+      "purpose": "Scenario-driven commercial Offer.",
+      "fixture_tags": ["primary_offer", "stale_critical_fields"]
+    },
+    "offer_special_template_001_primary": {
+      "purpose": "Template price_from Offer; not an exact concrete unit.",
+      "fixture_tags": ["primary_offer"]
+    },
+    "offer_nb_001_agency": {
+      "purpose": "Offer participates in unresolved price conflict ground truth.",
+      "fixture_tags": ["duplicate_offer", "price_conflict"]
+    },
+    "offer_nb_002_agency": {
+      "purpose": "Offer participates in unresolved price conflict ground truth.",
+      "fixture_tags": ["duplicate_offer", "price_conflict"]
+    },
+    "offer_nb_003_agency": {
+      "purpose": "Scenario-driven commercial Offer.",
+      "fixture_tags": ["duplicate_offer"]
+    },
+    "offer_sec_001_agency": {
+      "purpose": "Offer participates in unresolved price conflict ground truth.",
+      "fixture_tags": ["duplicate_offer", "price_conflict"]
+    },
+    "offer_sec_002_classified": {
+      "purpose": "Scenario-driven commercial Offer.",
+      "fixture_tags": ["duplicate_offer"]
+    },
+    "offer_house_001_classified": {
+      "purpose": "Offer participates in unresolved price conflict ground truth.",
+      "fixture_tags": ["duplicate_offer", "price_conflict"]
+    },
+    "offer_house_002_classified": {
+      "purpose": "Scenario-driven commercial Offer.",
+      "fixture_tags": ["duplicate_offer"]
+    },
+    "offer_th_001_classified": {
+      "purpose": "Offer participates in unresolved price conflict ground truth.",
+      "fixture_tags": ["duplicate_offer", "price_conflict"]
+    },
+    "offer_nb_005_project": {
+      "purpose": "Scenario-driven commercial Offer.",
+      "fixture_tags": ["duplicate_offer"]
+    },
+    "offer_sec_004_agency": {
+      "purpose": "Scenario-driven commercial Offer.",
+      "fixture_tags": ["duplicate_offer"]
+    }
+  }
+}

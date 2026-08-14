@@ -1,0 +1,40 @@
+[
+  {
+    "group_id": "comparison_new_vs_secondary",
+    "property_ids": ["prop_nb_005", "prop_sec_001"],
+    "tradeoff_dimensions": [
+      "move-in timeline",
+      "finishing",
+      "financing confidence"
+    ],
+    "known_differences": [
+      "The secondary unit is ready sooner; the new build has confirmed synthetic family financing."
+    ],
+    "unknowns": ["Future renovation cost for the new-build unit."],
+    "winner": null
+  },
+  {
+    "group_id": "comparison_apartment_vs_house",
+    "property_ids": ["prop_sec_002", "prop_house_001"],
+    "tradeoff_dimensions": ["area", "land", "commute", "maintenance"],
+    "known_differences": [
+      "The house has more area and land; the apartment has shorter normalized travel time."
+    ],
+    "unknowns": ["Long-term house maintenance cost."],
+    "winner": null
+  },
+  {
+    "group_id": "comparison_cheap_uncertain",
+    "property_ids": ["prop_special_template_001", "prop_nb_001"],
+    "tradeoff_dimensions": [
+      "price certainty",
+      "availability",
+      "unit specificity"
+    ],
+    "known_differences": [
+      "The template has a lower price_from but is not a concrete unit."
+    ],
+    "unknowns": ["Exact template price", "Exact template availability"],
+    "winner": null
+  }
+]

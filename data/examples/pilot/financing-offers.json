@@ -1,0 +1,240 @@
+[
+  {
+    "schema_version": "1.0",
+    "financing_offer_id": "finoffer_family_zero_confirmed",
+    "program_id": "finprog_family_a",
+    "provider": {
+      "provider_id": null,
+      "provider_type": "developer",
+      "name": "Developer Alpha"
+    },
+    "rate_structure": {
+      "advertised_rate_percent": "6.50",
+      "nominal_rate_percent": "6.50",
+      "rate_from": false,
+      "periods": [],
+      "after_introductory_period_rate_percent": null,
+      "conditions": ["Synthetic test-only financing conditions."]
+    },
+    "initial_payment": {
+      "amount": { "amount": "0.00", "currency": "RUB" },
+      "percent": "0",
+      "zero_payment_status": "available"
+    },
+    "loan_amount": {
+      "minimum": { "amount": "500000.00", "currency": "RUB" },
+      "maximum": { "amount": "12000000.00", "currency": "RUB" }
+    },
+    "term": { "minimum_months": 60, "maximum_months": 360 },
+    "mandatory_services": [],
+    "price_impact": {
+      "kind": "increase",
+      "amount": { "amount": "300000.00", "currency": "RUB" },
+      "percent": null,
+      "description": "Price increases for this zero-down scenario."
+    },
+    "validity": { "from": "2026-01-01", "to": "2027-12-31" },
+    "source_reference": {
+      "source_id": "src_dev_alpha",
+      "snapshot_id": null,
+      "source_url": "https://src-dev-alpha.example/fixture",
+      "evidence_ids": ["evidence_finoffer_family_zero_confirmed_terms"]
+    },
+    "verification_status": "confirmed",
+    "freshness_status": "fresh",
+    "evidence_refs": ["evidence_finoffer_family_zero_confirmed_terms"]
+  },
+  {
+    "schema_version": "1.0",
+    "financing_offer_id": "finoffer_family_zero_claimed",
+    "program_id": "finprog_family_a",
+    "provider": {
+      "provider_id": null,
+      "provider_type": "developer",
+      "name": "Developer Alpha"
+    },
+    "rate_structure": {
+      "advertised_rate_percent": null,
+      "nominal_rate_percent": null,
+      "rate_from": false,
+      "periods": [],
+      "after_introductory_period_rate_percent": null,
+      "conditions": ["Synthetic test-only financing conditions."]
+    },
+    "initial_payment": {
+      "amount": { "amount": "0.00", "currency": "RUB" },
+      "percent": "0",
+      "zero_payment_status": "claimed"
+    },
+    "loan_amount": {
+      "minimum": { "amount": "500000.00", "currency": "RUB" },
+      "maximum": { "amount": "12000000.00", "currency": "RUB" }
+    },
+    "term": { "minimum_months": 60, "maximum_months": 360 },
+    "mandatory_services": [],
+    "price_impact": {
+      "kind": "unknown",
+      "amount": null,
+      "percent": null,
+      "description": "Applicability and price impact require confirmation."
+    },
+    "validity": { "from": "2026-01-01", "to": "2027-12-31" },
+    "source_reference": {
+      "source_id": "src_dev_alpha",
+      "snapshot_id": null,
+      "source_url": "https://src-dev-alpha.example/fixture",
+      "evidence_ids": ["evidence_finoffer_family_zero_claimed_terms"]
+    },
+    "verification_status": "claimed",
+    "freshness_status": "fresh",
+    "evidence_refs": ["evidence_finoffer_family_zero_claimed_terms"]
+  },
+  {
+    "schema_version": "1.0",
+    "financing_offer_id": "finoffer_standard_no_zero",
+    "program_id": "finprog_standard_b",
+    "provider": {
+      "provider_id": null,
+      "provider_type": "bank",
+      "name": "Bank Gamma"
+    },
+    "rate_structure": {
+      "advertised_rate_percent": "13.20",
+      "nominal_rate_percent": "13.20",
+      "rate_from": false,
+      "periods": [],
+      "after_introductory_period_rate_percent": null,
+      "conditions": ["Synthetic test-only financing conditions."]
+    },
+    "initial_payment": {
+      "amount": { "amount": "1000000.00", "currency": "RUB" },
+      "percent": "20.00",
+      "zero_payment_status": "not_available"
+    },
+    "loan_amount": {
+      "minimum": { "amount": "500000.00", "currency": "RUB" },
+      "maximum": { "amount": "12000000.00", "currency": "RUB" }
+    },
+    "term": { "minimum_months": 60, "maximum_months": 360 },
+    "mandatory_services": [],
+    "price_impact": {
+      "kind": "none",
+      "amount": null,
+      "percent": null,
+      "description": null
+    },
+    "validity": { "from": "2026-01-01", "to": "2027-12-31" },
+    "source_reference": {
+      "source_id": "src_bank_gamma",
+      "snapshot_id": null,
+      "source_url": "https://src-bank-gamma.example/fixture",
+      "evidence_ids": ["evidence_finoffer_standard_no_zero_terms"]
+    },
+    "verification_status": "confirmed",
+    "freshness_status": "fresh",
+    "evidence_refs": ["evidence_finoffer_standard_no_zero_terms"]
+  },
+  {
+    "schema_version": "1.0",
+    "financing_offer_id": "finoffer_staged_rate",
+    "program_id": "finprog_family_a",
+    "provider": {
+      "provider_id": null,
+      "provider_type": "developer",
+      "name": "Developer Alpha"
+    },
+    "rate_structure": {
+      "advertised_rate_percent": null,
+      "nominal_rate_percent": null,
+      "rate_from": false,
+      "periods": [
+        {
+          "from_month": 1,
+          "to_month": 12,
+          "rate_percent": "0.10",
+          "conditions": ["Synthetic introductory period only."]
+        },
+        {
+          "from_month": 13,
+          "to_month": null,
+          "rate_percent": "12.00",
+          "conditions": ["Synthetic post-introductory rate."]
+        }
+      ],
+      "after_introductory_period_rate_percent": "12.00",
+      "conditions": ["Synthetic test-only financing conditions."]
+    },
+    "initial_payment": {
+      "amount": { "amount": "1000000.00", "currency": "RUB" },
+      "percent": "20.00",
+      "zero_payment_status": "not_available"
+    },
+    "loan_amount": {
+      "minimum": { "amount": "500000.00", "currency": "RUB" },
+      "maximum": { "amount": "12000000.00", "currency": "RUB" }
+    },
+    "term": { "minimum_months": 60, "maximum_months": 360 },
+    "mandatory_services": [],
+    "price_impact": {
+      "kind": "increase",
+      "amount": { "amount": "180000.00", "currency": "RUB" },
+      "percent": null,
+      "description": "Subsidy cost is included in this Offer only."
+    },
+    "validity": { "from": "2026-01-01", "to": "2027-12-31" },
+    "source_reference": {
+      "source_id": "src_dev_alpha",
+      "snapshot_id": null,
+      "source_url": "https://src-dev-alpha.example/fixture",
+      "evidence_ids": ["evidence_finoffer_staged_rate_terms"]
+    },
+    "verification_status": "confirmed",
+    "freshness_status": "fresh",
+    "evidence_refs": ["evidence_finoffer_staged_rate_terms"]
+  },
+  {
+    "schema_version": "1.0",
+    "financing_offer_id": "finoffer_installment_balloon",
+    "program_id": "finprog_installment_c",
+    "provider": {
+      "provider_id": null,
+      "provider_type": "developer",
+      "name": "Developer Alpha"
+    },
+    "rate_structure": {
+      "advertised_rate_percent": "0.00",
+      "nominal_rate_percent": "0.00",
+      "rate_from": false,
+      "periods": [],
+      "after_introductory_period_rate_percent": null,
+      "conditions": ["Synthetic test-only financing conditions."]
+    },
+    "initial_payment": {
+      "amount": { "amount": "1000000.00", "currency": "RUB" },
+      "percent": "20.00",
+      "zero_payment_status": "not_available"
+    },
+    "loan_amount": {
+      "minimum": { "amount": "500000.00", "currency": "RUB" },
+      "maximum": { "amount": "12000000.00", "currency": "RUB" }
+    },
+    "term": { "minimum_months": 12, "maximum_months": 24 },
+    "mandatory_services": [],
+    "price_impact": {
+      "kind": "none",
+      "amount": null,
+      "percent": null,
+      "description": "Limited-duration installment with final balloon payment."
+    },
+    "validity": { "from": "2026-01-01", "to": "2027-12-31" },
+    "source_reference": {
+      "source_id": "src_dev_alpha",
+      "snapshot_id": null,
+      "source_url": "https://src-dev-alpha.example/fixture",
+      "evidence_ids": ["evidence_finoffer_installment_balloon_terms"]
+    },
+    "verification_status": "confirmed",
+    "freshness_status": "fresh",
+    "evidence_refs": ["evidence_finoffer_installment_balloon_terms"]
+  }
+]

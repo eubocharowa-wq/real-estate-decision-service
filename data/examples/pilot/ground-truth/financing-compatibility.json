@@ -1,0 +1,18 @@
+[
+  {
+    "case_id": "fincompat_no_frankenstein_nb_001",
+    "property_id": "prop_nb_001",
+    "allowed_scenario_ids": [
+      "scenario_nb_001_cash",
+      "scenario_nb_001_standard",
+      "scenario_nb_001_zero"
+    ],
+    "forbidden_combinations": [
+      {
+        "price_offer_id": "offer_nb_001_primary",
+        "financing_offer_id": "finoffer_family_zero_confirmed",
+        "reason": "The lower primary Offer price cannot be combined with zero-down terms attached only to the higher agency Offer."
+      }
+    ]
+  }
+]

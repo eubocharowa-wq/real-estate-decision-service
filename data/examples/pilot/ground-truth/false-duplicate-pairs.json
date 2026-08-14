@@ -1,0 +1,23 @@
+[
+  {
+    "pair_id": "false_pair_nb_layout_001",
+    "property_ids": ["prop_nb_003", "prop_nb_004"],
+    "offer_ids": ["offer_nb_003_primary", "offer_nb_004_primary"],
+    "expected_relation": "different_property",
+    "similarity_trap": "Same development, layout and area; different unit numbers and floors."
+  },
+  {
+    "pair_id": "false_pair_nb_layout_002",
+    "property_ids": ["prop_nb_005", "prop_nb_006"],
+    "offer_ids": ["offer_nb_005_primary", "offer_nb_006_primary"],
+    "expected_relation": "different_property",
+    "similarity_trap": "Same development and area; distinct physical units."
+  },
+  {
+    "pair_id": "false_pair_secondary_001",
+    "property_ids": ["prop_sec_003", "prop_sec_004"],
+    "offer_ids": ["offer_sec_003_primary", "offer_sec_004_primary"],
+    "expected_relation": "different_property",
+    "similarity_trap": "Similar area and room count at one synthetic street; different floor and house."
+  }
+]

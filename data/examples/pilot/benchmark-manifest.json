@@ -1,0 +1,139 @@
+{
+  "dataset_id": "pilot_dataset_v1",
+  "dataset_version": "1.0.0",
+  "cases": [
+    {
+      "id": "case_budget_hard_fail",
+      "purpose": "Strict price budget hard fail.",
+      "property_ids": ["prop_nb_014"],
+      "offer_ids": ["offer_nb_014_primary"],
+      "relevant_user_request_ids": ["request_pilot_a"],
+      "expected_invariants": ["Offer price is over the strict budget."]
+    },
+    {
+      "id": "case_first_floor_hard_fail",
+      "purpose": "Excluded first floor hard fail.",
+      "property_ids": ["prop_sec_003"],
+      "offer_ids": ["offer_sec_003_primary"],
+      "relevant_user_request_ids": ["request_pilot_a"],
+      "expected_invariants": ["Property floor is exactly 1."]
+    },
+    {
+      "id": "case_movein_hard_fail",
+      "purpose": "Move-in after strict deadline.",
+      "property_ids": ["prop_nb_007"],
+      "offer_ids": ["offer_nb_007_primary"],
+      "relevant_user_request_ids": ["request_pilot_b"],
+      "expected_invariants": ["Move-in date is after the request deadline."]
+    },
+    {
+      "id": "case_utility_hard_fail",
+      "purpose": "Required gas is confirmed absent.",
+      "property_ids": ["prop_house_005"],
+      "offer_ids": ["offer_house_005_primary"],
+      "relevant_user_request_ids": ["request_pilot_e"],
+      "expected_invariants": ["Gas status is absent, not unknown."]
+    },
+    {
+      "id": "case_financing_hard_fail",
+      "purpose": "Required program is not eligible.",
+      "property_ids": ["prop_nb_006"],
+      "offer_ids": ["offer_nb_006_primary"],
+      "relevant_user_request_ids": ["request_pilot_a"],
+      "expected_invariants": ["Family program eligibility is not_eligible."]
+    },
+    {
+      "id": "case_family_unknown",
+      "purpose": "Critical family mortgage applicability unknown.",
+      "property_ids": ["prop_nb_004"],
+      "offer_ids": ["offer_nb_004_primary"],
+      "relevant_user_request_ids": ["request_pilot_a"],
+      "expected_invariants": [
+        "Unknown must criterion must not pass or hard-fail without evidence."
+      ]
+    },
+    {
+      "id": "case_price_from_unknown",
+      "purpose": "Exact price unknown for template inventory.",
+      "property_ids": ["prop_special_template_001"],
+      "offer_ids": ["offer_special_template_001_primary"],
+      "relevant_user_request_ids": ["request_pilot_a"],
+      "expected_invariants": ["price_from is not an exact concrete-unit price."]
+    },
+    {
+      "id": "case_availability_unknown",
+      "purpose": "Availability is unknown.",
+      "property_ids": ["prop_nb_013"],
+      "offer_ids": ["offer_nb_013_primary"],
+      "relevant_user_request_ids": ["request_pilot_a"],
+      "expected_invariants": [
+        "Unknown availability is not converted to available or sold."
+      ]
+    },
+    {
+      "id": "case_gas_unknown",
+      "purpose": "Required house gas status unknown.",
+      "property_ids": ["prop_house_003"],
+      "offer_ids": ["offer_house_003_primary"],
+      "relevant_user_request_ids": ["request_pilot_e"],
+      "expected_invariants": ["Unknown gas is a critical unknown, not false."]
+    },
+    {
+      "id": "case_not_applicable_land",
+      "purpose": "Apartment elevator criterion is not applicable to land.",
+      "property_ids": ["prop_land_001"],
+      "offer_ids": ["offer_land_001_primary"],
+      "relevant_user_request_ids": [],
+      "expected_invariants": [
+        "Land has null building elevator and must support not_applicable evaluation later."
+      ]
+    },
+    {
+      "id": "case_frankenstein_guardrail",
+      "purpose": "Prevent mixing lower price and zero-down from different Offers.",
+      "property_ids": ["prop_nb_001"],
+      "offer_ids": ["offer_nb_001_primary", "offer_nb_001_agency"],
+      "relevant_user_request_ids": ["request_pilot_a"],
+      "expected_invariants": [
+        "Every PurchaseScenario is anchored to one Offer.",
+        "Lower primary price cannot use agency-only zero-down terms."
+      ]
+    },
+    {
+      "id": "case_removed_not_sold",
+      "purpose": "Removed listing must not imply sold.",
+      "property_ids": ["prop_sec_006"],
+      "offer_ids": ["offer_sec_006_primary"],
+      "relevant_user_request_ids": [],
+      "expected_invariants": [
+        "Availability remains unknown and freshness is expired."
+      ]
+    },
+    {
+      "id": "case_area_conflict",
+      "purpose": "Physical area conflict remains unresolved.",
+      "property_ids": ["prop_nb_003"],
+      "offer_ids": ["offer_nb_003_primary"],
+      "relevant_user_request_ids": ["request_pilot_c"],
+      "expected_invariants": ["Both area evidence values remain available."]
+    },
+    {
+      "id": "case_handover_conflict",
+      "purpose": "Handover date conflict remains unresolved.",
+      "property_ids": ["prop_nb_007"],
+      "offer_ids": ["offer_nb_007_primary"],
+      "relevant_user_request_ids": ["request_pilot_b"],
+      "expected_invariants": ["Both handover dates remain available."]
+    },
+    {
+      "id": "case_initial_payment_conflict",
+      "purpose": "Initial payment conflict remains unresolved.",
+      "property_ids": ["prop_nb_002"],
+      "offer_ids": ["offer_nb_002_primary"],
+      "relevant_user_request_ids": ["request_pilot_a"],
+      "expected_invariants": [
+        "Zero and non-zero initial payment evidence coexist."
+      ]
+    }
+  ]
+}

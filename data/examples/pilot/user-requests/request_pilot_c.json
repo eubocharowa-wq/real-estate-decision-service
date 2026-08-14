@@ -1,0 +1,96 @@
+{
+  "schema_version": "1.0",
+  "user_request_id": "request_pilot_c",
+  "intent": "find",
+  "goal": {
+    "purpose": "own_residence",
+    "description": "Synthetic pilot benchmark request."
+  },
+  "location": {
+    "country_codes": ["RU"],
+    "regions": ["Тестовая область"],
+    "cities": ["Пилотск"],
+    "preferred_districts": [],
+    "excluded_districts": [],
+    "destination_addresses": []
+  },
+  "property": {
+    "allowed_property_types": ["apartment", "house"],
+    "allowed_market_types": ["new_build", "secondary", "suburban"],
+    "rooms_min": null,
+    "rooms_max": null
+  },
+  "budget": {
+    "purchase_price": { "minimum": null, "maximum": null },
+    "total_budget": null,
+    "renovation_budget": null
+  },
+  "financing": {
+    "purchase_methods": ["cash", "mortgage"],
+    "required_program_types": [],
+    "initial_payment_max": null,
+    "monthly_payment_max": null,
+    "financing_period": { "from": null, "to": null }
+  },
+  "timeline": {
+    "purchase_by": null,
+    "move_in_by": null,
+    "ready_now_required": null
+  },
+  "household": {
+    "adults_count": 2,
+    "children_count": null,
+    "pets_count": null,
+    "notes": null
+  },
+  "lifestyle": { "commute_modes": ["public_transport"], "notes": [] },
+  "infrastructure": [],
+  "property_features": [],
+  "must_have": [
+    {
+      "schema_version": "1.0",
+      "criterion_id": "criterion_c_area",
+      "category": "property",
+      "field": "physical.total_area_m2",
+      "operator": "gte",
+      "target": 70,
+      "unit": null,
+      "priority": "must",
+      "weight": null,
+      "tolerance": null,
+      "fit_function": null,
+      "criterion_group_id": null,
+      "applicable_property_types": ["apartment", "house"],
+      "source_requirement": ["primary"],
+      "freshness_requirement": "fresh",
+      "critical_if_unknown": true,
+      "user_expression": "Synthetic request criterion: physical.total_area_m2."
+    },
+    {
+      "schema_version": "1.0",
+      "criterion_id": "criterion_c_commute",
+      "category": "infrastructure",
+      "field": "mobility.user_destination.public_transport_time_min",
+      "operator": "within_time",
+      "target": 40,
+      "unit": null,
+      "priority": "must",
+      "weight": null,
+      "tolerance": null,
+      "fit_function": null,
+      "criterion_group_id": null,
+      "applicable_property_types": ["apartment", "house"],
+      "source_requirement": ["primary"],
+      "freshness_requirement": "fresh",
+      "critical_if_unknown": true,
+      "user_expression": "Synthetic request criterion: mobility.user_destination.public_transport_time_min."
+    }
+  ],
+  "nice_to_have": [],
+  "avoid": [],
+  "unknowns": [],
+  "source_links": [],
+  "clarifications": [],
+  "confidence": { "extraction_confidence": 1, "status": "high" },
+  "result_limit": 7
+}

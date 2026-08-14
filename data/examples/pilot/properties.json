@@ -1,0 +1,2817 @@
+[
+  {
+    "schema_version": "1.0",
+    "identity": {
+      "property_id": "prop_nb_001",
+      "canonical_key": "pilot:new_build:prop_nb_001",
+      "cadastral_number": null,
+      "source_unit_ids": ["unit_prop_nb_001"]
+    },
+    "property_type": "apartment",
+    "market_type": "new_build",
+    "location": {
+      "address": {
+        "country_code": "RU",
+        "region": "Тестовая область",
+        "city": "Пилотск",
+        "locality": null,
+        "district": "Центральный",
+        "street": "Тестовая улица 1",
+        "house_number": "11",
+        "postal_code": null
+      },
+      "geo_point": { "latitude": 54.190999999999995, "longitude": 37.611 }
+    },
+    "physical": {
+      "total_area_m2": 38.2,
+      "living_area_m2": 23.7,
+      "kitchen_area_m2": 8.4,
+      "rooms": 1,
+      "bedrooms": null,
+      "floor": 3,
+      "balcony": false,
+      "bathrooms": 1,
+      "layout_type": "layout_1"
+    },
+    "building": {
+      "name": "ЖК Альфа, корпус 2",
+      "building_type": "multi_unit",
+      "floors_total": 18,
+      "built_year": 2024,
+      "elevator": true,
+      "freight_elevator": true
+    },
+    "condition": {
+      "finishing_type": "pre_finish",
+      "condition_description": "Synthetic normalized condition.",
+      "ready_for_living": true
+    },
+    "land": { "area_sotka": null, "category": null, "permitted_use": null },
+    "utilities": {
+      "electricity": "connected",
+      "water": "connected",
+      "gas": "connected",
+      "sewerage": "connected",
+      "heating": "connected",
+      "internet": "available"
+    },
+    "timeline": {
+      "planned_commissioning_date": null,
+      "handover_date": null,
+      "move_in_possible_date": "2026-09-01"
+    },
+    "ownership": {
+      "ownership_type": "developer",
+      "encumbrance_status": "claimed_none",
+      "ownership_notes": null
+    },
+    "metadata": {
+      "created_at": "2026-08-15T00:00:00.000Z",
+      "updated_at": "2026-08-15T00:00:00.000Z",
+      "evidence_refs": [
+        "evidence_prop_nb_001_timeline",
+        "evidence_prop_nb_001_area",
+        "evidence_prop_nb_001_floor",
+        "evidence_prop_nb_001_infrastructure_school_walk_time_min",
+        "evidence_prop_nb_001_infrastructure_kindergarten_walk_time_min",
+        "evidence_prop_nb_001_infrastructure_park_walk_time_min",
+        "evidence_prop_nb_001_infrastructure_transport_walk_time_min",
+        "evidence_prop_nb_001_mobility_user_destination_public_transport_time_min"
+      ],
+      "tags": []
+    }
+  },
+  {
+    "schema_version": "1.0",
+    "identity": {
+      "property_id": "prop_nb_002",
+      "canonical_key": "pilot:new_build:prop_nb_002",
+      "cadastral_number": null,
+      "source_unit_ids": ["unit_prop_nb_002"]
+    },
+    "property_type": "apartment",
+    "market_type": "new_build",
+    "location": {
+      "address": {
+        "country_code": "RU",
+        "region": "Тестовая область",
+        "city": "Пилотск",
+        "locality": null,
+        "district": "Речной",
+        "street": "Тестовая улица 1",
+        "house_number": "12",
+        "postal_code": null
+      },
+      "geo_point": { "latitude": 54.192, "longitude": 37.612 }
+    },
+    "physical": {
+      "total_area_m2": 41.8,
+      "living_area_m2": 25.9,
+      "kitchen_area_m2": 9.2,
+      "rooms": 1,
+      "bedrooms": null,
+      "floor": 4,
+      "balcony": true,
+      "bathrooms": 1,
+      "layout_type": "layout_1"
+    },
+    "building": {
+      "name": "ЖК Альфа, корпус 3",
+      "building_type": "multi_unit",
+      "floors_total": 18,
+      "built_year": 2025,
+      "elevator": true,
+      "freight_elevator": true
+    },
+    "condition": {
+      "finishing_type": "shell",
+      "condition_description": "Synthetic normalized condition.",
+      "ready_for_living": true
+    },
+    "land": { "area_sotka": null, "category": null, "permitted_use": null },
+    "utilities": {
+      "electricity": "connected",
+      "water": "connected",
+      "gas": "connected",
+      "sewerage": "connected",
+      "heating": "connected",
+      "internet": "available"
+    },
+    "timeline": {
+      "planned_commissioning_date": null,
+      "handover_date": null,
+      "move_in_possible_date": "2026-09-01"
+    },
+    "ownership": {
+      "ownership_type": "developer",
+      "encumbrance_status": "claimed_none",
+      "ownership_notes": null
+    },
+    "metadata": {
+      "created_at": "2026-08-15T00:00:00.000Z",
+      "updated_at": "2026-08-15T00:00:00.000Z",
+      "evidence_refs": [
+        "evidence_prop_nb_002_timeline",
+        "evidence_prop_nb_002_area",
+        "evidence_prop_nb_002_floor"
+      ],
+      "tags": []
+    }
+  },
+  {
+    "schema_version": "1.0",
+    "identity": {
+      "property_id": "prop_nb_003",
+      "canonical_key": "pilot:new_build:prop_nb_003",
+      "cadastral_number": null,
+      "source_unit_ids": ["unit_prop_nb_003"]
+    },
+    "property_type": "apartment",
+    "market_type": "new_build",
+    "location": {
+      "address": {
+        "country_code": "RU",
+        "region": "Тестовая область",
+        "city": "Пилотск",
+        "locality": null,
+        "district": "Северный",
+        "street": "Тестовая улица 1",
+        "house_number": "13",
+        "postal_code": null
+      },
+      "geo_point": { "latitude": 54.193, "longitude": 37.613 }
+    },
+    "physical": {
+      "total_area_m2": 44.2,
+      "living_area_m2": 27.4,
+      "kitchen_area_m2": 9.7,
+      "rooms": 2,
+      "bedrooms": null,
+      "floor": 7,
+      "balcony": false,
+      "bathrooms": 1,
+      "layout_type": "layout_2"
+    },
+    "building": {
+      "name": "ЖК Альфа, корпус 1",
+      "building_type": "multi_unit",
+      "floors_total": 18,
+      "built_year": 2023,
+      "elevator": true,
+      "freight_elevator": true
+    },
+    "condition": {
+      "finishing_type": "finished",
+      "condition_description": "Synthetic normalized condition.",
+      "ready_for_living": true
+    },
+    "land": { "area_sotka": null, "category": null, "permitted_use": null },
+    "utilities": {
+      "electricity": "connected",
+      "water": "connected",
+      "gas": "connected",
+      "sewerage": "connected",
+      "heating": "connected",
+      "internet": "available"
+    },
+    "timeline": {
+      "planned_commissioning_date": null,
+      "handover_date": null,
+      "move_in_possible_date": "2026-09-01"
+    },
+    "ownership": {
+      "ownership_type": "developer",
+      "encumbrance_status": "claimed_none",
+      "ownership_notes": null
+    },
+    "metadata": {
+      "created_at": "2026-08-15T00:00:00.000Z",
+      "updated_at": "2026-08-15T00:00:00.000Z",
+      "evidence_refs": [
+        "evidence_prop_nb_003_timeline",
+        "evidence_prop_nb_003_area",
+        "evidence_prop_nb_003_floor"
+      ],
+      "tags": []
+    }
+  },
+  {
+    "schema_version": "1.0",
+    "identity": {
+      "property_id": "prop_nb_004",
+      "canonical_key": "pilot:new_build:prop_nb_004",
+      "cadastral_number": null,
+      "source_unit_ids": ["unit_prop_nb_004"]
+    },
+    "property_type": "apartment",
+    "market_type": "new_build",
+    "location": {
+      "address": {
+        "country_code": "RU",
+        "region": "Тестовая область",
+        "city": "Пилотск",
+        "locality": null,
+        "district": "Центральный",
+        "street": "Тестовая улица 2",
+        "house_number": "14",
+        "postal_code": null
+      },
+      "geo_point": { "latitude": 54.193999999999996, "longitude": 37.614 }
+    },
+    "physical": {
+      "total_area_m2": 44.2,
+      "living_area_m2": 27.4,
+      "kitchen_area_m2": 9.7,
+      "rooms": 1,
+      "bedrooms": null,
+      "floor": 9,
+      "balcony": true,
+      "bathrooms": 1,
+      "layout_type": "layout_1"
+    },
+    "building": {
+      "name": "ЖК Альфа, корпус 2",
+      "building_type": "multi_unit",
+      "floors_total": 18,
+      "built_year": 2024,
+      "elevator": true,
+      "freight_elevator": true
+    },
+    "condition": {
+      "finishing_type": "pre_finish",
+      "condition_description": "Synthetic normalized condition.",
+      "ready_for_living": true
+    },
+    "land": { "area_sotka": null, "category": null, "permitted_use": null },
+    "utilities": {
+      "electricity": "connected",
+      "water": "connected",
+      "gas": "connected",
+      "sewerage": "connected",
+      "heating": "connected",
+      "internet": "available"
+    },
+    "timeline": {
+      "planned_commissioning_date": null,
+      "handover_date": null,
+      "move_in_possible_date": "2026-09-01"
+    },
+    "ownership": {
+      "ownership_type": "developer",
+      "encumbrance_status": "claimed_none",
+      "ownership_notes": null
+    },
+    "metadata": {
+      "created_at": "2026-08-15T00:00:00.000Z",
+      "updated_at": "2026-08-15T00:00:00.000Z",
+      "evidence_refs": [
+        "evidence_prop_nb_004_timeline",
+        "evidence_prop_nb_004_area",
+        "evidence_prop_nb_004_floor"
+      ],
+      "tags": []
+    }
+  },
+  {
+    "schema_version": "1.0",
+    "identity": {
+      "property_id": "prop_nb_005",
+      "canonical_key": "pilot:new_build:prop_nb_005",
+      "cadastral_number": null,
+      "source_unit_ids": ["unit_prop_nb_005"]
+    },
+    "property_type": "apartment",
+    "market_type": "new_build",
+    "location": {
+      "address": {
+        "country_code": "RU",
+        "region": "Тестовая область",
+        "city": "Пилотск",
+        "locality": null,
+        "district": "Речной",
+        "street": "Тестовая улица 2",
+        "house_number": "15",
+        "postal_code": null
+      },
+      "geo_point": { "latitude": 54.195, "longitude": 37.615 }
+    },
+    "physical": {
+      "total_area_m2": 57.4,
+      "living_area_m2": 35.6,
+      "kitchen_area_m2": 12.6,
+      "rooms": 3,
+      "bedrooms": null,
+      "floor": 7,
+      "balcony": false,
+      "bathrooms": 1,
+      "layout_type": "layout_3"
+    },
+    "building": {
+      "name": "ЖК Альфа, корпус 3",
+      "building_type": "multi_unit",
+      "floors_total": 18,
+      "built_year": null,
+      "elevator": true,
+      "freight_elevator": true
+    },
+    "condition": {
+      "finishing_type": "shell",
+      "condition_description": "Synthetic normalized condition.",
+      "ready_for_living": false
+    },
+    "land": { "area_sotka": null, "category": null, "permitted_use": null },
+    "utilities": {
+      "electricity": "connected",
+      "water": "connected",
+      "gas": "connected",
+      "sewerage": "connected",
+      "heating": "connected",
+      "internet": "available"
+    },
+    "timeline": {
+      "planned_commissioning_date": "2027-09-30",
+      "handover_date": "2027-12-15",
+      "move_in_possible_date": "2027-12-15"
+    },
+    "ownership": {
+      "ownership_type": "developer",
+      "encumbrance_status": "claimed_none",
+      "ownership_notes": null
+    },
+    "metadata": {
+      "created_at": "2026-08-15T00:00:00.000Z",
+      "updated_at": "2026-08-15T00:00:00.000Z",
+      "evidence_refs": [
+        "evidence_prop_nb_005_timeline",
+        "evidence_prop_nb_005_area",
+        "evidence_prop_nb_005_floor",
+        "evidence_prop_nb_005_infrastructure_school_walk_time_min",
+        "evidence_prop_nb_005_infrastructure_kindergarten_walk_time_min",
+        "evidence_prop_nb_005_infrastructure_park_walk_time_min",
+        "evidence_prop_nb_005_infrastructure_transport_walk_time_min",
+        "evidence_prop_nb_005_mobility_user_destination_public_transport_time_min"
+      ],
+      "tags": []
+    }
+  },
+  {
+    "schema_version": "1.0",
+    "identity": {
+      "property_id": "prop_nb_006",
+      "canonical_key": "pilot:new_build:prop_nb_006",
+      "cadastral_number": null,
+      "source_unit_ids": ["unit_prop_nb_006"]
+    },
+    "property_type": "apartment",
+    "market_type": "new_build",
+    "location": {
+      "address": {
+        "country_code": "RU",
+        "region": "Тестовая область",
+        "city": "Пилотск",
+        "locality": null,
+        "district": "Северный",
+        "street": "Тестовая улица 2",
+        "house_number": "16",
+        "postal_code": null
+      },
+      "geo_point": { "latitude": 54.196, "longitude": 37.616 }
+    },
+    "physical": {
+      "total_area_m2": 57.4,
+      "living_area_m2": 35.6,
+      "kitchen_area_m2": 12.6,
+      "rooms": 2,
+      "bedrooms": null,
+      "floor": 8,
+      "balcony": true,
+      "bathrooms": 1,
+      "layout_type": "layout_2"
+    },
+    "building": {
+      "name": "ЖК Альфа, корпус 1",
+      "building_type": "multi_unit",
+      "floors_total": 18,
+      "built_year": null,
+      "elevator": true,
+      "freight_elevator": true
+    },
+    "condition": {
+      "finishing_type": "finished",
+      "condition_description": "Synthetic normalized condition.",
+      "ready_for_living": false
+    },
+    "land": { "area_sotka": null, "category": null, "permitted_use": null },
+    "utilities": {
+      "electricity": "connected",
+      "water": "connected",
+      "gas": "connected",
+      "sewerage": "connected",
+      "heating": "connected",
+      "internet": "available"
+    },
+    "timeline": {
+      "planned_commissioning_date": "2027-09-30",
+      "handover_date": "2027-12-15",
+      "move_in_possible_date": "2027-12-15"
+    },
+    "ownership": {
+      "ownership_type": "developer",
+      "encumbrance_status": "claimed_none",
+      "ownership_notes": null
+    },
+    "metadata": {
+      "created_at": "2026-08-15T00:00:00.000Z",
+      "updated_at": "2026-08-15T00:00:00.000Z",
+      "evidence_refs": [
+        "evidence_prop_nb_006_timeline",
+        "evidence_prop_nb_006_area",
+        "evidence_prop_nb_006_floor"
+      ],
+      "tags": []
+    }
+  },
+  {
+    "schema_version": "1.0",
+    "identity": {
+      "property_id": "prop_nb_007",
+      "canonical_key": "pilot:new_build:prop_nb_007",
+      "cadastral_number": null,
+      "source_unit_ids": ["unit_prop_nb_007"]
+    },
+    "property_type": "apartment",
+    "market_type": "new_build",
+    "location": {
+      "address": {
+        "country_code": "RU",
+        "region": "Тестовая область",
+        "city": "Пилотск",
+        "locality": null,
+        "district": "Центральный",
+        "street": "Тестовая улица 2",
+        "house_number": "17",
+        "postal_code": null
+      },
+      "geo_point": { "latitude": 54.196999999999996, "longitude": 37.617 }
+    },
+    "physical": {
+      "total_area_m2": 63.1,
+      "living_area_m2": 39.1,
+      "kitchen_area_m2": 13.9,
+      "rooms": 1,
+      "bedrooms": null,
+      "floor": 9,
+      "balcony": false,
+      "bathrooms": 1,
+      "layout_type": "layout_1"
+    },
+    "building": {
+      "name": "ЖК Альфа, корпус 2",
+      "building_type": "multi_unit",
+      "floors_total": 18,
+      "built_year": null,
+      "elevator": true,
+      "freight_elevator": true
+    },
+    "condition": {
+      "finishing_type": "pre_finish",
+      "condition_description": "Synthetic normalized condition.",
+      "ready_for_living": false
+    },
+    "land": { "area_sotka": null, "category": null, "permitted_use": null },
+    "utilities": {
+      "electricity": "connected",
+      "water": "connected",
+      "gas": "connected",
+      "sewerage": "connected",
+      "heating": "connected",
+      "internet": "available"
+    },
+    "timeline": {
+      "planned_commissioning_date": "2027-09-30",
+      "handover_date": "2027-12-15",
+      "move_in_possible_date": "2027-12-15"
+    },
+    "ownership": {
+      "ownership_type": "developer",
+      "encumbrance_status": "claimed_none",
+      "ownership_notes": null
+    },
+    "metadata": {
+      "created_at": "2026-08-15T00:00:00.000Z",
+      "updated_at": "2026-08-15T00:00:00.000Z",
+      "evidence_refs": [
+        "evidence_prop_nb_007_timeline",
+        "evidence_prop_nb_007_area",
+        "evidence_prop_nb_007_floor"
+      ],
+      "tags": []
+    }
+  },
+  {
+    "schema_version": "1.0",
+    "identity": {
+      "property_id": "prop_nb_008",
+      "canonical_key": "pilot:new_build:prop_nb_008",
+      "cadastral_number": null,
+      "source_unit_ids": ["unit_prop_nb_008"]
+    },
+    "property_type": "apartment",
+    "market_type": "new_build",
+    "location": {
+      "address": {
+        "country_code": "RU",
+        "region": "Тестовая область",
+        "city": "Пилотск",
+        "locality": null,
+        "district": "Речной",
+        "street": "Тестовая улица 3",
+        "house_number": "18",
+        "postal_code": null
+      },
+      "geo_point": { "latitude": 54.198, "longitude": 37.618 }
+    },
+    "physical": {
+      "total_area_m2": 71.5,
+      "living_area_m2": 44.3,
+      "kitchen_area_m2": 15.7,
+      "rooms": 1,
+      "bedrooms": null,
+      "floor": 10,
+      "balcony": true,
+      "bathrooms": 1,
+      "layout_type": "layout_1"
+    },
+    "building": {
+      "name": "ЖК Альфа, корпус 3",
+      "building_type": "multi_unit",
+      "floors_total": 18,
+      "built_year": null,
+      "elevator": true,
+      "freight_elevator": true
+    },
+    "condition": {
+      "finishing_type": "shell",
+      "condition_description": "Synthetic normalized condition.",
+      "ready_for_living": false
+    },
+    "land": { "area_sotka": null, "category": null, "permitted_use": null },
+    "utilities": {
+      "electricity": "connected",
+      "water": "connected",
+      "gas": "connected",
+      "sewerage": "connected",
+      "heating": "connected",
+      "internet": "available"
+    },
+    "timeline": {
+      "planned_commissioning_date": "2027-09-30",
+      "handover_date": "2027-12-15",
+      "move_in_possible_date": "2027-12-15"
+    },
+    "ownership": {
+      "ownership_type": "developer",
+      "encumbrance_status": "claimed_none",
+      "ownership_notes": null
+    },
+    "metadata": {
+      "created_at": "2026-08-15T00:00:00.000Z",
+      "updated_at": "2026-08-15T00:00:00.000Z",
+      "evidence_refs": [
+        "evidence_prop_nb_008_timeline",
+        "evidence_prop_nb_008_area",
+        "evidence_prop_nb_008_floor"
+      ],
+      "tags": []
+    }
+  },
+  {
+    "schema_version": "1.0",
+    "identity": {
+      "property_id": "prop_nb_009",
+      "canonical_key": "pilot:new_build:prop_nb_009",
+      "cadastral_number": null,
+      "source_unit_ids": ["unit_prop_nb_009"]
+    },
+    "property_type": "apartment",
+    "market_type": "new_build",
+    "location": {
+      "address": {
+        "country_code": "RU",
+        "region": "Тестовая область",
+        "city": "Пилотск",
+        "locality": null,
+        "district": "Северный",
+        "street": "Тестовая улица 3",
+        "house_number": "19",
+        "postal_code": null
+      },
+      "geo_point": { "latitude": 54.199, "longitude": 37.619 }
+    },
+    "physical": {
+      "total_area_m2": 74.8,
+      "living_area_m2": 46.4,
+      "kitchen_area_m2": 16.5,
+      "rooms": 2,
+      "bedrooms": null,
+      "floor": 11,
+      "balcony": false,
+      "bathrooms": 1,
+      "layout_type": "layout_2"
+    },
+    "building": {
+      "name": "ЖК Альфа, корпус 1",
+      "building_type": "multi_unit",
+      "floors_total": 18,
+      "built_year": null,
+      "elevator": true,
+      "freight_elevator": true
+    },
+    "condition": {
+      "finishing_type": "finished",
+      "condition_description": "Synthetic normalized condition.",
+      "ready_for_living": false
+    },
+    "land": { "area_sotka": null, "category": null, "permitted_use": null },
+    "utilities": {
+      "electricity": "connected",
+      "water": "connected",
+      "gas": "connected",
+      "sewerage": "connected",
+      "heating": "connected",
+      "internet": "available"
+    },
+    "timeline": {
+      "planned_commissioning_date": "2027-09-30",
+      "handover_date": "2027-12-15",
+      "move_in_possible_date": "2027-12-15"
+    },
+    "ownership": {
+      "ownership_type": "developer",
+      "encumbrance_status": "claimed_none",
+      "ownership_notes": null
+    },
+    "metadata": {
+      "created_at": "2026-08-15T00:00:00.000Z",
+      "updated_at": "2026-08-15T00:00:00.000Z",
+      "evidence_refs": [
+        "evidence_prop_nb_009_timeline",
+        "evidence_prop_nb_009_area",
+        "evidence_prop_nb_009_floor"
+      ],
+      "tags": []
+    }
+  },
+  {
+    "schema_version": "1.0",
+    "identity": {
+      "property_id": "prop_nb_010",
+      "canonical_key": "pilot:new_build:prop_nb_010",
+      "cadastral_number": null,
+      "source_unit_ids": ["unit_prop_nb_010"]
+    },
+    "property_type": "apartment",
+    "market_type": "new_build",
+    "location": {
+      "address": {
+        "country_code": "RU",
+        "region": "Тестовая область",
+        "city": "Пилотск",
+        "locality": null,
+        "district": "Центральный",
+        "street": "Тестовая улица 3",
+        "house_number": "20",
+        "postal_code": null
+      },
+      "geo_point": { "latitude": 54.199999999999996, "longitude": 37.62 }
+    },
+    "physical": {
+      "total_area_m2": 82.3,
+      "living_area_m2": 51,
+      "kitchen_area_m2": 18,
+      "rooms": 3,
+      "bedrooms": null,
+      "floor": 12,
+      "balcony": true,
+      "bathrooms": 1,
+      "layout_type": "layout_3"
+    },
+    "building": {
+      "name": "ЖК Альфа, корпус 2",
+      "building_type": "multi_unit",
+      "floors_total": 18,
+      "built_year": null,
+      "elevator": true,
+      "freight_elevator": true
+    },
+    "condition": {
+      "finishing_type": "pre_finish",
+      "condition_description": "Synthetic normalized condition.",
+      "ready_for_living": false
+    },
+    "land": { "area_sotka": null, "category": null, "permitted_use": null },
+    "utilities": {
+      "electricity": "connected",
+      "water": "connected",
+      "gas": "connected",
+      "sewerage": "connected",
+      "heating": "connected",
+      "internet": "available"
+    },
+    "timeline": {
+      "planned_commissioning_date": "2027-09-30",
+      "handover_date": "2027-12-15",
+      "move_in_possible_date": "2027-12-15"
+    },
+    "ownership": {
+      "ownership_type": "developer",
+      "encumbrance_status": "claimed_none",
+      "ownership_notes": null
+    },
+    "metadata": {
+      "created_at": "2026-08-15T00:00:00.000Z",
+      "updated_at": "2026-08-15T00:00:00.000Z",
+      "evidence_refs": [
+        "evidence_prop_nb_010_timeline",
+        "evidence_prop_nb_010_area",
+        "evidence_prop_nb_010_floor"
+      ],
+      "tags": []
+    }
+  },
+  {
+    "schema_version": "1.0",
+    "identity": {
+      "property_id": "prop_nb_011",
+      "canonical_key": "pilot:new_build:prop_nb_011",
+      "cadastral_number": null,
+      "source_unit_ids": ["unit_prop_nb_011"]
+    },
+    "property_type": "apartment",
+    "market_type": "new_build",
+    "location": {
+      "address": {
+        "country_code": "RU",
+        "region": "Тестовая область",
+        "city": "Пилотск",
+        "locality": null,
+        "district": "Речной",
+        "street": "Тестовая улица 3",
+        "house_number": "21",
+        "postal_code": null
+      },
+      "geo_point": { "latitude": 54.201, "longitude": 37.621 }
+    },
+    "physical": {
+      "total_area_m2": 36.9,
+      "living_area_m2": 22.9,
+      "kitchen_area_m2": 8.1,
+      "rooms": 1,
+      "bedrooms": null,
+      "floor": 13,
+      "balcony": false,
+      "bathrooms": 1,
+      "layout_type": "layout_1"
+    },
+    "building": {
+      "name": "ЖК Альфа, корпус 3",
+      "building_type": "multi_unit",
+      "floors_total": 18,
+      "built_year": null,
+      "elevator": true,
+      "freight_elevator": true
+    },
+    "condition": {
+      "finishing_type": "shell",
+      "condition_description": "Synthetic normalized condition.",
+      "ready_for_living": false
+    },
+    "land": { "area_sotka": null, "category": null, "permitted_use": null },
+    "utilities": {
+      "electricity": "connected",
+      "water": "connected",
+      "gas": "connected",
+      "sewerage": "connected",
+      "heating": "connected",
+      "internet": "available"
+    },
+    "timeline": {
+      "planned_commissioning_date": "2027-09-30",
+      "handover_date": "2027-12-15",
+      "move_in_possible_date": "2027-12-15"
+    },
+    "ownership": {
+      "ownership_type": "developer",
+      "encumbrance_status": "claimed_none",
+      "ownership_notes": null
+    },
+    "metadata": {
+      "created_at": "2026-08-15T00:00:00.000Z",
+      "updated_at": "2026-08-15T00:00:00.000Z",
+      "evidence_refs": [
+        "evidence_prop_nb_011_timeline",
+        "evidence_prop_nb_011_area",
+        "evidence_prop_nb_011_floor"
+      ],
+      "tags": []
+    }
+  },
+  {
+    "schema_version": "1.0",
+    "identity": {
+      "property_id": "prop_nb_012",
+      "canonical_key": "pilot:new_build:prop_nb_012",
+      "cadastral_number": null,
+      "source_unit_ids": ["unit_prop_nb_012"]
+    },
+    "property_type": "apartment",
+    "market_type": "new_build",
+    "location": {
+      "address": {
+        "country_code": "RU",
+        "region": "Тестовая область",
+        "city": "Пилотск",
+        "locality": null,
+        "district": "Северный",
+        "street": "Тестовая улица 4",
+        "house_number": "22",
+        "postal_code": null
+      },
+      "geo_point": { "latitude": 54.202, "longitude": 37.622 }
+    },
+    "physical": {
+      "total_area_m2": 48.6,
+      "living_area_m2": 30.1,
+      "kitchen_area_m2": 10.7,
+      "rooms": 2,
+      "bedrooms": null,
+      "floor": 14,
+      "balcony": true,
+      "bathrooms": 1,
+      "layout_type": "layout_2"
+    },
+    "building": {
+      "name": "ЖК Альфа, корпус 1",
+      "building_type": "multi_unit",
+      "floors_total": 18,
+      "built_year": null,
+      "elevator": true,
+      "freight_elevator": true
+    },
+    "condition": {
+      "finishing_type": "finished",
+      "condition_description": "Synthetic normalized condition.",
+      "ready_for_living": false
+    },
+    "land": { "area_sotka": null, "category": null, "permitted_use": null },
+    "utilities": {
+      "electricity": "connected",
+      "water": "connected",
+      "gas": "connected",
+      "sewerage": "connected",
+      "heating": "connected",
+      "internet": "available"
+    },
+    "timeline": {
+      "planned_commissioning_date": "2027-09-30",
+      "handover_date": "2027-12-15",
+      "move_in_possible_date": "2027-12-15"
+    },
+    "ownership": {
+      "ownership_type": "developer",
+      "encumbrance_status": "claimed_none",
+      "ownership_notes": null
+    },
+    "metadata": {
+      "created_at": "2026-08-15T00:00:00.000Z",
+      "updated_at": "2026-08-15T00:00:00.000Z",
+      "evidence_refs": [
+        "evidence_prop_nb_012_timeline",
+        "evidence_prop_nb_012_area",
+        "evidence_prop_nb_012_floor"
+      ],
+      "tags": []
+    }
+  },
+  {
+    "schema_version": "1.0",
+    "identity": {
+      "property_id": "prop_nb_013",
+      "canonical_key": "pilot:new_build:prop_nb_013",
+      "cadastral_number": null,
+      "source_unit_ids": ["unit_prop_nb_013"]
+    },
+    "property_type": "apartment",
+    "market_type": "new_build",
+    "location": {
+      "address": {
+        "country_code": "RU",
+        "region": "Тестовая область",
+        "city": "Пилотск",
+        "locality": null,
+        "district": "Центральный",
+        "street": "Тестовая улица 4",
+        "house_number": "23",
+        "postal_code": null
+      },
+      "geo_point": { "latitude": 54.202999999999996, "longitude": 37.623 }
+    },
+    "physical": {
+      "total_area_m2": 66.2,
+      "living_area_m2": 41,
+      "kitchen_area_m2": 14.6,
+      "rooms": 1,
+      "bedrooms": null,
+      "floor": 15,
+      "balcony": false,
+      "bathrooms": 1,
+      "layout_type": "layout_1"
+    },
+    "building": {
+      "name": "ЖК Альфа, корпус 2",
+      "building_type": "multi_unit",
+      "floors_total": 18,
+      "built_year": null,
+      "elevator": true,
+      "freight_elevator": true
+    },
+    "condition": {
+      "finishing_type": "pre_finish",
+      "condition_description": "Synthetic normalized condition.",
+      "ready_for_living": false
+    },
+    "land": { "area_sotka": null, "category": null, "permitted_use": null },
+    "utilities": {
+      "electricity": "connected",
+      "water": "connected",
+      "gas": "connected",
+      "sewerage": "connected",
+      "heating": "connected",
+      "internet": "available"
+    },
+    "timeline": {
+      "planned_commissioning_date": "2027-09-30",
+      "handover_date": "2027-12-15",
+      "move_in_possible_date": null
+    },
+    "ownership": {
+      "ownership_type": "developer",
+      "encumbrance_status": "claimed_none",
+      "ownership_notes": null
+    },
+    "metadata": {
+      "created_at": "2026-08-15T00:00:00.000Z",
+      "updated_at": "2026-08-15T00:00:00.000Z",
+      "evidence_refs": [
+        "evidence_prop_nb_013_timeline",
+        "evidence_prop_nb_013_area",
+        "evidence_prop_nb_013_floor"
+      ],
+      "tags": []
+    }
+  },
+  {
+    "schema_version": "1.0",
+    "identity": {
+      "property_id": "prop_nb_014",
+      "canonical_key": "pilot:new_build:prop_nb_014",
+      "cadastral_number": null,
+      "source_unit_ids": ["unit_prop_nb_014"]
+    },
+    "property_type": "apartment",
+    "market_type": "new_build",
+    "location": {
+      "address": {
+        "country_code": "RU",
+        "region": "Тестовая область",
+        "city": "Пилотск",
+        "locality": null,
+        "district": "Речной",
+        "street": "Тестовая улица 4",
+        "house_number": "24",
+        "postal_code": null
+      },
+      "geo_point": { "latitude": 54.204, "longitude": 37.624 }
+    },
+    "physical": {
+      "total_area_m2": 91.4,
+      "living_area_m2": 56.7,
+      "kitchen_area_m2": 18,
+      "rooms": 1,
+      "bedrooms": null,
+      "floor": 16,
+      "balcony": true,
+      "bathrooms": 2,
+      "layout_type": "layout_1"
+    },
+    "building": {
+      "name": "ЖК Альфа, корпус 3",
+      "building_type": "multi_unit",
+      "floors_total": 18,
+      "built_year": null,
+      "elevator": true,
+      "freight_elevator": true
+    },
+    "condition": {
+      "finishing_type": "shell",
+      "condition_description": "Synthetic normalized condition.",
+      "ready_for_living": false
+    },
+    "land": { "area_sotka": null, "category": null, "permitted_use": null },
+    "utilities": {
+      "electricity": "connected",
+      "water": "connected",
+      "gas": "connected",
+      "sewerage": "connected",
+      "heating": "connected",
+      "internet": "available"
+    },
+    "timeline": {
+      "planned_commissioning_date": "2027-09-30",
+      "handover_date": "2027-12-15",
+      "move_in_possible_date": "2027-12-15"
+    },
+    "ownership": {
+      "ownership_type": "developer",
+      "encumbrance_status": "claimed_none",
+      "ownership_notes": null
+    },
+    "metadata": {
+      "created_at": "2026-08-15T00:00:00.000Z",
+      "updated_at": "2026-08-15T00:00:00.000Z",
+      "evidence_refs": [
+        "evidence_prop_nb_014_timeline",
+        "evidence_prop_nb_014_area",
+        "evidence_prop_nb_014_floor"
+      ],
+      "tags": []
+    }
+  },
+  {
+    "schema_version": "1.0",
+    "identity": {
+      "property_id": "prop_sec_001",
+      "canonical_key": "pilot:secondary:prop_sec_001",
+      "cadastral_number": null,
+      "source_unit_ids": ["unit_prop_sec_001"]
+    },
+    "property_type": "apartment",
+    "market_type": "secondary",
+    "location": {
+      "address": {
+        "country_code": "RU",
+        "region": "Тестовая область",
+        "city": "Пилотск",
+        "locality": null,
+        "district": "Северный",
+        "street": "Тестовая улица 6",
+        "house_number": "31",
+        "postal_code": null
+      },
+      "geo_point": { "latitude": 54.211, "longitude": 37.631 }
+    },
+    "physical": {
+      "total_area_m2": 46.5,
+      "living_area_m2": 28.8,
+      "kitchen_area_m2": 10.2,
+      "rooms": 1,
+      "bedrooms": null,
+      "floor": 3,
+      "balcony": false,
+      "bathrooms": 1,
+      "layout_type": "layout_1"
+    },
+    "building": {
+      "name": "Дом 31",
+      "building_type": "multi_unit",
+      "floors_total": 9,
+      "built_year": 2023,
+      "elevator": true,
+      "freight_elevator": false
+    },
+    "condition": {
+      "finishing_type": "finished",
+      "condition_description": "Synthetic normalized condition.",
+      "ready_for_living": true
+    },
+    "land": { "area_sotka": null, "category": null, "permitted_use": null },
+    "utilities": {
+      "electricity": "connected",
+      "water": "connected",
+      "gas": "connected",
+      "sewerage": "connected",
+      "heating": "connected",
+      "internet": "available"
+    },
+    "timeline": {
+      "planned_commissioning_date": null,
+      "handover_date": null,
+      "move_in_possible_date": "2026-10-01"
+    },
+    "ownership": {
+      "ownership_type": "private",
+      "encumbrance_status": "claimed_none",
+      "ownership_notes": null
+    },
+    "metadata": {
+      "created_at": "2026-08-15T00:00:00.000Z",
+      "updated_at": "2026-08-15T00:00:00.000Z",
+      "evidence_refs": [
+        "evidence_prop_sec_001_timeline",
+        "evidence_prop_sec_001_area",
+        "evidence_prop_sec_001_floor",
+        "evidence_prop_sec_001_infrastructure_school_walk_time_min",
+        "evidence_prop_sec_001_infrastructure_kindergarten_walk_time_min",
+        "evidence_prop_sec_001_infrastructure_park_walk_time_min",
+        "evidence_prop_sec_001_infrastructure_transport_walk_time_min",
+        "evidence_prop_sec_001_mobility_user_destination_public_transport_time_min"
+      ],
+      "tags": []
+    }
+  },
+  {
+    "schema_version": "1.0",
+    "identity": {
+      "property_id": "prop_sec_002",
+      "canonical_key": "pilot:secondary:prop_sec_002",
+      "cadastral_number": null,
+      "source_unit_ids": ["unit_prop_sec_002"]
+    },
+    "property_type": "apartment",
+    "market_type": "secondary",
+    "location": {
+      "address": {
+        "country_code": "RU",
+        "region": "Тестовая область",
+        "city": "Пилотск",
+        "locality": null,
+        "district": "Центральный",
+        "street": "Тестовая улица 6",
+        "house_number": "32",
+        "postal_code": null
+      },
+      "geo_point": { "latitude": 54.211999999999996, "longitude": 37.632 }
+    },
+    "physical": {
+      "total_area_m2": 52.1,
+      "living_area_m2": 32.3,
+      "kitchen_area_m2": 11.5,
+      "rooms": 1,
+      "bedrooms": null,
+      "floor": 4,
+      "balcony": true,
+      "bathrooms": 1,
+      "layout_type": "layout_1"
+    },
+    "building": {
+      "name": "Дом 32",
+      "building_type": "multi_unit",
+      "floors_total": 9,
+      "built_year": 2024,
+      "elevator": true,
+      "freight_elevator": false
+    },
+    "condition": {
+      "finishing_type": "finished",
+      "condition_description": "Synthetic normalized condition.",
+      "ready_for_living": true
+    },
+    "land": { "area_sotka": null, "category": null, "permitted_use": null },
+    "utilities": {
+      "electricity": "connected",
+      "water": "connected",
+      "gas": "connected",
+      "sewerage": "connected",
+      "heating": "connected",
+      "internet": "available"
+    },
+    "timeline": {
+      "planned_commissioning_date": null,
+      "handover_date": null,
+      "move_in_possible_date": "2026-10-01"
+    },
+    "ownership": {
+      "ownership_type": "private",
+      "encumbrance_status": "claimed_none",
+      "ownership_notes": null
+    },
+    "metadata": {
+      "created_at": "2026-08-15T00:00:00.000Z",
+      "updated_at": "2026-08-15T00:00:00.000Z",
+      "evidence_refs": [
+        "evidence_prop_sec_002_timeline",
+        "evidence_prop_sec_002_area",
+        "evidence_prop_sec_002_floor"
+      ],
+      "tags": []
+    }
+  },
+  {
+    "schema_version": "1.0",
+    "identity": {
+      "property_id": "prop_sec_003",
+      "canonical_key": "pilot:secondary:prop_sec_003",
+      "cadastral_number": null,
+      "source_unit_ids": ["unit_prop_sec_003"]
+    },
+    "property_type": "apartment",
+    "market_type": "secondary",
+    "location": {
+      "address": {
+        "country_code": "RU",
+        "region": "Тестовая область",
+        "city": "Пилотск",
+        "locality": null,
+        "district": "Речной",
+        "street": "Тестовая улица 6",
+        "house_number": "33",
+        "postal_code": null
+      },
+      "geo_point": { "latitude": 54.213, "longitude": 37.633 }
+    },
+    "physical": {
+      "total_area_m2": 59.8,
+      "living_area_m2": 37.1,
+      "kitchen_area_m2": 13.2,
+      "rooms": 2,
+      "bedrooms": null,
+      "floor": 1,
+      "balcony": false,
+      "bathrooms": 1,
+      "layout_type": "layout_2"
+    },
+    "building": {
+      "name": "Дом 33",
+      "building_type": "multi_unit",
+      "floors_total": 9,
+      "built_year": 2025,
+      "elevator": true,
+      "freight_elevator": false
+    },
+    "condition": {
+      "finishing_type": "renovated",
+      "condition_description": "Synthetic normalized condition.",
+      "ready_for_living": true
+    },
+    "land": { "area_sotka": null, "category": null, "permitted_use": null },
+    "utilities": {
+      "electricity": "connected",
+      "water": "connected",
+      "gas": "connected",
+      "sewerage": "connected",
+      "heating": "connected",
+      "internet": "available"
+    },
+    "timeline": {
+      "planned_commissioning_date": null,
+      "handover_date": null,
+      "move_in_possible_date": "2026-10-01"
+    },
+    "ownership": {
+      "ownership_type": "private",
+      "encumbrance_status": "claimed_none",
+      "ownership_notes": null
+    },
+    "metadata": {
+      "created_at": "2026-08-15T00:00:00.000Z",
+      "updated_at": "2026-08-15T00:00:00.000Z",
+      "evidence_refs": [
+        "evidence_prop_sec_003_timeline",
+        "evidence_prop_sec_003_area",
+        "evidence_prop_sec_003_floor"
+      ],
+      "tags": []
+    }
+  },
+  {
+    "schema_version": "1.0",
+    "identity": {
+      "property_id": "prop_sec_004",
+      "canonical_key": "pilot:secondary:prop_sec_004",
+      "cadastral_number": null,
+      "source_unit_ids": ["unit_prop_sec_004"]
+    },
+    "property_type": "apartment",
+    "market_type": "secondary",
+    "location": {
+      "address": {
+        "country_code": "RU",
+        "region": "Тестовая область",
+        "city": "Пилотск",
+        "locality": null,
+        "district": "Северный",
+        "street": "Тестовая улица 7",
+        "house_number": "34",
+        "postal_code": null
+      },
+      "geo_point": { "latitude": 54.214, "longitude": 37.634 }
+    },
+    "physical": {
+      "total_area_m2": 59.8,
+      "living_area_m2": 37.1,
+      "kitchen_area_m2": 13.2,
+      "rooms": 3,
+      "bedrooms": null,
+      "floor": 9,
+      "balcony": true,
+      "bathrooms": 1,
+      "layout_type": "layout_3"
+    },
+    "building": {
+      "name": "Дом 34",
+      "building_type": "multi_unit",
+      "floors_total": 9,
+      "built_year": 2023,
+      "elevator": true,
+      "freight_elevator": false
+    },
+    "condition": {
+      "finishing_type": "needs_renovation",
+      "condition_description": "Synthetic case: renovation is required.",
+      "ready_for_living": true
+    },
+    "land": { "area_sotka": null, "category": null, "permitted_use": null },
+    "utilities": {
+      "electricity": "connected",
+      "water": "connected",
+      "gas": "connected",
+      "sewerage": "connected",
+      "heating": "connected",
+      "internet": "available"
+    },
+    "timeline": {
+      "planned_commissioning_date": null,
+      "handover_date": null,
+      "move_in_possible_date": "2026-10-01"
+    },
+    "ownership": {
+      "ownership_type": "private",
+      "encumbrance_status": "unknown",
+      "ownership_notes": null
+    },
+    "metadata": {
+      "created_at": "2026-08-15T00:00:00.000Z",
+      "updated_at": "2026-08-15T00:00:00.000Z",
+      "evidence_refs": [
+        "evidence_prop_sec_004_timeline",
+        "evidence_prop_sec_004_area",
+        "evidence_prop_sec_004_floor",
+        "evidence_prop_sec_004_infrastructure_school_walk_time_min",
+        "evidence_prop_sec_004_infrastructure_kindergarten_walk_time_min",
+        "evidence_prop_sec_004_infrastructure_park_walk_time_min",
+        "evidence_prop_sec_004_infrastructure_transport_walk_time_min",
+        "evidence_prop_sec_004_mobility_user_destination_public_transport_time_min"
+      ],
+      "tags": []
+    }
+  },
+  {
+    "schema_version": "1.0",
+    "identity": {
+      "property_id": "prop_sec_005",
+      "canonical_key": "pilot:secondary:prop_sec_005",
+      "cadastral_number": null,
+      "source_unit_ids": ["unit_prop_sec_005"]
+    },
+    "property_type": "apartment",
+    "market_type": "secondary",
+    "location": {
+      "address": {
+        "country_code": "RU",
+        "region": "Тестовая область",
+        "city": "Пилотск",
+        "locality": null,
+        "district": "Центральный",
+        "street": "Тестовая улица 7",
+        "house_number": null,
+        "postal_code": null
+      },
+      "geo_point": { "latitude": 54.214999999999996, "longitude": 37.635 }
+    },
+    "physical": {
+      "total_area_m2": 42.7,
+      "living_area_m2": 26.5,
+      "kitchen_area_m2": 9.4,
+      "rooms": 1,
+      "bedrooms": null,
+      "floor": 7,
+      "balcony": false,
+      "bathrooms": 1,
+      "layout_type": "layout_1"
+    },
+    "building": {
+      "name": "Дом 35",
+      "building_type": "multi_unit",
+      "floors_total": 9,
+      "built_year": 2024,
+      "elevator": true,
+      "freight_elevator": false
+    },
+    "condition": {
+      "finishing_type": "finished",
+      "condition_description": "Synthetic normalized condition.",
+      "ready_for_living": true
+    },
+    "land": { "area_sotka": null, "category": null, "permitted_use": null },
+    "utilities": {
+      "electricity": "connected",
+      "water": "connected",
+      "gas": "connected",
+      "sewerage": "connected",
+      "heating": "connected",
+      "internet": "available"
+    },
+    "timeline": {
+      "planned_commissioning_date": null,
+      "handover_date": null,
+      "move_in_possible_date": "2026-10-01"
+    },
+    "ownership": {
+      "ownership_type": "private",
+      "encumbrance_status": "claimed_none",
+      "ownership_notes": null
+    },
+    "metadata": {
+      "created_at": "2026-08-15T00:00:00.000Z",
+      "updated_at": "2026-08-15T00:00:00.000Z",
+      "evidence_refs": [
+        "evidence_prop_sec_005_timeline",
+        "evidence_prop_sec_005_area",
+        "evidence_prop_sec_005_floor"
+      ],
+      "tags": []
+    }
+  },
+  {
+    "schema_version": "1.0",
+    "identity": {
+      "property_id": "prop_sec_006",
+      "canonical_key": "pilot:secondary:prop_sec_006",
+      "cadastral_number": null,
+      "source_unit_ids": ["unit_prop_sec_006"]
+    },
+    "property_type": "apartment",
+    "market_type": "secondary",
+    "location": {
+      "address": {
+        "country_code": "RU",
+        "region": "Тестовая область",
+        "city": "Пилотск",
+        "locality": null,
+        "district": "Речной",
+        "street": "Тестовая улица 7",
+        "house_number": "36",
+        "postal_code": null
+      },
+      "geo_point": { "latitude": 54.216, "longitude": 37.636 }
+    },
+    "physical": {
+      "total_area_m2": 71.2,
+      "living_area_m2": 44.1,
+      "kitchen_area_m2": 15.7,
+      "rooms": 2,
+      "bedrooms": null,
+      "floor": 8,
+      "balcony": true,
+      "bathrooms": 1,
+      "layout_type": "layout_2"
+    },
+    "building": {
+      "name": "Дом 36",
+      "building_type": "multi_unit",
+      "floors_total": 9,
+      "built_year": null,
+      "elevator": true,
+      "freight_elevator": false
+    },
+    "condition": {
+      "finishing_type": "renovated",
+      "condition_description": "Synthetic normalized condition.",
+      "ready_for_living": null
+    },
+    "land": { "area_sotka": null, "category": null, "permitted_use": null },
+    "utilities": {
+      "electricity": "connected",
+      "water": "connected",
+      "gas": "connected",
+      "sewerage": "connected",
+      "heating": "connected",
+      "internet": "available"
+    },
+    "timeline": {
+      "planned_commissioning_date": null,
+      "handover_date": null,
+      "move_in_possible_date": "2026-10-01"
+    },
+    "ownership": {
+      "ownership_type": "private",
+      "encumbrance_status": "claimed_none",
+      "ownership_notes": null
+    },
+    "metadata": {
+      "created_at": "2026-08-15T00:00:00.000Z",
+      "updated_at": "2026-08-15T00:00:00.000Z",
+      "evidence_refs": [
+        "evidence_prop_sec_006_timeline",
+        "evidence_prop_sec_006_area",
+        "evidence_prop_sec_006_floor"
+      ],
+      "tags": []
+    }
+  },
+  {
+    "schema_version": "1.0",
+    "identity": {
+      "property_id": "prop_sec_007",
+      "canonical_key": "pilot:secondary:prop_sec_007",
+      "cadastral_number": null,
+      "source_unit_ids": ["unit_prop_sec_007"]
+    },
+    "property_type": "apartment",
+    "market_type": "secondary",
+    "location": {
+      "address": {
+        "country_code": "RU",
+        "region": "Тестовая область",
+        "city": "Пилотск",
+        "locality": null,
+        "district": "Северный",
+        "street": "Тестовая улица 7",
+        "house_number": "37",
+        "postal_code": null
+      },
+      "geo_point": { "latitude": 54.217, "longitude": 37.637 }
+    },
+    "physical": {
+      "total_area_m2": 64.4,
+      "living_area_m2": 39.9,
+      "kitchen_area_m2": 14.2,
+      "rooms": 1,
+      "bedrooms": null,
+      "floor": 2,
+      "balcony": false,
+      "bathrooms": 1,
+      "layout_type": "layout_1"
+    },
+    "building": {
+      "name": "Дом 37",
+      "building_type": "multi_unit",
+      "floors_total": 9,
+      "built_year": 2023,
+      "elevator": true,
+      "freight_elevator": false
+    },
+    "condition": {
+      "finishing_type": "finished",
+      "condition_description": "Synthetic normalized condition.",
+      "ready_for_living": true
+    },
+    "land": { "area_sotka": null, "category": null, "permitted_use": null },
+    "utilities": {
+      "electricity": "connected",
+      "water": "connected",
+      "gas": "connected",
+      "sewerage": "connected",
+      "heating": "connected",
+      "internet": "available"
+    },
+    "timeline": {
+      "planned_commissioning_date": null,
+      "handover_date": null,
+      "move_in_possible_date": "2026-10-01"
+    },
+    "ownership": {
+      "ownership_type": "private",
+      "encumbrance_status": "claimed_none",
+      "ownership_notes": null
+    },
+    "metadata": {
+      "created_at": "2026-08-15T00:00:00.000Z",
+      "updated_at": "2026-08-15T00:00:00.000Z",
+      "evidence_refs": [
+        "evidence_prop_sec_007_timeline",
+        "evidence_prop_sec_007_area",
+        "evidence_prop_sec_007_floor"
+      ],
+      "tags": []
+    }
+  },
+  {
+    "schema_version": "1.0",
+    "identity": {
+      "property_id": "prop_sec_008",
+      "canonical_key": "pilot:secondary:prop_sec_008",
+      "cadastral_number": null,
+      "source_unit_ids": ["unit_prop_sec_008"]
+    },
+    "property_type": "apartment",
+    "market_type": "secondary",
+    "location": {
+      "address": {
+        "country_code": "RU",
+        "region": "Тестовая область",
+        "city": "Пилотск",
+        "locality": null,
+        "district": "Центральный",
+        "street": "Тестовая улица 8",
+        "house_number": "38",
+        "postal_code": null
+      },
+      "geo_point": { "latitude": 54.217999999999996, "longitude": 37.638 }
+    },
+    "physical": {
+      "total_area_m2": 48.9,
+      "living_area_m2": 30.3,
+      "kitchen_area_m2": 10.8,
+      "rooms": 3,
+      "bedrooms": null,
+      "floor": 3,
+      "balcony": true,
+      "bathrooms": 1,
+      "layout_type": "layout_3"
+    },
+    "building": {
+      "name": "Дом 38",
+      "building_type": "multi_unit",
+      "floors_total": 9,
+      "built_year": 2024,
+      "elevator": true,
+      "freight_elevator": false
+    },
+    "condition": {
+      "finishing_type": "needs_renovation",
+      "condition_description": "Synthetic case: renovation is required.",
+      "ready_for_living": true
+    },
+    "land": { "area_sotka": null, "category": null, "permitted_use": null },
+    "utilities": {
+      "electricity": "connected",
+      "water": "connected",
+      "gas": "connected",
+      "sewerage": "connected",
+      "heating": "connected",
+      "internet": "available"
+    },
+    "timeline": {
+      "planned_commissioning_date": null,
+      "handover_date": null,
+      "move_in_possible_date": null
+    },
+    "ownership": {
+      "ownership_type": "private",
+      "encumbrance_status": "unknown",
+      "ownership_notes": null
+    },
+    "metadata": {
+      "created_at": "2026-08-15T00:00:00.000Z",
+      "updated_at": "2026-08-15T00:00:00.000Z",
+      "evidence_refs": [
+        "evidence_prop_sec_008_timeline",
+        "evidence_prop_sec_008_area",
+        "evidence_prop_sec_008_floor"
+      ],
+      "tags": []
+    }
+  },
+  {
+    "schema_version": "1.0",
+    "identity": {
+      "property_id": "prop_sec_009",
+      "canonical_key": "pilot:secondary:prop_sec_009",
+      "cadastral_number": null,
+      "source_unit_ids": ["unit_prop_sec_009"]
+    },
+    "property_type": "apartment",
+    "market_type": "secondary",
+    "location": {
+      "address": {
+        "country_code": "RU",
+        "region": "Тестовая область",
+        "city": "Пилотск",
+        "locality": null,
+        "district": "Речной",
+        "street": "Тестовая улица 8",
+        "house_number": "39",
+        "postal_code": null
+      },
+      "geo_point": { "latitude": 54.219, "longitude": 37.639 }
+    },
+    "physical": {
+      "total_area_m2": 55.6,
+      "living_area_m2": 34.5,
+      "kitchen_area_m2": 12.2,
+      "rooms": 2,
+      "bedrooms": null,
+      "floor": 4,
+      "balcony": false,
+      "bathrooms": 1,
+      "layout_type": "layout_2"
+    },
+    "building": {
+      "name": "Дом 39",
+      "building_type": "multi_unit",
+      "floors_total": 9,
+      "built_year": 2025,
+      "elevator": true,
+      "freight_elevator": false
+    },
+    "condition": {
+      "finishing_type": "renovated",
+      "condition_description": "Synthetic normalized condition.",
+      "ready_for_living": true
+    },
+    "land": { "area_sotka": null, "category": null, "permitted_use": null },
+    "utilities": {
+      "electricity": "connected",
+      "water": "connected",
+      "gas": "connected",
+      "sewerage": "connected",
+      "heating": "connected",
+      "internet": "available"
+    },
+    "timeline": {
+      "planned_commissioning_date": null,
+      "handover_date": null,
+      "move_in_possible_date": "2026-10-01"
+    },
+    "ownership": {
+      "ownership_type": "private",
+      "encumbrance_status": "claimed_none",
+      "ownership_notes": null
+    },
+    "metadata": {
+      "created_at": "2026-08-15T00:00:00.000Z",
+      "updated_at": "2026-08-15T00:00:00.000Z",
+      "evidence_refs": [
+        "evidence_prop_sec_009_timeline",
+        "evidence_prop_sec_009_area",
+        "evidence_prop_sec_009_floor"
+      ],
+      "tags": []
+    }
+  },
+  {
+    "schema_version": "1.0",
+    "identity": {
+      "property_id": "prop_sec_010",
+      "canonical_key": "pilot:secondary:prop_sec_010",
+      "cadastral_number": null,
+      "source_unit_ids": ["unit_prop_sec_010"]
+    },
+    "property_type": "apartment",
+    "market_type": "secondary",
+    "location": {
+      "address": {
+        "country_code": "RU",
+        "region": "Тестовая область",
+        "city": "Пилотск",
+        "locality": null,
+        "district": "Северный",
+        "street": "Тестовая улица 8",
+        "house_number": "40",
+        "postal_code": null
+      },
+      "geo_point": { "latitude": 54.22, "longitude": 37.64 }
+    },
+    "physical": {
+      "total_area_m2": 68.3,
+      "living_area_m2": 42.3,
+      "kitchen_area_m2": 15,
+      "rooms": 1,
+      "bedrooms": null,
+      "floor": 5,
+      "balcony": true,
+      "bathrooms": 1,
+      "layout_type": "layout_1"
+    },
+    "building": {
+      "name": "Дом 40",
+      "building_type": "multi_unit",
+      "floors_total": 9,
+      "built_year": 2023,
+      "elevator": true,
+      "freight_elevator": false
+    },
+    "condition": {
+      "finishing_type": "finished",
+      "condition_description": "Synthetic normalized condition.",
+      "ready_for_living": true
+    },
+    "land": { "area_sotka": null, "category": null, "permitted_use": null },
+    "utilities": {
+      "electricity": "connected",
+      "water": "connected",
+      "gas": "connected",
+      "sewerage": "connected",
+      "heating": "connected",
+      "internet": "available"
+    },
+    "timeline": {
+      "planned_commissioning_date": null,
+      "handover_date": null,
+      "move_in_possible_date": "2026-10-01"
+    },
+    "ownership": {
+      "ownership_type": "private",
+      "encumbrance_status": "claimed_none",
+      "ownership_notes": null
+    },
+    "metadata": {
+      "created_at": "2026-08-15T00:00:00.000Z",
+      "updated_at": "2026-08-15T00:00:00.000Z",
+      "evidence_refs": [
+        "evidence_prop_sec_010_timeline",
+        "evidence_prop_sec_010_area",
+        "evidence_prop_sec_010_floor"
+      ],
+      "tags": []
+    }
+  },
+  {
+    "schema_version": "1.0",
+    "identity": {
+      "property_id": "prop_sec_011",
+      "canonical_key": "pilot:secondary:prop_sec_011",
+      "cadastral_number": null,
+      "source_unit_ids": ["unit_prop_sec_011"]
+    },
+    "property_type": "apartment",
+    "market_type": "secondary",
+    "location": {
+      "address": {
+        "country_code": "RU",
+        "region": "Тестовая область",
+        "city": "Пилотск",
+        "locality": null,
+        "district": "Центральный",
+        "street": "Тестовая улица 8",
+        "house_number": "41",
+        "postal_code": null
+      },
+      "geo_point": { "latitude": 54.221, "longitude": 37.641 }
+    },
+    "physical": {
+      "total_area_m2": 39.5,
+      "living_area_m2": 24.5,
+      "kitchen_area_m2": 8.7,
+      "rooms": 1,
+      "bedrooms": null,
+      "floor": 6,
+      "balcony": false,
+      "bathrooms": 1,
+      "layout_type": "layout_1"
+    },
+    "building": {
+      "name": "Дом 41",
+      "building_type": "multi_unit",
+      "floors_total": 9,
+      "built_year": 2024,
+      "elevator": true,
+      "freight_elevator": false
+    },
+    "condition": {
+      "finishing_type": "finished",
+      "condition_description": "Synthetic normalized condition.",
+      "ready_for_living": true
+    },
+    "land": { "area_sotka": null, "category": null, "permitted_use": null },
+    "utilities": {
+      "electricity": "connected",
+      "water": "connected",
+      "gas": "connected",
+      "sewerage": "connected",
+      "heating": "connected",
+      "internet": "available"
+    },
+    "timeline": {
+      "planned_commissioning_date": null,
+      "handover_date": null,
+      "move_in_possible_date": "2026-10-01"
+    },
+    "ownership": {
+      "ownership_type": "private",
+      "encumbrance_status": "claimed_none",
+      "ownership_notes": null
+    },
+    "metadata": {
+      "created_at": "2026-08-15T00:00:00.000Z",
+      "updated_at": "2026-08-15T00:00:00.000Z",
+      "evidence_refs": [
+        "evidence_prop_sec_011_timeline",
+        "evidence_prop_sec_011_area",
+        "evidence_prop_sec_011_floor"
+      ],
+      "tags": []
+    }
+  },
+  {
+    "schema_version": "1.0",
+    "identity": {
+      "property_id": "prop_sec_012",
+      "canonical_key": "pilot:secondary:prop_sec_012",
+      "cadastral_number": null,
+      "source_unit_ids": ["unit_prop_sec_012"]
+    },
+    "property_type": "apartment",
+    "market_type": "secondary",
+    "location": {
+      "address": {
+        "country_code": "RU",
+        "region": "Тестовая область",
+        "city": "Пилотск",
+        "locality": null,
+        "district": "Речной",
+        "street": "Тестовая улица 9",
+        "house_number": "42",
+        "postal_code": null
+      },
+      "geo_point": {
+        "latitude": 54.221999999999994,
+        "longitude": 37.641999999999996
+      }
+    },
+    "physical": {
+      "total_area_m2": 76.1,
+      "living_area_m2": 47.2,
+      "kitchen_area_m2": 16.7,
+      "rooms": 3,
+      "bedrooms": null,
+      "floor": 7,
+      "balcony": true,
+      "bathrooms": 1,
+      "layout_type": "layout_3"
+    },
+    "building": {
+      "name": "Дом 42",
+      "building_type": "multi_unit",
+      "floors_total": 9,
+      "built_year": 2025,
+      "elevator": true,
+      "freight_elevator": false
+    },
+    "condition": {
+      "finishing_type": "needs_renovation",
+      "condition_description": "Synthetic case: renovation is required.",
+      "ready_for_living": true
+    },
+    "land": { "area_sotka": null, "category": null, "permitted_use": null },
+    "utilities": {
+      "electricity": "connected",
+      "water": "connected",
+      "gas": "connected",
+      "sewerage": "connected",
+      "heating": "connected",
+      "internet": "available"
+    },
+    "timeline": {
+      "planned_commissioning_date": null,
+      "handover_date": null,
+      "move_in_possible_date": "2026-10-01"
+    },
+    "ownership": {
+      "ownership_type": "private",
+      "encumbrance_status": "unknown",
+      "ownership_notes": null
+    },
+    "metadata": {
+      "created_at": "2026-08-15T00:00:00.000Z",
+      "updated_at": "2026-08-15T00:00:00.000Z",
+      "evidence_refs": [
+        "evidence_prop_sec_012_timeline",
+        "evidence_prop_sec_012_area",
+        "evidence_prop_sec_012_floor"
+      ],
+      "tags": []
+    }
+  },
+  {
+    "schema_version": "1.0",
+    "identity": {
+      "property_id": "prop_house_001",
+      "canonical_key": "pilot:house:prop_house_001",
+      "cadastral_number": null,
+      "source_unit_ids": ["unit_prop_house_001"]
+    },
+    "property_type": "house",
+    "market_type": "suburban",
+    "location": {
+      "address": {
+        "country_code": "RU",
+        "region": "Тестовая область",
+        "city": "Пилотск",
+        "locality": "Посёлок Сосновый",
+        "district": "Речной",
+        "street": "Тестовая улица 11",
+        "house_number": "51",
+        "postal_code": null
+      },
+      "geo_point": {
+        "latitude": 54.230999999999995,
+        "longitude": 37.650999999999996
+      }
+    },
+    "physical": {
+      "total_area_m2": 106,
+      "living_area_m2": 65.7,
+      "kitchen_area_m2": 18,
+      "rooms": 4,
+      "bedrooms": 4,
+      "floor": null,
+      "balcony": null,
+      "bathrooms": 2,
+      "layout_type": "layout_4"
+    },
+    "building": {
+      "name": "Дом 51",
+      "building_type": "individual",
+      "floors_total": 2,
+      "built_year": 2025,
+      "elevator": false,
+      "freight_elevator": false
+    },
+    "condition": {
+      "finishing_type": "finished",
+      "condition_description": "Synthetic normalized condition.",
+      "ready_for_living": true
+    },
+    "land": { "area_sotka": 7, "category": null, "permitted_use": null },
+    "utilities": {
+      "electricity": "connected",
+      "water": "connected",
+      "gas": "connected",
+      "sewerage": "connected",
+      "heating": "connected",
+      "internet": "available"
+    },
+    "timeline": {
+      "planned_commissioning_date": null,
+      "handover_date": null,
+      "move_in_possible_date": "2026-11-01"
+    },
+    "ownership": {
+      "ownership_type": "private",
+      "encumbrance_status": "claimed_none",
+      "ownership_notes": null
+    },
+    "metadata": {
+      "created_at": "2026-08-15T00:00:00.000Z",
+      "updated_at": "2026-08-15T00:00:00.000Z",
+      "evidence_refs": [
+        "evidence_prop_house_001_timeline",
+        "evidence_prop_house_001_area",
+        "evidence_prop_house_001_gas",
+        "evidence_prop_house_001_infrastructure_school_walk_time_min",
+        "evidence_prop_house_001_infrastructure_kindergarten_walk_time_min",
+        "evidence_prop_house_001_infrastructure_park_walk_time_min",
+        "evidence_prop_house_001_infrastructure_transport_walk_time_min",
+        "evidence_prop_house_001_mobility_user_destination_public_transport_time_min"
+      ],
+      "tags": []
+    }
+  },
+  {
+    "schema_version": "1.0",
+    "identity": {
+      "property_id": "prop_house_002",
+      "canonical_key": "pilot:house:prop_house_002",
+      "cadastral_number": null,
+      "source_unit_ids": ["unit_prop_house_002"]
+    },
+    "property_type": "house",
+    "market_type": "suburban",
+    "location": {
+      "address": {
+        "country_code": "RU",
+        "region": "Тестовая область",
+        "city": "Пилотск",
+        "locality": "Посёлок Сосновый",
+        "district": "Северный",
+        "street": "Тестовая улица 11",
+        "house_number": "52",
+        "postal_code": null
+      },
+      "geo_point": { "latitude": 54.232, "longitude": 37.652 }
+    },
+    "physical": {
+      "total_area_m2": 120,
+      "living_area_m2": 74.4,
+      "kitchen_area_m2": 18,
+      "rooms": 5,
+      "bedrooms": 5,
+      "floor": null,
+      "balcony": null,
+      "bathrooms": 2,
+      "layout_type": "layout_5"
+    },
+    "building": {
+      "name": "Дом 52",
+      "building_type": "individual",
+      "floors_total": 1,
+      "built_year": null,
+      "elevator": false,
+      "freight_elevator": false
+    },
+    "condition": {
+      "finishing_type": "shell",
+      "condition_description": "Synthetic normalized condition.",
+      "ready_for_living": false
+    },
+    "land": { "area_sotka": 9, "category": null, "permitted_use": null },
+    "utilities": {
+      "electricity": "connected",
+      "water": "connected",
+      "gas": "available",
+      "sewerage": "connected",
+      "heating": "connected",
+      "internet": "available"
+    },
+    "timeline": {
+      "planned_commissioning_date": null,
+      "handover_date": null,
+      "move_in_possible_date": "2027-11-30"
+    },
+    "ownership": {
+      "ownership_type": "private",
+      "encumbrance_status": "claimed_none",
+      "ownership_notes": null
+    },
+    "metadata": {
+      "created_at": "2026-08-15T00:00:00.000Z",
+      "updated_at": "2026-08-15T00:00:00.000Z",
+      "evidence_refs": [
+        "evidence_prop_house_002_timeline",
+        "evidence_prop_house_002_area",
+        "evidence_prop_house_002_gas"
+      ],
+      "tags": []
+    }
+  },
+  {
+    "schema_version": "1.0",
+    "identity": {
+      "property_id": "prop_house_003",
+      "canonical_key": "pilot:house:prop_house_003",
+      "cadastral_number": null,
+      "source_unit_ids": ["unit_prop_house_003"]
+    },
+    "property_type": "house",
+    "market_type": "suburban",
+    "location": {
+      "address": {
+        "country_code": "RU",
+        "region": "Тестовая область",
+        "city": "Пилотск",
+        "locality": "Посёлок Сосновый",
+        "district": "Центральный",
+        "street": "Тестовая улица 11",
+        "house_number": "53",
+        "postal_code": null
+      },
+      "geo_point": { "latitude": 54.233, "longitude": 37.653 }
+    },
+    "physical": {
+      "total_area_m2": 134,
+      "living_area_m2": 83.1,
+      "kitchen_area_m2": 18,
+      "rooms": 3,
+      "bedrooms": 3,
+      "floor": null,
+      "balcony": null,
+      "bathrooms": 2,
+      "layout_type": "layout_3"
+    },
+    "building": {
+      "name": "Дом 53",
+      "building_type": "individual",
+      "floors_total": 2,
+      "built_year": 2024,
+      "elevator": false,
+      "freight_elevator": false
+    },
+    "condition": {
+      "finishing_type": "finished",
+      "condition_description": "Synthetic normalized condition.",
+      "ready_for_living": true
+    },
+    "land": { "area_sotka": 11, "category": null, "permitted_use": null },
+    "utilities": {
+      "electricity": "connected",
+      "water": "connected",
+      "gas": "unknown",
+      "sewerage": "connected",
+      "heating": "connected",
+      "internet": "available"
+    },
+    "timeline": {
+      "planned_commissioning_date": null,
+      "handover_date": null,
+      "move_in_possible_date": null
+    },
+    "ownership": {
+      "ownership_type": "private",
+      "encumbrance_status": "claimed_none",
+      "ownership_notes": null
+    },
+    "metadata": {
+      "created_at": "2026-08-15T00:00:00.000Z",
+      "updated_at": "2026-08-15T00:00:00.000Z",
+      "evidence_refs": [
+        "evidence_prop_house_003_timeline",
+        "evidence_prop_house_003_area",
+        "evidence_prop_house_003_gas",
+        "evidence_prop_house_003_document_status"
+      ],
+      "tags": []
+    }
+  },
+  {
+    "schema_version": "1.0",
+    "identity": {
+      "property_id": "prop_house_004",
+      "canonical_key": "pilot:house:prop_house_004",
+      "cadastral_number": null,
+      "source_unit_ids": ["unit_prop_house_004"]
+    },
+    "property_type": "house",
+    "market_type": "suburban",
+    "location": {
+      "address": {
+        "country_code": "RU",
+        "region": "Тестовая область",
+        "city": "Пилотск",
+        "locality": "Посёлок Сосновый",
+        "district": "Речной",
+        "street": "Тестовая улица 12",
+        "house_number": "54",
+        "postal_code": null
+      },
+      "geo_point": {
+        "latitude": 54.233999999999995,
+        "longitude": 37.653999999999996
+      }
+    },
+    "physical": {
+      "total_area_m2": 148,
+      "living_area_m2": 91.8,
+      "kitchen_area_m2": 18,
+      "rooms": 4,
+      "bedrooms": 4,
+      "floor": null,
+      "balcony": null,
+      "bathrooms": 2,
+      "layout_type": "layout_4"
+    },
+    "building": {
+      "name": "Дом 54",
+      "building_type": "individual",
+      "floors_total": 1,
+      "built_year": 2025,
+      "elevator": false,
+      "freight_elevator": false
+    },
+    "condition": {
+      "finishing_type": "finished",
+      "condition_description": "Synthetic normalized condition.",
+      "ready_for_living": true
+    },
+    "land": { "area_sotka": 13, "category": null, "permitted_use": null },
+    "utilities": {
+      "electricity": "connected",
+      "water": "unknown",
+      "gas": "planned",
+      "sewerage": "connected",
+      "heating": "connected",
+      "internet": "available"
+    },
+    "timeline": {
+      "planned_commissioning_date": null,
+      "handover_date": null,
+      "move_in_possible_date": "2026-11-01"
+    },
+    "ownership": {
+      "ownership_type": "private",
+      "encumbrance_status": "claimed_none",
+      "ownership_notes": null
+    },
+    "metadata": {
+      "created_at": "2026-08-15T00:00:00.000Z",
+      "updated_at": "2026-08-15T00:00:00.000Z",
+      "evidence_refs": [
+        "evidence_prop_house_004_timeline",
+        "evidence_prop_house_004_area",
+        "evidence_prop_house_004_gas",
+        "evidence_prop_house_004_road_access",
+        "evidence_prop_house_004_infrastructure_school_walk_time_min",
+        "evidence_prop_house_004_infrastructure_kindergarten_walk_time_min",
+        "evidence_prop_house_004_infrastructure_park_walk_time_min",
+        "evidence_prop_house_004_infrastructure_transport_walk_time_min",
+        "evidence_prop_house_004_mobility_user_destination_public_transport_time_min"
+      ],
+      "tags": []
+    }
+  },
+  {
+    "schema_version": "1.0",
+    "identity": {
+      "property_id": "prop_house_005",
+      "canonical_key": "pilot:house:prop_house_005",
+      "cadastral_number": null,
+      "source_unit_ids": ["unit_prop_house_005"]
+    },
+    "property_type": "house",
+    "market_type": "suburban",
+    "location": {
+      "address": {
+        "country_code": "RU",
+        "region": "Тестовая область",
+        "city": "Пилотск",
+        "locality": "Посёлок Сосновый",
+        "district": "Северный",
+        "street": "Тестовая улица 12",
+        "house_number": "55",
+        "postal_code": null
+      },
+      "geo_point": { "latitude": 54.235, "longitude": 37.655 }
+    },
+    "physical": {
+      "total_area_m2": 162,
+      "living_area_m2": 100.4,
+      "kitchen_area_m2": 18,
+      "rooms": 5,
+      "bedrooms": 5,
+      "floor": null,
+      "balcony": null,
+      "bathrooms": 2,
+      "layout_type": "layout_5"
+    },
+    "building": {
+      "name": "Дом 55",
+      "building_type": "individual",
+      "floors_total": 2,
+      "built_year": 2023,
+      "elevator": false,
+      "freight_elevator": false
+    },
+    "condition": {
+      "finishing_type": "needs_renovation",
+      "condition_description": "Synthetic case: renovation is required.",
+      "ready_for_living": true
+    },
+    "land": { "area_sotka": 15, "category": null, "permitted_use": null },
+    "utilities": {
+      "electricity": "connected",
+      "water": "connected",
+      "gas": "absent",
+      "sewerage": "connected",
+      "heating": "connected",
+      "internet": "available"
+    },
+    "timeline": {
+      "planned_commissioning_date": null,
+      "handover_date": null,
+      "move_in_possible_date": "2026-11-01"
+    },
+    "ownership": {
+      "ownership_type": "private",
+      "encumbrance_status": "claimed_none",
+      "ownership_notes": null
+    },
+    "metadata": {
+      "created_at": "2026-08-15T00:00:00.000Z",
+      "updated_at": "2026-08-15T00:00:00.000Z",
+      "evidence_refs": [
+        "evidence_prop_house_005_timeline",
+        "evidence_prop_house_005_area",
+        "evidence_prop_house_005_gas"
+      ],
+      "tags": []
+    }
+  },
+  {
+    "schema_version": "1.0",
+    "identity": {
+      "property_id": "prop_th_001",
+      "canonical_key": "pilot:townhouse:prop_th_001",
+      "cadastral_number": null,
+      "source_unit_ids": ["unit_prop_th_001"]
+    },
+    "property_type": "townhouse",
+    "market_type": "suburban",
+    "location": {
+      "address": {
+        "country_code": "RU",
+        "region": "Тестовая область",
+        "city": "Пилотск",
+        "locality": null,
+        "district": "Северный",
+        "street": "Тестовая улица 13",
+        "house_number": "61",
+        "postal_code": null
+      },
+      "geo_point": { "latitude": 54.241, "longitude": 37.661 }
+    },
+    "physical": {
+      "total_area_m2": 100,
+      "living_area_m2": 62,
+      "kitchen_area_m2": 18,
+      "rooms": 3,
+      "bedrooms": 3,
+      "floor": null,
+      "balcony": null,
+      "bathrooms": 2,
+      "layout_type": "layout_3"
+    },
+    "building": {
+      "name": "Дом 61",
+      "building_type": "individual",
+      "floors_total": 2,
+      "built_year": 2023,
+      "elevator": false,
+      "freight_elevator": false
+    },
+    "condition": {
+      "finishing_type": "finished",
+      "condition_description": "Synthetic normalized condition.",
+      "ready_for_living": true
+    },
+    "land": { "area_sotka": 4.5, "category": null, "permitted_use": null },
+    "utilities": {
+      "electricity": "connected",
+      "water": "connected",
+      "gas": "connected",
+      "sewerage": "connected",
+      "heating": "connected",
+      "internet": "available"
+    },
+    "timeline": {
+      "planned_commissioning_date": null,
+      "handover_date": null,
+      "move_in_possible_date": "2026-10-15"
+    },
+    "ownership": {
+      "ownership_type": "private",
+      "encumbrance_status": "claimed_none",
+      "ownership_notes": null
+    },
+    "metadata": {
+      "created_at": "2026-08-15T00:00:00.000Z",
+      "updated_at": "2026-08-15T00:00:00.000Z",
+      "evidence_refs": [
+        "evidence_prop_th_001_timeline",
+        "evidence_prop_th_001_area",
+        "evidence_prop_th_001_gas"
+      ],
+      "tags": []
+    }
+  },
+  {
+    "schema_version": "1.0",
+    "identity": {
+      "property_id": "prop_th_002",
+      "canonical_key": "pilot:townhouse:prop_th_002",
+      "cadastral_number": null,
+      "source_unit_ids": ["unit_prop_th_002"]
+    },
+    "property_type": "townhouse",
+    "market_type": "suburban",
+    "location": {
+      "address": {
+        "country_code": "RU",
+        "region": "Тестовая область",
+        "city": "Пилотск",
+        "locality": null,
+        "district": "Центральный",
+        "street": "Тестовая улица 14",
+        "house_number": "62",
+        "postal_code": null
+      },
+      "geo_point": { "latitude": 54.242, "longitude": 37.662 }
+    },
+    "physical": {
+      "total_area_m2": 112,
+      "living_area_m2": 69.4,
+      "kitchen_area_m2": 18,
+      "rooms": 3,
+      "bedrooms": 3,
+      "floor": null,
+      "balcony": null,
+      "bathrooms": 2,
+      "layout_type": "layout_3"
+    },
+    "building": {
+      "name": "Дом 62",
+      "building_type": "individual",
+      "floors_total": 2,
+      "built_year": null,
+      "elevator": false,
+      "freight_elevator": false
+    },
+    "condition": {
+      "finishing_type": "pre_finish",
+      "condition_description": "Synthetic normalized condition.",
+      "ready_for_living": false
+    },
+    "land": { "area_sotka": 5.5, "category": null, "permitted_use": null },
+    "utilities": {
+      "electricity": "connected",
+      "water": "unknown",
+      "gas": "available",
+      "sewerage": "connected",
+      "heating": "connected",
+      "internet": "available"
+    },
+    "timeline": {
+      "planned_commissioning_date": null,
+      "handover_date": null,
+      "move_in_possible_date": "2027-10-15"
+    },
+    "ownership": {
+      "ownership_type": "private",
+      "encumbrance_status": "claimed_none",
+      "ownership_notes": null
+    },
+    "metadata": {
+      "created_at": "2026-08-15T00:00:00.000Z",
+      "updated_at": "2026-08-15T00:00:00.000Z",
+      "evidence_refs": [
+        "evidence_prop_th_002_timeline",
+        "evidence_prop_th_002_area",
+        "evidence_prop_th_002_gas"
+      ],
+      "tags": []
+    }
+  },
+  {
+    "schema_version": "1.0",
+    "identity": {
+      "property_id": "prop_land_001",
+      "canonical_key": "pilot:land:prop_land_001",
+      "cadastral_number": null,
+      "source_unit_ids": ["unit_prop_land_001"]
+    },
+    "property_type": "land",
+    "market_type": "suburban",
+    "location": {
+      "address": {
+        "country_code": "RU",
+        "region": "Тестовая область",
+        "city": "Пилотск",
+        "locality": null,
+        "district": "Центральный",
+        "street": "Тестовая улица 16",
+        "house_number": "71",
+        "postal_code": null
+      },
+      "geo_point": { "latitude": 54.251, "longitude": 37.671 }
+    },
+    "physical": {
+      "total_area_m2": null,
+      "living_area_m2": null,
+      "kitchen_area_m2": null,
+      "rooms": null,
+      "bedrooms": null,
+      "floor": null,
+      "balcony": null,
+      "bathrooms": null,
+      "layout_type": null
+    },
+    "building": {
+      "name": null,
+      "building_type": null,
+      "floors_total": null,
+      "built_year": null,
+      "elevator": null,
+      "freight_elevator": null
+    },
+    "condition": {
+      "finishing_type": "unknown",
+      "condition_description": null,
+      "ready_for_living": null
+    },
+    "land": {
+      "area_sotka": 8,
+      "category": "settlement_land",
+      "permitted_use": "individual_housing"
+    },
+    "utilities": {
+      "electricity": "available",
+      "water": "available",
+      "gas": "available",
+      "sewerage": "unknown",
+      "heating": "absent",
+      "internet": "unknown"
+    },
+    "timeline": {
+      "planned_commissioning_date": null,
+      "handover_date": null,
+      "move_in_possible_date": null
+    },
+    "ownership": {
+      "ownership_type": "unknown",
+      "encumbrance_status": "claimed_none",
+      "ownership_notes": null
+    },
+    "metadata": {
+      "created_at": "2026-08-15T00:00:00.000Z",
+      "updated_at": "2026-08-15T00:00:00.000Z",
+      "evidence_refs": [
+        "evidence_prop_land_001_timeline",
+        "evidence_prop_land_001_gas"
+      ],
+      "tags": []
+    }
+  },
+  {
+    "schema_version": "1.0",
+    "identity": {
+      "property_id": "prop_land_002",
+      "canonical_key": "pilot:land:prop_land_002",
+      "cadastral_number": null,
+      "source_unit_ids": ["unit_prop_land_002"]
+    },
+    "property_type": "land",
+    "market_type": "suburban",
+    "location": {
+      "address": {
+        "country_code": "RU",
+        "region": "Тестовая область",
+        "city": "Пилотск",
+        "locality": null,
+        "district": "Речной",
+        "street": "Тестовая улица 16",
+        "house_number": "72",
+        "postal_code": null
+      },
+      "geo_point": { "latitude": 54.251999999999995, "longitude": 37.672 }
+    },
+    "physical": {
+      "total_area_m2": null,
+      "living_area_m2": null,
+      "kitchen_area_m2": null,
+      "rooms": null,
+      "bedrooms": null,
+      "floor": null,
+      "balcony": null,
+      "bathrooms": null,
+      "layout_type": null
+    },
+    "building": {
+      "name": null,
+      "building_type": null,
+      "floors_total": null,
+      "built_year": null,
+      "elevator": null,
+      "freight_elevator": null
+    },
+    "condition": {
+      "finishing_type": "unknown",
+      "condition_description": null,
+      "ready_for_living": null
+    },
+    "land": {
+      "area_sotka": 12,
+      "category": "settlement_land",
+      "permitted_use": "individual_housing"
+    },
+    "utilities": {
+      "electricity": "available",
+      "water": "available",
+      "gas": "unknown",
+      "sewerage": "unknown",
+      "heating": "absent",
+      "internet": "unknown"
+    },
+    "timeline": {
+      "planned_commissioning_date": null,
+      "handover_date": null,
+      "move_in_possible_date": null
+    },
+    "ownership": {
+      "ownership_type": "unknown",
+      "encumbrance_status": "claimed_none",
+      "ownership_notes": null
+    },
+    "metadata": {
+      "created_at": "2026-08-15T00:00:00.000Z",
+      "updated_at": "2026-08-15T00:00:00.000Z",
+      "evidence_refs": [
+        "evidence_prop_land_002_timeline",
+        "evidence_prop_land_002_gas"
+      ],
+      "tags": []
+    }
+  },
+  {
+    "schema_version": "1.0",
+    "identity": {
+      "property_id": "prop_special_template_001",
+      "canonical_key": null,
+      "cadastral_number": null,
+      "source_unit_ids": ["layout_template"]
+    },
+    "property_type": "apartment",
+    "market_type": "new_build",
+    "location": {
+      "address": {
+        "country_code": "RU",
+        "region": "Тестовая область",
+        "city": "Пилотск",
+        "locality": null,
+        "district": "Центральный",
+        "street": "Тестовая улица 18",
+        "house_number": "80",
+        "postal_code": null
+      },
+      "geo_point": { "latitude": 54.26, "longitude": 37.68 }
+    },
+    "physical": {
+      "total_area_m2": null,
+      "living_area_m2": null,
+      "kitchen_area_m2": null,
+      "rooms": 1,
+      "bedrooms": null,
+      "floor": null,
+      "balcony": null,
+      "bathrooms": null,
+      "layout_type": "template_layout"
+    },
+    "building": {
+      "name": "ЖК Альфа, корпус 2",
+      "building_type": "multi_unit",
+      "floors_total": 18,
+      "built_year": null,
+      "elevator": true,
+      "freight_elevator": true
+    },
+    "condition": {
+      "finishing_type": "unknown",
+      "condition_description": null,
+      "ready_for_living": false
+    },
+    "land": { "area_sotka": null, "category": null, "permitted_use": null },
+    "utilities": {
+      "electricity": "unknown",
+      "water": "unknown",
+      "gas": "unknown",
+      "sewerage": "unknown",
+      "heating": "unknown",
+      "internet": "unknown"
+    },
+    "timeline": {
+      "planned_commissioning_date": null,
+      "handover_date": null,
+      "move_in_possible_date": null
+    },
+    "ownership": {
+      "ownership_type": "developer",
+      "encumbrance_status": "claimed_none",
+      "ownership_notes": null
+    },
+    "metadata": {
+      "created_at": "2026-08-15T00:00:00.000Z",
+      "updated_at": "2026-08-15T00:00:00.000Z",
+      "evidence_refs": ["evidence_prop_special_template_001_timeline"],
+      "tags": []
+    }
+  }
+]
