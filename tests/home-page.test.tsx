@@ -1,13 +1,15 @@
 import { renderToStaticMarkup } from "react-dom/server";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+
+vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn() }) }));
 
 import HomePage from "../app/page";
 
 describe("HomePage", () => {
-  it("renders the scaffold copy", () => {
+  it("renders the natural-language request entry", () => {
     const html = renderToStaticMarkup(<HomePage />);
 
-    expect(html).toContain("Real Estate Decision Service");
-    expect(html).toContain("Помогаем выбрать недвижимость под ваши условия.");
+    expect(html).toContain("Опишите, какую недвижимость вы ищете");
+    expect(html).toContain("Исходная формулировка сохранится без изменений.");
   });
 });

@@ -1,5 +1,6 @@
 import type { z } from "zod";
 
+import { requestConfirmationResultSchema } from "../request-confirmation/contracts";
 import {
   parserErrorSchema,
   userRequestParserInputSchema,
@@ -38,6 +39,11 @@ const schemaId = (name: string) =>
   `https://real-estate-decision-service.local/schemas/1.0/${name}.schema.json`;
 
 export const topLevelSchemas = [
+  {
+    file_name: "request-confirmation-result.schema.json",
+    id: schemaId("request-confirmation-result"),
+    schema: requestConfirmationResultSchema,
+  },
   {
     file_name: "user-request-parser-input.schema.json",
     id: schemaId("user-request-parser-input"),

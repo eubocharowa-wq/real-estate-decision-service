@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Real Estate Decision Service",
+  title: "Real Estate Decision Service — выбор под ваши условия",
   description: "Помогаем выбрать недвижимость под ваши условия.",
 };
 

@@ -143,6 +143,7 @@ export const interpretationConfidenceSchema = z.strictObject({
 
 export const confirmationCriterionSchema = z.strictObject({
   criterion_id: entityIdSchema,
+  field: nonEmptyStringSchema,
   label: nonEmptyStringSchema,
   value: z.json(),
   priority: prioritySchema,

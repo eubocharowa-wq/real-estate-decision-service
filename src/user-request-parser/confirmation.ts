@@ -37,6 +37,7 @@ const toConfirmationCriterion = (
   criterion: Criterion,
 ): ConfirmationView["groups"]["required"][number] => ({
   criterion_id: criterion.criterion_id,
+  field: criterion.field,
   label: labelByField[criterion.field] ?? criterion.field,
   value: criterion.target,
   priority: criterion.priority,
@@ -84,6 +85,7 @@ export const buildConfirmationView = (
     seen.add(key);
     const item: ConfirmationView["groups"]["required"][number] = {
       criterion_id: stableId("confirmation", fact.fact_id),
+      field: fact.field,
       label: labelByField[fact.field] ?? fact.field,
       value: fact.value,
       priority,
