@@ -80,8 +80,8 @@ export function RequestConfirmation({
         <p className="eyebrow">Условия сохранены</p>
         <h1>Запрос подтверждён</h1>
         <p>
-          Структурированный запрос прошёл проверку. Подбор вариантов ещё не
-          подключён на этом этапе.
+          Структурированный запрос прошёл проверку. Теперь можно открыть
+          короткий список вариантов с объяснениями и оценкой данных.
         </p>
         <dl className="success-facts">
           <div>
@@ -98,9 +98,14 @@ export function RequestConfirmation({
             </dd>
           </div>
         </dl>
-        <Link href="/" className="button button-secondary">
-          Вернуться к запросу
-        </Link>
+        <div className="primary-actions">
+          <Link href="/shortlist" className="button button-primary">
+            Открыть подбор
+          </Link>
+          <Link href="/" className="button button-secondary">
+            Вернуться к запросу
+          </Link>
+        </div>
       </main>
     );
   }
