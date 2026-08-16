@@ -171,17 +171,24 @@ export function PropertyDetailNotFound({
 
 export function PropertyDetailPageView({
   view,
+  backHrefOverride,
 }: {
   readonly view: PropertyDetailView;
+  readonly backHrefOverride?: string | null;
 }) {
+  const backHref = backHrefOverride ?? view.actions.backHref;
+  const backLabel =
+    backHref === "/comparison"
+      ? "Вернуться к сравнению"
+      : "Вернуться к вариантам";
   return (
     <main className="property-detail-shell" data-testid="property-detail">
       <nav className="detail-navigation" aria-label="Навигация по объекту">
         <Link href="/" className="brand-mark" aria-label="На главную">
           REDS <span> / 10</span>
         </Link>
-        <Link className="back-link" href={view.actions.backHref}>
-          ← Вернуться к вариантам
+        <Link className="back-link" href={backHref}>
+          ← {backLabel}
         </Link>
       </nav>
 
@@ -618,11 +625,8 @@ export function PropertyDetailPageView({
             >
               Добавить к сравнению
             </Link>
-            <Link
-              className="button button-secondary"
-              href={view.actions.backHref}
-            >
-              Вернуться к вариантам
+            <Link className="button button-secondary" href={backHref}>
+              {backLabel}
             </Link>
             {view.personalized ? (
               <Link

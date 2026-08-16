@@ -4,6 +4,9 @@ import type { ShortlistCardView } from "../types";
 
 interface PropertyMatchCardProps {
   readonly card: ShortlistCardView;
+  readonly comparisonSelected?: boolean;
+  readonly comparisonDisabled?: boolean;
+  readonly onComparisonToggle?: (card: ShortlistCardView) => void;
 }
 
 function Price({ card }: PropertyMatchCardProps) {
@@ -65,7 +68,12 @@ function Financing({ card }: PropertyMatchCardProps) {
   );
 }
 
-export function PropertyMatchCard({ card }: PropertyMatchCardProps) {
+export function PropertyMatchCard({
+  card,
+  comparisonSelected = false,
+  comparisonDisabled = false,
+  onComparisonToggle,
+}: PropertyMatchCardProps) {
   const titleId = `shortlist-title-${card.propertyId}`;
   return (
     <article
@@ -174,6 +182,21 @@ export function PropertyMatchCard({ card }: PropertyMatchCardProps) {
             Посмотреть подробнее
             <span className="visually-hidden">: {card.title}</span>
           </Link>
+          {onComparisonToggle ? (
+            <button
+              type="button"
+              className={`button ${comparisonSelected ? "button-secondary" : "button-ghost"}`}
+              disabled={comparisonDisabled && !comparisonSelected}
+              aria-pressed={comparisonSelected}
+              onClick={() => onComparisonToggle(card)}
+            >
+              {comparisonSelected
+                ? "Убрать из сравнения"
+                : comparisonDisabled
+                  ? "Выбрано максимум 4"
+                  : "Добавить к сравнению"}
+            </button>
+          ) : null}
         </footer>
       </div>
     </article>

@@ -1,11 +1,28 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  useSyncExternalStore,
+} from "react";
 
 import { requestConfirmationResultSchema } from "../../request-confirmation";
 import { CONFIRMED_REQUEST_STORAGE_KEY } from "../../request-confirmation/storage";
 import type { ShortlistView } from "../types";
+import type { ShortlistCardView } from "../types";
+import {
+  addComparisonItem,
+  comparisonSelectionMatchesRequest,
+  createComparisonSelection,
+  getComparisonSelectionSnapshot,
+  parseComparisonSelection,
+  removeComparisonItem,
+  subscribeComparisonSelection,
+  writeComparisonSelection,
+} from "../../comparison/selection";
 import { ShortlistPageView } from "./shortlist-page-view";
 
 interface ShortlistClientProps {
@@ -89,6 +106,12 @@ export function ShortlistClient({ initialView }: ShortlistClientProps) {
         ? { status: "loading" }
         : { status: "loading" },
   );
+  const storedComparison = useSyncExternalStore(
+    subscribeComparisonSelection,
+    getComparisonSelectionSnapshot,
+    () => null,
+  );
+  const [comparisonNotice, setComparisonNotice] = useState<string | null>(null);
   const confirmationState = useMemo<StoredConfirmationState>(() => {
     if (!stored) return { status: "missing" };
     let confirmation: unknown;
@@ -102,6 +125,50 @@ export function ShortlistClient({ initialView }: ShortlistClientProps) {
       ? { status: "ready", request: parsed.data.confirmed_request }
       : { status: "invalid" };
   }, [stored]);
+  const comparisonSelection = useMemo(
+    () => parseComparisonSelection(storedComparison),
+    [storedComparison],
+  );
+  const comparisonPropertyIds = useMemo(
+    () =>
+      new Set(
+        comparisonSelection &&
+          confirmationState.status === "ready" &&
+          comparisonSelectionMatchesRequest(
+            comparisonSelection,
+            confirmationState.request,
+          )
+          ? comparisonSelection.items.map((item) => item.propertyId)
+          : [],
+      ),
+    [comparisonSelection, confirmationState],
+  );
+
+  const handleComparisonToggle = useCallback(
+    (card: ShortlistCardView) => {
+      if (confirmationState.status !== "ready") return;
+      const base =
+        comparisonSelection &&
+        comparisonSelectionMatchesRequest(
+          comparisonSelection,
+          confirmationState.request,
+        )
+          ? comparisonSelection
+          : createComparisonSelection(confirmationState.request);
+      const outcome = base.items.some(
+        (item) => item.propertyId === card.propertyId,
+      )
+        ? removeComparisonItem(base, card.propertyId)
+        : addComparisonItem(base, {
+            propertyId: card.propertyId,
+            offerId: card.offerId,
+            scenarioId: card.purchaseScenarioId,
+          });
+      setComparisonNotice(outcome.success ? null : outcome.message);
+      if (outcome.success) writeComparisonSelection(outcome.state);
+    },
+    [comparisonSelection, confirmationState],
+  );
 
   useEffect(() => {
     if (initialView !== undefined) return;
@@ -186,5 +253,12 @@ export function ShortlistClient({ initialView }: ShortlistClientProps) {
     );
   }
   if (remote.status !== "ready") return <GuardState state={remote} />;
-  return <ShortlistPageView view={remote.view} />;
+  return (
+    <ShortlistPageView
+      view={remote.view}
+      comparisonPropertyIds={comparisonPropertyIds}
+      comparisonNotice={comparisonNotice}
+      onComparisonToggle={handleComparisonToggle}
+    />
+  );
 }

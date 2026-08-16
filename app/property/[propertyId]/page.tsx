@@ -13,6 +13,7 @@ interface PropertyPageProps {
   readonly searchParams: Promise<{
     readonly offer?: string | readonly string[];
     readonly scenario?: string | readonly string[];
+    readonly from?: string | readonly string[];
   }>;
 }
 
@@ -29,6 +30,7 @@ export default async function PropertyPage({
       propertyId={propertyId}
       offerId={first(query.offer)}
       scenarioId={first(query.scenario)}
+      returnToComparison={first(query.from) === "comparison"}
     />
   );
 }

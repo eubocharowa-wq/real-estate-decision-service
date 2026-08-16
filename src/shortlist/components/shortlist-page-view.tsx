@@ -1,10 +1,14 @@
 import Link from "next/link";
 
 import type { ShortlistView } from "../types";
+import type { ShortlistCardView } from "../types";
 import { PropertyMatchCard } from "./property-match-card";
 
 interface ShortlistPageViewProps {
   readonly view: ShortlistView;
+  readonly comparisonPropertyIds?: ReadonlySet<string>;
+  readonly comparisonNotice?: string | null;
+  readonly onComparisonToggle?: (card: ShortlistCardView) => void;
 }
 
 export function EmptyShortlistState() {
@@ -25,7 +29,13 @@ export function EmptyShortlistState() {
   );
 }
 
-export function ShortlistPageView({ view }: ShortlistPageViewProps) {
+export function ShortlistPageView({
+  view,
+  comparisonPropertyIds = new Set<string>(),
+  comparisonNotice = null,
+  onComparisonToggle,
+}: ShortlistPageViewProps) {
+  const comparisonCount = comparisonPropertyIds.size;
   return (
     <main className="shortlist-shell">
       <header className="shortlist-header">
@@ -70,6 +80,29 @@ export function ShortlistPageView({ view }: ShortlistPageViewProps) {
         </aside>
       ) : null}
 
+      {onComparisonToggle ? (
+        <aside className="comparison-selection-bar" aria-live="polite">
+          <div>
+            <strong>Сравнение: {comparisonCount} из 4</strong>
+            <span>
+              {comparisonCount === 0
+                ? "Выберите 2–4 финалиста."
+                : comparisonCount === 1
+                  ? "Добавьте ещё один вариант."
+                  : "Можно открыть сравнение или добавить ещё."}
+            </span>
+            {comparisonNotice ? (
+              <small role="status">{comparisonNotice}</small>
+            ) : null}
+          </div>
+          {comparisonCount >= 2 ? (
+            <Link className="button button-primary" href="/comparison">
+              Сравнить выбранные
+            </Link>
+          ) : null}
+        </aside>
+      ) : null}
+
       {view.cards.length === 0 ? (
         <EmptyShortlistState />
       ) : (
@@ -89,6 +122,9 @@ export function ShortlistPageView({ view }: ShortlistPageViewProps) {
               <PropertyMatchCard
                 key={`${card.propertyId}:${card.offerId ?? "property"}:${card.purchaseScenarioId ?? "scenario"}`}
                 card={card}
+                comparisonSelected={comparisonPropertyIds.has(card.propertyId)}
+                comparisonDisabled={comparisonCount >= 4}
+                onComparisonToggle={onComparisonToggle}
               />
             ))}
           </div>

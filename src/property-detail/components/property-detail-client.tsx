@@ -14,6 +14,7 @@ interface PropertyDetailClientProps {
   readonly propertyId: string;
   readonly offerId?: string | null;
   readonly scenarioId?: string | null;
+  readonly returnToComparison?: boolean;
   readonly initialView?: PropertyDetailView | null;
 }
 
@@ -33,6 +34,7 @@ export function PropertyDetailClient({
   propertyId,
   offerId = null,
   scenarioId = null,
+  returnToComparison = false,
   initialView,
 }: PropertyDetailClientProps) {
   const stored = useSyncExternalStore(
@@ -135,5 +137,10 @@ export function PropertyDetailClient({
   }
   if (remote.status === "error")
     return <PropertyDetailNotFound message={remote.message} />;
-  return <PropertyDetailPageView view={remote.view} />;
+  return (
+    <PropertyDetailPageView
+      view={remote.view}
+      backHrefOverride={returnToComparison ? "/comparison" : null}
+    />
+  );
 }
