@@ -246,6 +246,10 @@ Product & engineering backlog:
 
 [`docs/08-roadmap/backlog.md`](docs/08-roadmap/backlog.md)
 
+End-to-end controlled buyer journey:
+
+[`docs/08-roadmap/e2e-buyer-journey.md`](docs/08-roadmap/e2e-buyer-journey.md)
+
 ---
 
 ## Development Workflow
@@ -287,13 +291,10 @@ Commit
 
 ## Current Status
 
-Продуктовая, архитектурная, data, matching, source, expert и UX-документация подготовлена. Последовательность implementation tasks зафиксирована в `TASK-001`–`TASK-020`.
-
-Application code ещё не реализован.
-
-Следующая стадия:
-
-> передать репозиторий coding-agent и выполнить только `TASK-001 — Repository Scaffold`, после чего провести curator review и переходить к следующей задаче отдельно.
+Реализован controlled fixture-based buyer journey от свободного запроса до
+обновлённого решения после экспертной проверки. Демо использует только явно
+маркированный `synthetic_pilot` dataset; live source coverage и production
+persistence не заявлены.
 
 ---
 

@@ -139,14 +139,18 @@ const applicableTypes = (
 
 const createDomainCriterion = (item: ConfirmationCriterion): Criterion => {
   const presentation = getCriterionPresentation(item.field);
+  const target =
+    presentation.editor === "money" && typeof item.value === "number"
+      ? money(item.value)
+      : item.value;
   return {
     schema_version: "1.0",
     criterion_id: item.criterion_id,
     category: presentation.category,
     field: item.field,
     operator: presentation.operator,
-    target: item.value,
-    unit: presentation.unit,
+    target,
+    unit: presentation.editor === "money" ? null : presentation.unit,
     priority: item.priority,
     weight:
       item.priority === "preferred" || item.priority === "avoid" ? 3 : null,
@@ -640,8 +644,11 @@ export const editCriterionValue = (
   updateDomainCriterion(request, criterionId, (criterion) => ({
     ...criterion,
     operator: presentation.operator,
-    target: value,
-    unit: presentation.unit,
+    target:
+      presentation.editor === "money" && typeof value === "number"
+        ? money(value)
+        : value,
+    unit: presentation.editor === "money" ? null : presentation.unit,
   }));
   syncBoundValue(request, existing.field, value);
   const criteria = session.criteria.map((criterion) =>

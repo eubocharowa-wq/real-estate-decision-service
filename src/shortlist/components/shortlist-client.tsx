@@ -24,6 +24,10 @@ import {
   writeComparisonSelection,
 } from "../../comparison/selection";
 import { ShortlistPageView } from "./shortlist-page-view";
+import {
+  BUYER_JOURNEY_ID_STORAGE_KEY,
+  getOrCreateBuyerSessionId,
+} from "../../buyer-journey/browser-storage";
 
 interface ShortlistClientProps {
   readonly initialView?: ShortlistView | null;
@@ -99,6 +103,11 @@ export function ShortlistClient({ initialView }: ShortlistClientProps) {
     () => window.sessionStorage.getItem(CONFIRMED_REQUEST_STORAGE_KEY),
     () => null,
   );
+  const journeyId = useSyncExternalStore(
+    () => () => undefined,
+    () => window.sessionStorage.getItem(BUYER_JOURNEY_ID_STORAGE_KEY),
+    () => null,
+  );
   const [remote, setRemote] = useState<RemoteState>(() =>
     initialView
       ? { status: "ready", view: initialView }
@@ -172,14 +181,16 @@ export function ShortlistClient({ initialView }: ShortlistClientProps) {
 
   useEffect(() => {
     if (initialView !== undefined) return;
-    if (confirmationState.status !== "ready") return;
+    if (confirmationState.status !== "ready" || !journeyId) return;
 
     const controller = new AbortController();
-    void fetch("/api/shortlist", {
+    void fetch("/api/buyer-journeys", {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({
-        userRequest: confirmationState.request,
+        action: "shortlist",
+        journeyId,
+        sessionId: getOrCreateBuyerSessionId(),
       }),
       signal: controller.signal,
     })
@@ -218,13 +229,16 @@ export function ShortlistClient({ initialView }: ShortlistClientProps) {
         });
       });
     return () => controller.abort();
-  }, [confirmationState, initialView]);
+  }, [confirmationState, initialView, journeyId]);
 
   if (initialView === null) {
     return <GuardState state={{ status: "missing" }} />;
   }
   if (initialView === undefined && confirmationState.status !== "ready") {
     return <GuardState state={confirmationState} />;
+  }
+  if (initialView === undefined && !journeyId) {
+    return <GuardState state={{ status: "missing" }} />;
   }
   if (
     initialView === undefined &&

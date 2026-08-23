@@ -24,7 +24,10 @@ import {
 import type { ComparisonSelectionItem } from "../selection";
 import type { ComparisonView } from "../types";
 import { ComparisonPageView } from "./comparison-page-view";
-import { readStoredUserUrlCandidates } from "../../user-url-ingestion/storage";
+import {
+  BUYER_JOURNEY_ID_STORAGE_KEY,
+  getOrCreateBuyerSessionId,
+} from "../../buyer-journey/browser-storage";
 
 interface ComparisonClientProps {
   readonly initialView?: ComparisonView | null;
@@ -100,6 +103,11 @@ export function ComparisonClient({
     () => window.sessionStorage.getItem(CONFIRMED_REQUEST_STORAGE_KEY),
     () => null,
   );
+  const journeyId = useSyncExternalStore(
+    () => () => undefined,
+    () => window.sessionStorage.getItem(BUYER_JOURNEY_ID_STORAGE_KEY),
+    () => null,
+  );
   const storedSelection = useSyncExternalStore(
     subscribeComparisonSelection,
     getComparisonSelectionSnapshot,
@@ -137,26 +145,22 @@ export function ComparisonClient({
   }, [confirmation, requestedItem, selection]);
 
   useEffect(() => {
-    if (initialView !== undefined || !confirmation || !selection) return;
+    if (initialView !== undefined || !confirmation || !selection || !journeyId)
+      return;
     if (
       !comparisonSelectionMatchesRequest(selection, confirmation) ||
       selection.items.length < 2
     )
       return;
     const controller = new AbortController();
-    void fetch("/api/comparison", {
+    void fetch("/api/buyer-journeys", {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({
-        userRequest: confirmation,
-        selection,
-        importedCandidates: readStoredUserUrlCandidates().filter((candidate) =>
-          selection.items.some(
-            (item) =>
-              item.propertyId ===
-              candidate.propertyCandidate.identity.property_id,
-          ),
-        ),
+        action: "comparison",
+        journeyId,
+        sessionId: getOrCreateBuyerSessionId(),
+        propertyIds: selection.items.map((item) => item.propertyId),
       }),
       signal: controller.signal,
     })
@@ -190,7 +194,7 @@ export function ComparisonClient({
           });
       });
     return () => controller.abort();
-  }, [confirmation, initialView, selection]);
+  }, [confirmation, initialView, journeyId, selection]);
 
   const handleRemove = useCallback(
     (propertyId: string) => {
@@ -215,6 +219,13 @@ export function ComparisonClient({
       <ComparisonGuard
         title="Сначала подтвердите условия"
         message="Без одного подтверждённого UserRequest нельзя корректно сравнить Match Score."
+      />
+    );
+  if (!journeyId)
+    return (
+      <ComparisonGuard
+        title="Сначала опишите задачу"
+        message="Активный путь выбора не найден. Начните с подтверждённого запроса."
       />
     );
   if (selection && !comparisonSelectionMatchesRequest(selection, confirmation))

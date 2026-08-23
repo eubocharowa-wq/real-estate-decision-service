@@ -35,15 +35,27 @@ const allCriteria = (request: UserRequest): Criterion[] => [
 
 const toConfirmationCriterion = (
   criterion: Criterion,
-): ConfirmationView["groups"]["required"][number] => ({
-  criterion_id: criterion.criterion_id,
-  field: criterion.field,
-  label: labelByField[criterion.field] ?? criterion.field,
-  value: criterion.target,
-  priority: criterion.priority,
-  source_text: criterion.user_expression,
-  editable: { value: true, priority: true, removable: true },
-});
+): ConfirmationView["groups"]["required"][number] => {
+  const moneyTarget =
+    typeof criterion.target === "object" &&
+    criterion.target !== null &&
+    "amount" in criterion.target &&
+    typeof criterion.target.amount === "string"
+      ? Number(criterion.target.amount)
+      : null;
+  return {
+    criterion_id: criterion.criterion_id,
+    field: criterion.field,
+    label: labelByField[criterion.field] ?? criterion.field,
+    value:
+      moneyTarget !== null && Number.isFinite(moneyTarget)
+        ? moneyTarget
+        : criterion.target,
+    priority: criterion.priority,
+    source_text: criterion.user_expression,
+    editable: { value: true, priority: true, removable: true },
+  };
+};
 
 export const buildConfirmationView = (
   request: UserRequest,

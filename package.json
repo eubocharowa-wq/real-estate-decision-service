@@ -8,6 +8,7 @@
     "build": "next build",
     "lint": "eslint .",
     "test": "vitest run",
+    "test:e2e": "vitest run tests/buyer-journey",
     "typecheck": "next typegen && tsc --noEmit",
     "schemas:generate": "node --import tsx scripts/generate-schemas.ts",
     "schemas:check": "node --import tsx scripts/generate-schemas.ts --check",
@@ -15,7 +16,8 @@
     "fixtures:check": "node --import tsx scripts/generate-pilot-fixtures.ts --check",
     "fixtures:validate": "node --import tsx scripts/validate-pilot-fixtures.ts",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "demo:seed": "node --import tsx scripts/seed-buyer-journey-demo.ts"
   },
   "engines": {
     "node": "^20.19.0 || >=22.12.0"

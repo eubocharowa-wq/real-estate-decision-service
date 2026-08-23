@@ -9,6 +9,10 @@ import {
 } from "../../user-request-parser";
 import { PARSER_RESULT_STORAGE_KEY } from "../storage";
 import { RequestConfirmation } from "./request-confirmation";
+import {
+  getBuyerJourneyId,
+  getOrCreateBuyerSessionId,
+} from "../../buyer-journey/browser-storage";
 
 interface RequestConfirmationClientProps {
   readonly initialResult?: UserRequestParserResult | null;
@@ -65,5 +69,36 @@ export function RequestConfirmationClient({
       </main>
     );
   }
-  return <RequestConfirmation parserResult={state.result} />;
+  return (
+    <RequestConfirmation
+      parserResult={state.result}
+      onConfirmed={async (confirmationResult) => {
+        const journeyId = getBuyerJourneyId();
+        if (!journeyId)
+          throw new Error(
+            "Путь выбора не найден. Вернитесь к описанию задачи.",
+          );
+        const response = await fetch("/api/buyer-journeys", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({
+            action: "confirm_and_match",
+            journeyId,
+            sessionId: getOrCreateBuyerSessionId(),
+            confirmationResult,
+          }),
+        });
+        const payload: unknown = await response.json();
+        if (!response.ok) {
+          const message =
+            typeof payload === "object" &&
+            payload !== null &&
+            typeof Reflect.get(payload, "message") === "string"
+              ? String(Reflect.get(payload, "message"))
+              : "Не удалось подготовить подбор.";
+          throw new Error(message);
+        }
+      }}
+    />
+  );
 }

@@ -76,6 +76,15 @@ export interface ExpertContextBuildInput {
   readonly onsite: OnsiteContextInput | null;
   readonly createdAt: string;
   readonly latestSourceDataAt: string | null;
+  readonly decisionSnapshot?: {
+    readonly journeyId: string;
+    readonly userRequestVersion: number;
+    readonly matchingBundleId: string;
+    readonly matchResultIds: readonly string[];
+    readonly dataQualityIds: readonly string[];
+    readonly comparisonId: string | null;
+    readonly comparisonVersion: number | null;
+  } | null;
 }
 
 const locationLabel = (property: Property): string => {
@@ -354,6 +363,17 @@ export const buildExpertContextPackage = (
     created_at: input.createdAt,
     latest_source_data_at: input.latestSourceDataAt,
     stale: latest !== null && latest > created,
+    decision_snapshot: input.decisionSnapshot
+      ? {
+          journey_id: input.decisionSnapshot.journeyId,
+          user_request_version: input.decisionSnapshot.userRequestVersion,
+          matching_bundle_id: input.decisionSnapshot.matchingBundleId,
+          match_result_ids: [...input.decisionSnapshot.matchResultIds],
+          data_quality_ids: [...input.decisionSnapshot.dataQualityIds],
+          comparison_id: input.decisionSnapshot.comparisonId,
+          comparison_version: input.decisionSnapshot.comparisonVersion,
+        }
+      : null,
   });
 };
 

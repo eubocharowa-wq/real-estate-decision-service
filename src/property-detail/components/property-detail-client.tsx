@@ -9,6 +9,10 @@ import {
   PropertyDetailNotFound,
   PropertyDetailPageView,
 } from "./property-detail-page-view";
+import {
+  BUYER_JOURNEY_ID_STORAGE_KEY,
+  getOrCreateBuyerSessionId,
+} from "../../buyer-journey/browser-storage";
 
 interface PropertyDetailClientProps {
   readonly propertyId: string;
@@ -40,6 +44,11 @@ export function PropertyDetailClient({
   const stored = useSyncExternalStore(
     () => () => undefined,
     () => window.sessionStorage.getItem(CONFIRMED_REQUEST_STORAGE_KEY),
+    () => null,
+  );
+  const journeyId = useSyncExternalStore(
+    () => () => undefined,
+    () => window.sessionStorage.getItem(BUYER_JOURNEY_ID_STORAGE_KEY),
     () => null,
   );
   const confirmation = useMemo(() => {
@@ -74,15 +83,15 @@ export function PropertyDetailClient({
   useEffect(() => {
     if (initialView !== undefined) return;
     const controller = new AbortController();
-    void fetch("/api/property-detail", {
+    if (!journeyId) return;
+    void fetch("/api/buyer-journeys", {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({
+        action: "open_property",
+        journeyId,
+        sessionId: getOrCreateBuyerSessionId(),
         propertyId,
-        offerId,
-        scenarioId,
-        userRequest: confirmation.request,
-        contextNotice: confirmation.notice,
       }),
       signal: controller.signal,
     })
@@ -120,10 +129,16 @@ export function PropertyDetailClient({
     confirmation.notice,
     confirmation.request,
     initialView,
+    journeyId,
     offerId,
     propertyId,
     scenarioId,
   ]);
+
+  if (initialView === undefined && !journeyId)
+    return (
+      <PropertyDetailNotFound message="Сначала опишите задачу и откройте объект из текущего подбора." />
+    );
 
   if (remote.status === "loading") {
     return (

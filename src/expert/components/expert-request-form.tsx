@@ -5,6 +5,10 @@ import { useState } from "react";
 import { CONFIRMED_REQUEST_STORAGE_KEY } from "../../request-confirmation/storage";
 import type { RequestOwner } from "../contracts";
 import type { ExpertRequestPreview } from "../presentation";
+import {
+  getBuyerJourneyId,
+  getOrCreateBuyerSessionId,
+} from "../../buyer-journey/browser-storage";
 
 export interface ExpertRequestUiSubmission {
   readonly requestType: ExpertRequestPreview["requestType"];
@@ -73,6 +77,7 @@ export function ExpertRequestForm({
     try {
       if (onSubmit) await onSubmit(submission);
       else {
+        const journeyId = getBuyerJourneyId();
         const rawUserRequest = window.sessionStorage.getItem(
           CONFIRMED_REQUEST_STORAGE_KEY,
         );
@@ -85,15 +90,38 @@ export function ExpertRequestForm({
           typeof parsed === "object" && parsed !== null
             ? Reflect.get(parsed, "confirmed_request")
             : null;
-        const response = await fetch("/api/expert-requests", {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({
-            owner: getAnonymousOwner(),
-            submission,
-            userRequest,
-          }),
-        });
+        const useJourneyBoundary =
+          journeyId !== null &&
+          !["document_review", "onsite_check"].includes(submission.requestType);
+        const response = await fetch(
+          useJourneyBoundary ? "/api/buyer-journeys" : "/api/expert-requests",
+          {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify(
+              useJourneyBoundary
+                ? {
+                    action: "create_expert_request",
+                    journeyId,
+                    sessionId: getOrCreateBuyerSessionId(),
+                    input: {
+                      requestType: submission.requestType,
+                      triggerType: submission.triggerType,
+                      questionCategory: submission.questionCategory,
+                      question: submission.userQuestion,
+                      propertyIds: submission.propertyIds,
+                      field: submission.field,
+                      questionCode: submission.questionCode,
+                    },
+                  }
+                : {
+                    owner: getAnonymousOwner(),
+                    submission,
+                    userRequest,
+                  },
+            ),
+          },
+        );
         const payload: unknown = await response.json();
         if (!response.ok) {
           const message =

@@ -29,7 +29,9 @@ import { UnknownsSection } from "./unknowns-section";
 
 interface RequestConfirmationProps {
   readonly parserResult: UserRequestParserResult;
-  readonly onConfirmed?: (result: RequestConfirmationResult) => void;
+  readonly onConfirmed?: (
+    result: RequestConfirmationResult,
+  ) => void | Promise<void>;
 }
 
 export function RequestConfirmation({
@@ -39,6 +41,10 @@ export function RequestConfirmation({
   const [session, setSession] = useState(() =>
     createConfirmationSession(parserResult),
   );
+  const [applicationStatus, setApplicationStatus] = useState<
+    "idle" | "saving" | "ready" | "error"
+  >("idle");
+  const [applicationError, setApplicationError] = useState<string | null>(null);
   const lowConfidence =
     session.initial_result.interpretation_confidence.band === "low";
   const required = session.criteria.filter(
@@ -54,7 +60,7 @@ export function RequestConfirmation({
       criterion.priority === "neutral" || criterion.priority === "unknown",
   );
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     const updated = confirmRequest(session);
     setSession(updated);
     if (updated.confirmation_result) {
@@ -64,7 +70,21 @@ export function RequestConfirmation({
           JSON.stringify(updated.confirmation_result),
         );
       }
-      onConfirmed?.(updated.confirmation_result);
+      if (onConfirmed) {
+        setApplicationStatus("saving");
+        setApplicationError(null);
+        try {
+          await onConfirmed(updated.confirmation_result);
+          setApplicationStatus("ready");
+        } catch (error) {
+          setApplicationStatus("error");
+          setApplicationError(
+            error instanceof Error
+              ? error.message
+              : "Не удалось подготовить подбор.",
+          );
+        }
+      } else setApplicationStatus("ready");
     }
   };
 
@@ -98,10 +118,20 @@ export function RequestConfirmation({
             </dd>
           </div>
         </dl>
+        {applicationStatus === "saving" ? (
+          <p role="status">Подбираем варианты по подтверждённым условиям…</p>
+        ) : null}
+        {applicationError ? (
+          <p className="field-error" role="alert">
+            {applicationError}
+          </p>
+        ) : null}
         <div className="primary-actions">
-          <Link href="/shortlist" className="button button-primary">
-            Открыть подбор
-          </Link>
+          {applicationStatus === "ready" ? (
+            <Link href="/shortlist" className="button button-primary">
+              Открыть подбор
+            </Link>
+          ) : null}
           <Link href="/" className="button button-secondary">
             Вернуться к запросу
           </Link>

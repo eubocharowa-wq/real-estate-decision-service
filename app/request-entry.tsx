@@ -8,6 +8,10 @@ import {
   PARSER_RESULT_STORAGE_KEY,
   RAW_REQUEST_STORAGE_KEY,
 } from "../src/request-confirmation/storage";
+import {
+  getOrCreateBuyerSessionId,
+  saveBuyerJourneyId,
+} from "../src/buyer-journey/browser-storage";
 
 const examples = [
   "Найди 5 квартир в Туле до 5 млн, семейная ипотека обязательно, желательно без первоначального взноса.",
@@ -34,13 +38,21 @@ export function RequestEntry() {
     setSubmitting(true);
     setError(null);
     try {
-      const response = await fetch("/api/user-request/parse", {
+      const response = await fetch("/api/buyer-journeys", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ raw_text: rawText }),
+        body: JSON.stringify({
+          action: "start_and_parse",
+          sessionId: getOrCreateBuyerSessionId(),
+          rawRequestText: rawText,
+        }),
       });
       const payload: unknown = await response.json();
-      const outcome = userRequestParserOutcomeSchema.safeParse(payload);
+      const outcome = userRequestParserOutcomeSchema.safeParse(
+        typeof payload === "object" && payload !== null
+          ? Reflect.get(payload, "parserOutcome")
+          : null,
+      );
       if (!outcome.success) {
         setError("Не удалось проверить ответ parser. Попробуйте ещё раз.");
         return;
@@ -49,6 +61,19 @@ export function RequestEntry() {
         setError(outcome.data.error.message);
         return;
       }
+      const journey =
+        typeof payload === "object" && payload !== null
+          ? Reflect.get(payload, "journey")
+          : null;
+      const journeyId =
+        typeof journey === "object" && journey !== null
+          ? Reflect.get(journey, "journey_id")
+          : null;
+      if (typeof journeyId !== "string") {
+        setError("Не удалось сохранить путь выбора. Попробуйте ещё раз.");
+        return;
+      }
+      saveBuyerJourneyId(journeyId);
       window.sessionStorage.setItem(RAW_REQUEST_STORAGE_KEY, rawText);
       window.sessionStorage.setItem(
         PARSER_RESULT_STORAGE_KEY,

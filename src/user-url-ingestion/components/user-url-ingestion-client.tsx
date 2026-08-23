@@ -18,6 +18,10 @@ import type {
   UserUrlIngestionPreview,
 } from "../types";
 import { upsertStoredUserUrlCandidate } from "../storage";
+import {
+  getBuyerJourneyId,
+  getOrCreateBuyerSessionId,
+} from "../../buyer-journey/browser-storage";
 
 type State =
   | { readonly status: "idle" }
@@ -111,12 +115,36 @@ export function UserUrlIngestionClient() {
         throw new Error(error?.message ?? "Не удалось сохранить вариант.");
       }
       const candidate = payload.candidate as NormalizedUserUrlCandidate;
+      const journeyId = getBuyerJourneyId();
+      if (journeyId) {
+        const journeyResponse = await fetch("/api/buyer-journeys", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({
+            action: "add_user_url",
+            journeyId,
+            sessionId: getOrCreateBuyerSessionId(),
+            candidate,
+          }),
+        });
+        if (!journeyResponse.ok) {
+          const journeyPayload = await responseObject(journeyResponse);
+          throw new Error(
+            String(
+              journeyPayload.message ??
+                "Не удалось добавить вариант в активный подбор.",
+            ),
+          );
+        }
+      }
       upsertStoredUserUrlCandidate(candidate);
       const duplicateNotice =
         candidate.duplicateDecision.status === "same_property"
           ? "Похоже, этот объект уже есть в сервисе: выбран существующий Property, а ссылка сохранена как новое Offer. "
           : "";
-      let notice = `${duplicateNotice}Вариант сохранён локально и готов для оценки.`;
+      let notice = journeyId
+        ? `${duplicateNotice}Вариант добавлен в активный подбор и пересчитан тем же Matching Engine.`
+        : `${duplicateNotice}Вариант сохранён локально и готов для оценки.`;
       const requestRaw = window.sessionStorage.getItem(
         CONFIRMED_REQUEST_STORAGE_KEY,
       );

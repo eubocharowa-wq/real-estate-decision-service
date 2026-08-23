@@ -84,7 +84,7 @@ const classifyPriority = (
     return { value: "preferred", confidence: 0.96 };
   }
   if (
-    /только|строго|обязательно|принципиально|не больше|не меньше|максимум|минимум/u.test(
+    /только|строго|обязательн\p{L}*|принципиально|не больше|не меньше|максимум|минимум/u.test(
       value,
     )
   ) {
@@ -497,8 +497,8 @@ const extractBudget = (draft: ParserDraft, rawText: string): void => {
         field: "budget.purchase_price.maximum",
         category: "finance",
         operator: "lte",
-        target: amount,
-        unit: "RUB",
+        target: money(amount),
+        unit: null,
         priority: priority.value,
         weight: priority.value === "preferred" ? 5 : null,
         source_span: span,
@@ -528,8 +528,8 @@ const extractBudget = (draft: ParserDraft, rawText: string): void => {
         field: "budget.purchase_price.minimum",
         category: "finance",
         operator: "gte",
-        target: amount,
-        unit: "RUB",
+        target: money(amount),
+        unit: null,
         priority: priority.value,
         weight: priority.value === "preferred" ? 5 : null,
         source_span: matchSpan(rawText, priceMinimum),
@@ -675,8 +675,8 @@ const extractFinancing = (draft: ParserDraft, rawText: string): void => {
         field: "financing.monthly_payment_max",
         category: "finance",
         operator: "lte",
-        target: amount,
-        unit: "RUB/month",
+        target: money(amount),
+        unit: null,
         priority: priority.value,
         weight: priority.value === "preferred" ? 5 : null,
         source_span: matchSpan(rawText, payment),
@@ -701,8 +701,8 @@ const extractFinancing = (draft: ParserDraft, rawText: string): void => {
         field: "financing.initial_payment_max",
         category: "finance",
         operator: "lte",
-        target: amount,
-        unit: "RUB",
+        target: money(amount),
+        unit: null,
         priority: priority.value,
         weight: priority.value === "preferred" ? 5 : null,
         source_span: matchSpan(rawText, initialPayment),

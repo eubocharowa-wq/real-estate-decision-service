@@ -18,7 +18,7 @@ export interface PilotShortlistAdapterResult {
   readonly diagnostics: PilotShortlistDiagnostics;
 }
 
-const matchesConfirmedScope = (
+export const matchesConfirmedScope = (
   request: UserRequest,
   property: Property,
 ): boolean => {

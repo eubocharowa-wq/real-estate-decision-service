@@ -242,6 +242,18 @@ export const expertContextPackageSchema = z
     created_at: isoDateTimeSchema,
     latest_source_data_at: isoDateTimeSchema.nullable(),
     stale: z.boolean(),
+    decision_snapshot: z
+      .strictObject({
+        journey_id: entityIdSchema,
+        user_request_version: z.number().int().positive(),
+        matching_bundle_id: entityIdSchema,
+        match_result_ids: z.array(entityIdSchema),
+        data_quality_ids: z.array(entityIdSchema),
+        comparison_id: entityIdSchema.nullable(),
+        comparison_version: z.number().int().positive().nullable(),
+      })
+      .nullable()
+      .optional(),
   })
   .superRefine((contextPackage, context) => {
     const propertyIds = new Set(
