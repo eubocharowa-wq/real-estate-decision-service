@@ -30,6 +30,34 @@ import {
   parseUserRequest,
   type UserRequestParserOutcome,
 } from "../user-request-parser";
+import {
+  InMemoryPilotPerformanceRecorder,
+  InMemoryPilotTelemetry,
+  InMemoryFeedbackRepository,
+  InMemoryApplicationErrorRepository,
+  JourneyFeedbackService,
+  createPilotRuntimeConfig,
+  createApplicationError,
+  buildJourneyDiagnosticReport,
+  buildCoverageSummary,
+  isFeatureOperational,
+  measurePilotOperation,
+  measurePilotOperationAsync,
+  validatePilotCandidate,
+  type PilotPerformanceRecorder,
+  type FeedbackRepository,
+  type ApplicationErrorLayer,
+  type ApplicationErrorRecord,
+  type ApplicationErrorRepository,
+  type JourneyFeedback,
+  type JourneyDiagnosticReport,
+  type CoverageSummary,
+  type PilotFeedbackStage,
+  type PilotRuntimeConfig,
+  type PilotTelemetry,
+  type PilotTelemetryEventName,
+  evaluateAllPilotSources,
+} from "../pilot-hardening";
 import { buildComparisonFromState, createComparisonState } from "./comparison";
 import { isJourneyCanonicalFieldAllowed } from "./config";
 import {
@@ -74,6 +102,11 @@ export interface BuyerJourneyApplicationDependencies {
   readonly createId?: BuyerJourneyIdFactory;
   readonly clock?: () => string;
   readonly parse?: (input: unknown) => Promise<UserRequestParserOutcome>;
+  readonly pilotRuntimeConfig?: PilotRuntimeConfig;
+  readonly pilotTelemetry?: PilotTelemetry;
+  readonly performanceRecorder?: PilotPerformanceRecorder;
+  readonly feedbackRepository?: FeedbackRepository;
+  readonly errorRepository?: ApplicationErrorRepository;
 }
 
 export interface CreateJourneyExpertRequestInput {
@@ -88,7 +121,7 @@ export interface CreateJourneyExpertRequestInput {
 
 export interface JourneyRefreshRequestOutcome {
   readonly status: "queued" | "blocked";
-  readonly error_code: "SOURCE_POLICY_BLOCKED" | null;
+  readonly error_code: "SOURCE_POLICY_BLOCKED" | "FEATURE_DISABLED" | null;
   readonly audit: RefreshEnqueueAudit;
 }
 
@@ -154,14 +187,37 @@ const activeBundle = (
 const priority = (value: "critical" | "high" | "medium" | "low") =>
   value === "medium" ? ("normal" as const) : value;
 
+const pilotEventForAudit: Partial<
+  Record<
+    Parameters<JourneyInstrumentation["record"]>[0]["eventType"],
+    PilotTelemetryEventName
+  >
+> = {
+  journey_started: "buyer_journey_started",
+  request_parsed: "request_parsed",
+  request_confirmed: "request_confirmed",
+  matching_completed: "matching_completed",
+  shortlist_viewed: "shortlist_viewed",
+  property_opened: "property_opened",
+  comparison_created: "comparison_created",
+  expert_request_created: "expert_request_created",
+  decision_recomputed: "decision_recomputed",
+};
+
 export class BuyerJourneyApplication {
   readonly repository: BuyerJourneyRepository;
   readonly expertRepository: ExpertRequestRepository;
   readonly instrumentation: JourneyInstrumentation;
+  readonly pilotTelemetry: PilotTelemetry;
+  readonly performanceRecorder: PilotPerformanceRecorder;
+  readonly feedbackRepository: FeedbackRepository;
+  readonly errorRepository: ApplicationErrorRepository;
   private readonly createId: BuyerJourneyIdFactory;
   private readonly clock: () => string;
   private readonly parse: (input: unknown) => Promise<UserRequestParserOutcome>;
   private readonly expertService: ExpertRequestService;
+  private readonly pilotRuntimeConfig: PilotRuntimeConfig;
+  private readonly feedbackService: JourneyFeedbackService;
   private readonly expertCreateId =
     createSequentialExpertIdFactory("journey_expert");
 
@@ -172,9 +228,26 @@ export class BuyerJourneyApplication {
       dependencies.expertRepository ?? new InMemoryExpertRequestRepository();
     this.instrumentation =
       dependencies.instrumentation ?? new InMemoryJourneyInstrumentation();
+    this.pilotRuntimeConfig =
+      dependencies.pilotRuntimeConfig ?? createPilotRuntimeConfig();
+    this.pilotTelemetry =
+      dependencies.pilotTelemetry ??
+      new InMemoryPilotTelemetry(this.pilotRuntimeConfig);
+    this.performanceRecorder =
+      dependencies.performanceRecorder ??
+      new InMemoryPilotPerformanceRecorder();
+    this.feedbackRepository =
+      dependencies.feedbackRepository ?? new InMemoryFeedbackRepository();
+    this.errorRepository =
+      dependencies.errorRepository ?? new InMemoryApplicationErrorRepository();
     this.createId =
       dependencies.createId ?? createSequentialBuyerJourneyIdFactory();
     this.clock = dependencies.clock ?? (() => new Date().toISOString());
+    this.feedbackService = new JourneyFeedbackService(
+      this.feedbackRepository,
+      this.pilotTelemetry,
+      this.clock,
+    );
     this.parse = dependencies.parse ?? parseUserRequest;
     this.expertService = new ExpertRequestService(
       this.expertRepository,
@@ -269,6 +342,14 @@ export class BuyerJourneyApplication {
     };
     this.repository.saveJourney(journey);
     this.record(journey, "journey_started", {});
+    this.recordPilot(journey, "request_submitted", {
+      request_length_bucket:
+        input.rawRequestText.length < 100
+          ? "short"
+          : input.rawRequestText.length < 500
+            ? "medium"
+            : "long",
+    });
     return journey;
   }
 
@@ -282,17 +363,32 @@ export class BuyerJourneyApplication {
         "Parser can run only from request_entry",
         true,
       );
-    const outcome = await this.parse({
-      schema_version: "1.0",
-      raw_text: journey.raw_request_text,
-      locale: "ru-RU",
-      context: {
-        continuation: false,
-        previous_request: null,
-        reference_date: this.clock().slice(0, 10),
-      },
+    const outcome = await measurePilotOperationAsync({
+      operation: "parser",
+      recorder: this.performanceRecorder,
+      clock: this.clock,
+      execute: () =>
+        this.parse({
+          schema_version: "1.0",
+          raw_text: journey.raw_request_text,
+          locale: "ru-RU",
+          context: {
+            continuation: false,
+            previous_request: null,
+            reference_date: this.clock().slice(0, 10),
+          },
+        }),
     });
-    if (!outcome.success) return outcome;
+    if (!outcome.success) {
+      this.recordApplicationError({
+        errorCode: outcome.error.type,
+        layer: "parser",
+        journeyId,
+        recoverable: true,
+        userVisible: true,
+      });
+      return outcome;
+    }
     const parsedRef = this.createId("parsed_request");
     this.repository.saveParsedRequest(parsedRef, outcome.result);
     const updated = this.transition(journey, "request_confirmation", {
@@ -302,11 +398,17 @@ export class BuyerJourneyApplication {
       parser_version: outcome.result.parser_version,
       parsed_request_ref: parsedRef,
     });
+    this.recordPilot(updated, "request_confirmation_viewed", {
+      parsed_request_ref: parsedRef,
+    });
     return outcome;
   }
 
   beginRequestEdit(journeyId: string): BuyerJourney {
     const journey = this.requireJourney(journeyId);
+    this.recordPilot(journey, "request_edited", {
+      request_version: journey.confirmed_user_request_version,
+    });
     if (journey.current_stage !== "request_confirmation")
       return this.transition(journey, "request_confirmation", {
         recoverable_error: null,
@@ -391,25 +493,47 @@ export class BuyerJourneyApplication {
         true,
       );
     const confirmed = activeRequest(this.repository, journey);
+    this.recordPilot(journey, "matching_started", {
+      request_version: confirmed.user_request_version,
+    });
     const previousBundleId = journey.shortlist_state.matching_bundle_id;
     const previousBundle = previousBundleId
       ? this.repository.getMatchingBundle(previousBundleId)
       : null;
     const generatedAt = this.clock();
     const imported = this.repository.listImportedCandidates(journeyId);
-    const bundle = runMatchingForConfirmedRequest({
-      repository: this.repository,
-      confirmed,
-      previousBundle,
-      importedCandidateIds: imported.map((item) => item.ingestionId),
-      generatedAt,
-      createId: this.createId,
+    const bundle = measurePilotOperation({
+      operation: "matching",
+      candidateCount:
+        (this.pilotRuntimeConfig.mode === "demo"
+          ? loadJourneyDataset(this.repository).properties.length
+          : 0) + imported.length,
+      recorder: this.performanceRecorder,
+      clock: this.clock,
+      execute: () =>
+        runMatchingForConfirmedRequest({
+          repository: this.repository,
+          confirmed,
+          previousBundle,
+          importedCandidateIds: imported.map((item) => item.ingestionId),
+          generatedAt,
+          createId: this.createId,
+          performanceRecorder: this.performanceRecorder,
+          includeSyntheticDataset: this.pilotRuntimeConfig.mode === "demo",
+        }),
     });
     this.repository.saveMatchingBundle(bundle);
-    const shortlist = buildShortlistFromMatchingBundle({
-      repository: this.repository,
-      confirmed,
-      bundle,
+    const shortlist = measurePilotOperation({
+      operation: "shortlist",
+      candidateCount: bundle.entries.length,
+      recorder: this.performanceRecorder,
+      clock: this.clock,
+      execute: () =>
+        buildShortlistFromMatchingBundle({
+          repository: this.repository,
+          confirmed,
+          bundle,
+        }),
     });
     let updated = this.transition(journey, "shortlist", {
       shortlist_state: {
@@ -454,10 +578,17 @@ export class BuyerJourneyApplication {
     const journey = this.requireJourney(journeyId);
     const confirmed = activeRequest(this.repository, journey);
     const bundle = activeBundle(this.repository, journey, confirmed);
-    const view = buildShortlistFromMatchingBundle({
-      repository: this.repository,
-      confirmed,
-      bundle,
+    const view = measurePilotOperation({
+      operation: "shortlist",
+      candidateCount: bundle.entries.length,
+      recorder: this.performanceRecorder,
+      clock: this.clock,
+      execute: () =>
+        buildShortlistFromMatchingBundle({
+          repository: this.repository,
+          confirmed,
+          bundle,
+        }),
     });
     this.record(journey, "shortlist_viewed", { card_count: view.cards.length });
     return view;
@@ -519,11 +650,18 @@ export class BuyerJourneyApplication {
       createId: this.createId,
     });
     this.repository.saveComparison(state);
-    const view = buildComparisonFromState({
-      repository: this.repository,
-      confirmed,
-      bundle,
-      comparison: state,
+    const view = measurePilotOperation({
+      operation: "comparison",
+      candidateCount: state.items.length,
+      recorder: this.performanceRecorder,
+      clock: this.clock,
+      execute: () =>
+        buildComparisonFromState({
+          repository: this.repository,
+          confirmed,
+          bundle,
+          comparison: state,
+        }),
     });
     const updated = this.transition(journey, "comparison", {
       comparison_id: state.comparison_id,
@@ -538,6 +676,19 @@ export class BuyerJourneyApplication {
         property_count: state.items.length,
       },
     );
+    this.recordPilot(updated, "comparison_item_added", {
+      comparison_id: state.comparison_id,
+      added_count: state.items.filter(
+        (item) =>
+          !previous?.items.some(
+            (previousItem) => previousItem.property_id === item.property_id,
+          ),
+      ).length,
+    });
+    this.recordPilot(updated, "comparison_viewed", {
+      comparison_id: state.comparison_id,
+      property_count: state.items.length,
+    });
     return { state, view };
   }
 
@@ -554,24 +705,87 @@ export class BuyerJourneyApplication {
         "Comparison is missing",
         true,
       );
-    return buildComparisonFromState({
-      repository: this.repository,
-      confirmed,
-      bundle,
-      comparison,
+    const view = measurePilotOperation({
+      operation: "comparison",
+      candidateCount: comparison.items.length,
+      recorder: this.performanceRecorder,
+      clock: this.clock,
+      execute: () =>
+        buildComparisonFromState({
+          repository: this.repository,
+          confirmed,
+          bundle,
+          comparison,
+        }),
     });
+    this.recordPilot(journey, "comparison_viewed", {
+      comparison_id: comparison.comparison_id,
+      property_count: comparison.items.length,
+    });
+    return view;
   }
 
   addUserUrlCandidate(
     journeyId: string,
     candidateValue: unknown,
   ): { readonly bundle: MatchingBundle; readonly update: DecisionUpdate } {
-    this.requireJourney(journeyId);
+    const journey = this.requireJourney(journeyId);
+    if (!this.pilotRuntimeConfig.features.user_url_ingestion)
+      throw new BuyerJourneyError(
+        "INGESTION_FAILED",
+        "User URL ingestion is disabled in the active application mode",
+        true,
+      );
+    this.recordPilot(journey, "user_url_ingestion_started", {});
     const candidate = parseNormalizedUserUrlCandidate(candidateValue);
     if (!candidate || candidate.matchingReadiness.status === "not_ready")
       throw new BuyerJourneyError(
         "INGESTION_FAILED",
         "Normalized URL candidate is not ready for matching",
+        true,
+      );
+    if (
+      candidate.sourceMode === "automatic_allowed" &&
+      this.pilotRuntimeConfig.killSwitches.user_url_automatic_ingestion
+    )
+      throw new BuyerJourneyError(
+        "SOURCE_POLICY_BLOCKED",
+        "Automatic user URL ingestion kill switch is active",
+        true,
+      );
+    const candidateValidation = validatePilotCandidate(
+      {
+        schema_version: "pilot-candidate-v1",
+        origin: "user_supplied",
+        property: candidate.propertyCandidate,
+        offer: candidate.offerCandidate,
+        source: candidate.source,
+        sources: [candidate.source],
+        evidence: candidate.evidence,
+        financing_claims: candidate.evidence
+          .filter((item) =>
+            /financing|mortgage|promotion|marketing/iu.test(item.field),
+          )
+          .map((item) => ({
+            field: item.field,
+            verification_status: item.verification_status,
+            evidence_refs: [item.evidence_id],
+          })),
+        observed_at:
+          candidate.snapshot?.collected_at ??
+          candidate.offerCandidate.updated_at ??
+          candidate.propertyCandidate.metadata.updated_at,
+        environment:
+          this.pilotRuntimeConfig.mode === "demo"
+            ? "test"
+            : this.pilotRuntimeConfig.mode,
+      },
+      { runtimeConfig: this.pilotRuntimeConfig, now: this.clock() },
+    );
+    if (!candidateValidation.valid)
+      throw new BuyerJourneyError(
+        "INGESTION_FAILED",
+        `Pilot candidate validation failed: ${candidateValidation.errors.join(",")}`,
         true,
       );
     this.repository.saveImportedCandidate(candidate);
@@ -582,6 +796,14 @@ export class BuyerJourneyApplication {
       triggerRef: candidate.ingestionId,
       affectedPropertyIds: [candidate.propertyCandidate.identity.property_id],
     });
+    this.recordPilot(
+      this.requireJourney(journeyId),
+      "user_url_ingestion_completed",
+      {
+        ingestion_id: candidate.ingestionId,
+        validation_warning_count: candidateValidation.warnings.length,
+      },
+    );
     return result;
   }
 
@@ -590,6 +812,12 @@ export class BuyerJourneyApplication {
     input: CreateJourneyExpertRequestInput,
   ): ExpertRequest {
     const journey = this.requireJourney(journeyId);
+    if (!this.pilotRuntimeConfig.features.expert_requests)
+      throw new BuyerJourneyError(
+        "INVALID_TRANSITION",
+        "Expert requests are disabled in the active application mode",
+        true,
+      );
     const confirmed = activeRequest(this.repository, journey);
     const bundle = activeBundle(this.repository, journey, confirmed);
     const comparison = journey.comparison_id
@@ -657,6 +885,7 @@ export class BuyerJourneyApplication {
     );
     this.currentAccessJourney = journey;
     let created: ReturnType<ExpertRequestService["createDraft"]>;
+    const expertContextStartedAt = performance.now();
     try {
       created = this.expertService.createDraft({
         owner: ownerForJourney(journey),
@@ -771,6 +1000,14 @@ export class BuyerJourneyApplication {
         },
       });
     } finally {
+      this.performanceRecorder.record({
+        operation: "expert_context",
+        duration_ms: Number(
+          (performance.now() - expertContextStartedAt).toFixed(3),
+        ),
+        candidate_count: propertyIds.length,
+        recorded_at: this.clock(),
+      });
       this.currentAccessJourney = null;
     }
     const request = created.created
@@ -1081,6 +1318,152 @@ export class BuyerJourneyApplication {
     return outcome;
   }
 
+  viewJourneyExpertResult(
+    journeyId: string,
+    expertResultId: string,
+  ): ExpertResult {
+    const journey = this.requireJourney(journeyId);
+    const snapshot = this.getJourneySnapshot(journeyId);
+    const result = snapshot.expert?.result ?? null;
+    if (!result || result.expert_result_id !== expertResultId)
+      throw new BuyerJourneyError(
+        "ENTITY_NOT_FOUND",
+        "Expert result not found in this journey",
+        false,
+      );
+    this.recordPilot(journey, "expert_result_viewed", {
+      expert_result_id: expertResultId,
+      expert_request_id: result.request_id,
+    });
+    return result;
+  }
+
+  submitJourneyFeedback(input: {
+    readonly journeyId: string;
+    readonly stage: PilotFeedbackStage;
+    readonly questionCode: string;
+    readonly answer: JourneyFeedback["answer"];
+    readonly optionalComment?: string | null;
+  }): JourneyFeedback {
+    const journey = this.requireJourney(input.journeyId);
+    return this.feedbackService.submit({
+      journeyId: journey.journey_id,
+      sessionId: journey.session_id,
+      journeyStage: journey.current_stage,
+      stage: input.stage,
+      questionCode: input.questionCode,
+      answer: input.answer,
+      optionalComment: input.optionalComment,
+    });
+  }
+
+  recordApplicationError(input: {
+    readonly errorCode: string;
+    readonly layer: ApplicationErrorLayer;
+    readonly journeyId?: string | null;
+    readonly recoverable: boolean;
+    readonly userVisible: boolean;
+    readonly contextIds?: Readonly<Record<string, string>>;
+  }): ApplicationErrorRecord {
+    const journey = input.journeyId
+      ? this.repository.getJourney(input.journeyId)
+      : null;
+    const error = createApplicationError({
+      errorCode: input.errorCode,
+      layer: input.layer,
+      journeyId: journey?.journey_id ?? input.journeyId ?? null,
+      stage: journey?.current_stage ?? null,
+      recoverable: input.recoverable,
+      userVisible: input.userVisible,
+      occurredAt: this.clock(),
+      contextIds: input.contextIds,
+      appVersion: this.pilotRuntimeConfig.appVersion,
+    });
+    this.errorRepository.record(error.record);
+    return error.record;
+  }
+
+  getJourneyDiagnostics(
+    journeyId: string,
+    correlations: {
+      readonly refreshTaskIds?: readonly string[];
+      readonly collectionRunIds?: readonly string[];
+      readonly openclawRequestIds?: readonly string[];
+    } = {},
+  ): JourneyDiagnosticReport {
+    const journey = this.requireJourney(journeyId);
+    return buildJourneyDiagnosticReport({
+      journey,
+      snapshot: this.getJourneySnapshot(journeyId),
+      auditEvents: this.instrumentation.list(journeyId),
+      telemetryEvents: this.pilotTelemetry.list(journeyId),
+      errors: this.errorRepository.list(journeyId),
+      refreshTaskIds: correlations.refreshTaskIds,
+      collectionRunIds: correlations.collectionRunIds,
+      openclawRequestIds: correlations.openclawRequestIds,
+      generatedAt: this.clock(),
+    });
+  }
+
+  getJourneyCoverage(journeyId: string): CoverageSummary {
+    const journey = this.requireJourney(journeyId);
+    const confirmed = activeRequest(this.repository, journey);
+    const bundle = activeBundle(this.repository, journey, confirmed);
+    const imported = this.repository.listImportedCandidates(journeyId);
+    const syntheticDataset = loadJourneyDataset(this.repository);
+    const explicitReadiness = imported.map((candidate) => ({
+      source_id: candidate.source.source_id,
+      ready: true,
+      blockers: [],
+      warnings: ["USER_SUPPLIED_NOT_MARKET_COVERAGE"],
+      approved_operations: ["user_url_ingest" as const, "display" as const],
+      approved_environment:
+        this.pilotRuntimeConfig.mode === "production"
+          ? ("production" as const)
+          : this.pilotRuntimeConfig.mode === "pilot"
+            ? ("pilot" as const)
+            : ("test" as const),
+      policy_version: this.pilotRuntimeConfig.policyVersion,
+    }));
+    const demoReadiness =
+      this.pilotRuntimeConfig.mode === "demo"
+        ? syntheticDataset.sources.map((source) => ({
+            source_id: source.source_id,
+            ready: true,
+            blockers: [],
+            warnings: ["SYNTHETIC_DEMO_SOURCE"],
+            approved_operations: ["display" as const],
+            approved_environment: "test" as const,
+            policy_version: this.pilotRuntimeConfig.policyVersion,
+          }))
+        : [];
+    const properties = [
+      ...(this.pilotRuntimeConfig.mode === "demo"
+        ? syntheticDataset.properties
+        : []),
+      ...imported.map((candidate) => candidate.propertyCandidate),
+    ];
+    return buildCoverageSummary({
+      properties,
+      eligiblePropertyIds: bundle.entries
+        .filter((entry) =>
+          ["eligible", "eligible_with_unknowns", "possible_match"].includes(
+            entry.match.match_result.eligibility_status,
+          ),
+        )
+        .map((entry) => entry.property_id),
+      sourceReadiness: [
+        ...evaluateAllPilotSources(),
+        ...demoReadiness,
+        ...explicitReadiness,
+      ],
+      staleSourceIds: syntheticDataset.sources
+        .filter((source) => source.status === "degraded")
+        .map((source) => source.source_id),
+      generatedAt: this.clock(),
+    });
+  }
+
   requestJourneyRefresh(input: {
     readonly journeyId: string;
     readonly propertyId: string;
@@ -1123,18 +1506,34 @@ export class BuyerJourneyApplication {
         satisfiedConditions: ["TARGETED_UNIT_HTTP_POC_APPROVED"],
       },
     );
-    const blocked = !audit.policyAllowedAtEnqueue;
+    const featureAllowed = isFeatureOperational(
+      this.pilotRuntimeConfig,
+      "refresh",
+      "refresh_execution",
+    );
+    const blocked = !audit.policyAllowedAtEnqueue || !featureAllowed;
+    const errorCode = !audit.policyAllowedAtEnqueue
+      ? ("SOURCE_POLICY_BLOCKED" as const)
+      : !featureAllowed
+        ? ("FEATURE_DISABLED" as const)
+        : null;
     const updated = this.updateJourney(journey, {
-      recoverable_error: blocked ? "SOURCE_POLICY_BLOCKED" : "REFRESH_PENDING",
+      recoverable_error:
+        errorCode === "SOURCE_POLICY_BLOCKED"
+          ? "SOURCE_POLICY_BLOCKED"
+          : errorCode === "FEATURE_DISABLED"
+            ? "FEATURE_DISABLED"
+            : "REFRESH_PENDING",
     });
     this.record(updated, "refresh_requested", {
       refresh_task_id: audit.enqueueResult.task.refresh_task_id,
       policy_allowed: audit.policyAllowedAtEnqueue,
+      feature_allowed: featureAllowed,
       property_id: input.propertyId,
     });
     return {
       status: blocked ? "blocked" : "queued",
-      error_code: blocked ? "SOURCE_POLICY_BLOCKED" : null,
+      error_code: errorCode,
       audit,
     };
   }
@@ -1238,14 +1637,23 @@ export class BuyerJourneyApplication {
     const previous = activeBundle(this.repository, journey, confirmed);
     const generatedAt = this.clock();
     const imported = this.repository.listImportedCandidates(input.journeyId);
-    const bundle = runMatchingForConfirmedRequest({
-      repository: this.repository,
-      confirmed,
-      previousBundle: previous,
-      importedCandidateIds: imported.map((item) => item.ingestionId),
-      generatedAt,
-      createId: this.createId,
-      affectedPropertyIds: input.affectedPropertyIds,
+    const bundle = measurePilotOperation({
+      operation: "matching",
+      candidateCount: input.affectedPropertyIds.length,
+      recorder: this.performanceRecorder,
+      clock: this.clock,
+      execute: () =>
+        runMatchingForConfirmedRequest({
+          repository: this.repository,
+          confirmed,
+          previousBundle: previous,
+          importedCandidateIds: imported.map((item) => item.ingestionId),
+          generatedAt,
+          createId: this.createId,
+          affectedPropertyIds: input.affectedPropertyIds,
+          performanceRecorder: this.performanceRecorder,
+          includeSyntheticDataset: this.pilotRuntimeConfig.mode === "demo",
+        }),
     });
     this.repository.saveMatchingBundle(bundle);
     this.repository.markMatchingBundleStale(previous.matching_bundle_id);
@@ -1326,6 +1734,23 @@ export class BuyerJourneyApplication {
     this.instrumentation.record({
       journey,
       eventType,
+      occurredAt: this.clock(),
+      metadata,
+    });
+    const pilotEvent = pilotEventForAudit[eventType];
+    if (pilotEvent) this.recordPilot(journey, pilotEvent, metadata);
+  }
+
+  private recordPilot(
+    journey: BuyerJourney,
+    eventName: PilotTelemetryEventName,
+    metadata: Readonly<Record<string, unknown>>,
+  ): void {
+    this.pilotTelemetry.record({
+      eventName,
+      journeyId: journey.journey_id,
+      sessionId: journey.session_id,
+      stage: journey.current_stage,
       occurredAt: this.clock(),
       metadata,
     });

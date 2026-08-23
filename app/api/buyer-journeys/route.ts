@@ -19,7 +19,7 @@ const stringList = (body: object, key: string): readonly string[] => {
     : [];
 };
 
-const failure = (error: unknown): Response => {
+const failure = (error: unknown, errorId?: string): Response => {
   const journeyError =
     error instanceof BuyerJourneyError
       ? error
@@ -32,6 +32,7 @@ const failure = (error: unknown): Response => {
   return Response.json(
     {
       error: journeyError.code,
+      errorId: errorId ?? null,
       title: presentation.title,
       message: presentation.message,
       recovery: {
@@ -113,7 +114,10 @@ export async function POST(request: Request): Promise<Response> {
       return Response.json(result);
     }
     if (action === "shortlist")
-      return Response.json({ view: application.getShortlist(journeyId) });
+      return Response.json({
+        view: application.getShortlist(journeyId),
+        coverage: application.getJourneyCoverage(journeyId),
+      });
     if (action === "open_property") {
       const propertyId = stringValue(body, "propertyId");
       if (!propertyId)
@@ -159,10 +163,38 @@ export async function POST(request: Request): Promise<Response> {
         { status: 201 },
       );
     }
+    if (action === "submit_feedback") {
+      const stage = stringValue(body, "stage");
+      const questionCode = stringValue(body, "questionCode");
+      const answer = stringValue(body, "answer");
+      const optionalComment =
+        typeof Reflect.get(body, "optionalComment") === "string"
+          ? String(Reflect.get(body, "optionalComment"))
+          : null;
+      if (!stage || !questionCode || !answer)
+        throw new BuyerJourneyError(
+          "INVALID_TRANSITION",
+          "Feedback boundary requires stage, question and answer",
+          true,
+        );
+      const feedback = application.submitJourneyFeedback({
+        journeyId,
+        stage: stage as Parameters<
+          typeof application.submitJourneyFeedback
+        >[0]["stage"],
+        questionCode,
+        answer: answer as Parameters<
+          typeof application.submitJourneyFeedback
+        >[0]["answer"],
+        optionalComment,
+      });
+      return Response.json({ feedback }, { status: 201 });
+    }
     if (action === "snapshot")
       return Response.json({
         journey: application.getJourney(journeyId),
         snapshot: application.getJourneySnapshot(journeyId),
+        diagnostics: application.getJourneyDiagnostics(journeyId),
       });
     throw new BuyerJourneyError(
       "INVALID_TRANSITION",
@@ -170,6 +202,34 @@ export async function POST(request: Request): Promise<Response> {
       true,
     );
   } catch (error) {
-    return failure(error);
+    const journeyId = stringValue(body, "journeyId");
+    const errorCode =
+      error instanceof BuyerJourneyError ? error.code : "INVALID_TRANSITION";
+    const layer =
+      errorCode === "SOURCE_POLICY_BLOCKED"
+        ? ("source_policy" as const)
+        : action === "start_and_parse"
+          ? ("parser" as const)
+          : action === "confirm_and_match"
+            ? ("matching" as const)
+            : action === "shortlist" || action === "open_property"
+              ? ("shortlist" as const)
+              : action === "comparison"
+                ? ("comparison" as const)
+                : action === "add_user_url"
+                  ? ("user_url_ingestion" as const)
+                  : action === "create_expert_request"
+                    ? ("expert_workflow" as const)
+                    : ("recompute" as const);
+    const record = application.recordApplicationError({
+      errorCode,
+      layer,
+      journeyId,
+      recoverable:
+        error instanceof BuyerJourneyError ? error.recoverable : true,
+      userVisible: true,
+      contextIds: action ? { action } : {},
+    });
+    return failure(error, record.error_id);
   }
 }

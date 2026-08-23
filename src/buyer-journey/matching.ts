@@ -27,6 +27,10 @@ import {
 } from "../shortlist";
 import { buildUserUrlPropertyDetailInput } from "../user-url-ingestion";
 import {
+  measurePilotOperation,
+  type PilotPerformanceRecorder,
+} from "../pilot-hardening/performance";
+import {
   MATCHING_BUNDLE_SCHEMA_VERSION,
   type CanonicalDecisionOverlay,
   type ConfirmedRequestRecord,
@@ -153,6 +157,7 @@ const evaluateCandidate = (
   parts: CandidateParts,
   dataset: EvaluatedDataset,
   currentTime: string,
+  performanceRecorder?: PilotPerformanceRecorder,
 ): MatchingBundleEntry | null => {
   const propertyId = parts.property.identity.property_id;
   const match = matchProperty({
@@ -176,27 +181,37 @@ const evaluateCandidate = (
       (scenario) =>
         scenario.scenario_id === match.result.match_result.purchase_scenario_id,
     ) ?? null;
-  const quality = calculateDataQuality({
-    userRequest: request,
-    matchResult: match.result.match_result,
-    fieldEvidence: dataset.fieldEvidence,
-    sourceConflicts: dataset.sourceConflicts,
-    sources: dataset.sources,
-    selectedOffer,
-    selectedPurchaseScenario: selectedScenario,
-    selectedPromotion:
-      dataset.promotions.find(
-        (promotion) =>
-          promotion.promotion_id === selectedScenario?.promotion_id,
-      ) ?? null,
-    currentTime,
-  });
+  const calculateQuality = () =>
+    calculateDataQuality({
+      userRequest: request,
+      matchResult: match.result.match_result,
+      fieldEvidence: dataset.fieldEvidence,
+      sourceConflicts: dataset.sourceConflicts,
+      sources: dataset.sources,
+      selectedOffer,
+      selectedPurchaseScenario: selectedScenario,
+      selectedPromotion:
+        dataset.promotions.find(
+          (promotion) =>
+            promotion.promotion_id === selectedScenario?.promotion_id,
+        ) ?? null,
+      currentTime,
+    });
+  const quality = performanceRecorder
+    ? measurePilotOperation({
+        operation: "confidence",
+        candidateCount: 1,
+        recorder: performanceRecorder,
+        clock: () => currentTime,
+        execute: calculateQuality,
+      })
+    : calculateQuality();
   return {
     property_id: propertyId,
     selected_offer_id: match.result.selected_offer_id,
     selected_purchase_scenario_id:
       match.result.match_result.purchase_scenario_id,
-    origin: "synthetic_pilot",
+    origin: "synthetic",
     match: match.result,
     data_quality: quality.success ? quality.result : null,
   };
@@ -219,7 +234,7 @@ const evaluateImportedCandidate = (
     selected_offer_id: detail.selectedOffer?.offer_id ?? null,
     selected_purchase_scenario_id:
       detail.selectedPurchaseScenario?.scenario_id ?? null,
-    origin: "user_url_fixture",
+    origin: "user_supplied",
     match: detail.matching,
     data_quality: detail.dataQuality,
   };
@@ -233,8 +248,11 @@ export const runMatchingForConfirmedRequest = (input: {
   readonly generatedAt: string;
   readonly createId: BuyerJourneyIdFactory;
   readonly affectedPropertyIds?: readonly string[] | null;
+  readonly performanceRecorder?: PilotPerformanceRecorder;
+  readonly includeSyntheticDataset?: boolean;
 }): MatchingBundle => {
   const dataset = loadJourneyDataset(input.repository);
+  const includeSyntheticDataset = input.includeSyntheticDataset ?? true;
   const affected = input.affectedPropertyIds
     ? new Set(input.affectedPropertyIds)
     : null;
@@ -245,7 +263,10 @@ export const runMatchingForConfirmedRequest = (input: {
   const entries: MatchingBundleEntry[] = [];
   let partial = false;
 
-  for (const property of dataset.properties.filter((candidate) =>
+  for (const property of (includeSyntheticDataset
+    ? dataset.properties
+    : []
+  ).filter((candidate) =>
     matchesConfirmedScope(input.confirmed.request, candidate),
   )) {
     const propertyId = property.identity.property_id;
@@ -271,6 +292,7 @@ export const runMatchingForConfirmedRequest = (input: {
       },
       dataset,
       input.generatedAt,
+      input.performanceRecorder,
     );
     if (candidate) entries.push(candidate);
     else partial = true;
@@ -307,9 +329,19 @@ export const runMatchingForConfirmedRequest = (input: {
     confidence_algorithm_version: CONFIDENCE_ALGORITHM_VERSION,
     criteria_registry_version: CRITERIA_REGISTRY_VERSION,
     dataset_snapshot: {
-      dataset_id: dataset.metadata.dataset_id,
-      dataset_version: dataset.metadata.dataset_version,
-      dataset_type: dataset.metadata.dataset_type,
+      dataset_id: includeSyntheticDataset
+        ? dataset.metadata.dataset_id
+        : "pilot_runtime_explicit",
+      dataset_version: includeSyntheticDataset
+        ? dataset.metadata.dataset_version
+        : "pilot-runtime-v1",
+      dataset_type: includeSyntheticDataset
+        ? input.importedCandidateIds.length > 0
+          ? "mixed_explicit"
+          : dataset.metadata.dataset_type
+        : input.importedCandidateIds.length > 0
+          ? "user_supplied_only"
+          : "empty_pilot",
     },
     imported_candidate_ids: [...input.importedCandidateIds],
     partial,
@@ -362,7 +394,7 @@ export const resolveBundlePropertyDetail = (input: {
       true,
     );
 
-  if (entry.origin === "user_url_fixture") {
+  if (entry.origin === "user_supplied") {
     const detail = importedDetail(
       input.repository,
       input.bundle,
@@ -444,6 +476,11 @@ export const buildShortlistFromMatchingBundle = (input: {
   readonly confirmed: ConfirmedRequestRecord;
   readonly bundle: MatchingBundle;
 }): ShortlistView => {
+  const origins = [
+    ...new Set(input.bundle.entries.map((entry) => entry.origin)),
+  ]
+    .sort()
+    .join(",");
   const candidates: ShortlistCandidateInput[] = input.bundle.entries.map(
     (entry) => {
       const detail = resolveBundlePropertyDetail({
@@ -470,8 +507,18 @@ export const buildShortlistFromMatchingBundle = (input: {
     candidates,
     generatedAt: input.bundle.generated_at,
     partial: input.bundle.partial,
-    datasetNotice:
-      "Демонстрационные данные · dataset_type=synthetic_pilot. Это не полное покрытие рынка.",
+    datasetNotice: (() => {
+      switch (input.bundle.dataset_snapshot.dataset_type) {
+        case "synthetic_pilot":
+          return "Демонстрационные данные · origin=synthetic · dataset_type=synthetic_pilot. Это не полное покрытие рынка.";
+        case "mixed_explicit":
+          return `Смешанный явный набор · dataset_type=mixed_explicit · origins=${origins}. Synthetic и пользовательские данные не считаются live-market coverage.`;
+        case "user_supplied_only":
+          return "Только явно добавленные пользователем варианты · origin=user_supplied. Это не полное покрытие рынка.";
+        case "empty_pilot":
+          return "Pilot dataset не подключён. Данных недостаточно для вывода о наличии вариантов на рынке.";
+      }
+    })(),
   };
   const outcome = buildShortlistView(shortlistInput);
   if (!outcome.success)

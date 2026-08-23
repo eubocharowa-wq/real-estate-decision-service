@@ -6,6 +6,7 @@ import {
   buildExpertResultReviewView,
   getExpertWorkbenchFixtureRuntime,
 } from "../../../../src/expert-workbench";
+import { PilotFeedbackForm } from "../../../../src/pilot-hardening/components";
 
 export const metadata: Metadata = {
   title: "Результат экспертной проверки · REDS",
@@ -14,10 +15,13 @@ export const metadata: Metadata = {
 
 export default async function ExpertResultPage({
   params,
+  searchParams,
 }: {
   readonly params: Promise<{ readonly requestId: string }>;
+  readonly searchParams: Promise<{ readonly journeyId?: string }>;
 }) {
   const { requestId } = await params;
+  const { journeyId } = await searchParams;
   const runtime = await getExpertWorkbenchFixtureRuntime();
   let view;
   try {
@@ -39,5 +43,12 @@ export default async function ExpertResultPage({
       </main>
     );
   }
-  return <ExpertResultReview view={view} />;
+  return (
+    <>
+      <ExpertResultReview view={view} />
+      {journeyId ? (
+        <PilotFeedbackForm journeyId={journeyId} stage="expert_result" />
+      ) : null}
+    </>
+  );
 }

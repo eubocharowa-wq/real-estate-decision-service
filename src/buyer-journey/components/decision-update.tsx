@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import type { BuyerJourney, DecisionUpdate } from "../contracts";
+import { PilotFeedbackForm } from "../../pilot-hardening/components";
 
 const delta = (before: number, after: number): string => {
   const change = after - before;
@@ -114,8 +115,10 @@ export function JourneyDecisionUpdateView({
           </Link>
         ) : null}
       </nav>
+      <PilotFeedbackForm journeyId={journey.journey_id} stage="journey_end" />
       <p className="dataset-notice">
-        Демонстрационные данные · dataset_type=synthetic_pilot.
+        Происхождение каждого варианта сохранено отдельно; synthetic и
+        user-supplied данные не выдаются за live-market coverage.
       </p>
     </main>
   );

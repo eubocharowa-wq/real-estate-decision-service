@@ -28,6 +28,7 @@ import {
   BUYER_JOURNEY_ID_STORAGE_KEY,
   getOrCreateBuyerSessionId,
 } from "../../buyer-journey/browser-storage";
+import { PilotFeedbackForm } from "../../pilot-hardening/components";
 
 interface ShortlistClientProps {
   readonly initialView?: ShortlistView | null;
@@ -268,11 +269,16 @@ export function ShortlistClient({ initialView }: ShortlistClientProps) {
   }
   if (remote.status !== "ready") return <GuardState state={remote} />;
   return (
-    <ShortlistPageView
-      view={remote.view}
-      comparisonPropertyIds={comparisonPropertyIds}
-      comparisonNotice={comparisonNotice}
-      onComparisonToggle={handleComparisonToggle}
-    />
+    <>
+      <ShortlistPageView
+        view={remote.view}
+        comparisonPropertyIds={comparisonPropertyIds}
+        comparisonNotice={comparisonNotice}
+        onComparisonToggle={handleComparisonToggle}
+      />
+      {journeyId ? (
+        <PilotFeedbackForm journeyId={journeyId} stage="shortlist" />
+      ) : null}
+    </>
   );
 }

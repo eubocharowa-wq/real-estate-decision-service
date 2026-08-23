@@ -31,9 +31,10 @@ describe("buyer journey URL and refresh boundaries", () => {
       confirmed.candidate,
     );
     const imported = result.bundle.entries.find(
-      (entry) => entry.origin === "user_url_fixture",
+      (entry) => entry.origin === "user_supplied",
     );
     expect(imported).toBeDefined();
+    expect(result.bundle.dataset_snapshot.dataset_type).toBe("mixed_explicit");
     expect(imported!.match.match_result.algorithm_version).toBe(
       matching.bundle.matching_algorithm_version,
     );

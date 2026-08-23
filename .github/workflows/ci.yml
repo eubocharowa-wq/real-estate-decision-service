@@ -29,5 +29,11 @@ jobs:
       - name: Test
         run: npm test
 
+      - name: Pilot hardening regressions (offline)
+        run: npm run test:pilot
+
+      - name: Pilot performance regression (offline)
+        run: npm run test:pilot-performance
+
       - name: Build
         run: npm run build

@@ -28,6 +28,20 @@ import {
   BUYER_JOURNEY_ID_STORAGE_KEY,
   getOrCreateBuyerSessionId,
 } from "../../buyer-journey/browser-storage";
+import { PilotFeedbackForm } from "../../pilot-hardening/components";
+
+const comparisonWithFeedback = (
+  view: ComparisonView,
+  onRemove: (propertyId: string) => void,
+  journeyId: string | null,
+) => (
+  <>
+    <ComparisonPageView view={view} onRemove={onRemove} />
+    {journeyId ? (
+      <PilotFeedbackForm journeyId={journeyId} stage="comparison" />
+    ) : null}
+  </>
+);
 
 interface ComparisonClientProps {
   readonly initialView?: ComparisonView | null;
@@ -213,7 +227,7 @@ export function ComparisonClient({
       />
     );
   if (initialView !== undefined && remote.status === "ready")
-    return <ComparisonPageView view={remote.view} onRemove={handleRemove} />;
+    return comparisonWithFeedback(remote.view, handleRemove, journeyId);
   if (!confirmation)
     return (
       <ComparisonGuard
@@ -251,7 +265,7 @@ export function ComparisonClient({
     remote.status === "ready" &&
     remote.view.selectionSignature === selectionSignature(selection.items)
   )
-    return <ComparisonPageView view={remote.view} onRemove={handleRemove} />;
+    return comparisonWithFeedback(remote.view, handleRemove, journeyId);
   return (
     <main className="shortlist-loading" aria-busy="true" aria-live="polite">
       <div className="loading-orbit" aria-hidden="true" />

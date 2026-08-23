@@ -73,7 +73,13 @@ export interface ConfirmedRequestRecord {
   readonly supersedes_version: number | null;
 }
 
-export type MatchingCandidateOrigin = "synthetic_pilot" | "user_url_fixture";
+/** Explicit provenance prevents synthetic and supplied records looking live. */
+export type MatchingCandidateOrigin =
+  | "synthetic"
+  | "manual_curated"
+  | "approved_live_source"
+  | "user_supplied"
+  | "expert_supplied";
 
 export interface MatchingBundleEntry {
   readonly property_id: string;
@@ -97,7 +103,11 @@ export interface MatchingBundle {
   readonly dataset_snapshot: {
     readonly dataset_id: string;
     readonly dataset_version: string;
-    readonly dataset_type: "synthetic_pilot";
+    readonly dataset_type:
+      | "synthetic_pilot"
+      | "mixed_explicit"
+      | "user_supplied_only"
+      | "empty_pilot";
   };
   readonly imported_candidate_ids: readonly string[];
   readonly partial: boolean;
@@ -208,6 +218,7 @@ export const JOURNEY_ERROR_CODES = [
   "INGESTION_FAILED",
   "REFRESH_PENDING",
   "SOURCE_POLICY_BLOCKED",
+  "FEATURE_DISABLED",
   "ENTITY_NOT_FOUND",
 ] as const;
 

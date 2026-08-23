@@ -14,6 +14,7 @@ export const USER_URL_INGESTION_POLICY_V1 = Object.freeze({
   maximumRedirects: 3,
   maximumResponseBytes: 1_500_000,
   requestTimeoutMs: 8_000,
+  allowedContentTypes: Object.freeze(["text/html", "application/xhtml+xml"]),
   minimumComparisonFields: Object.freeze([
     "property_type",
     "location",

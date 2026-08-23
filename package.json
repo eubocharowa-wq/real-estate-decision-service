@@ -9,6 +9,8 @@
     "lint": "eslint .",
     "test": "vitest run",
     "test:e2e": "vitest run tests/buyer-journey",
+    "test:pilot": "vitest run tests/pilot tests/buyer-journey tests/source-registry tests/user-url-ingestion tests/expert tests/expert-workbench",
+    "test:pilot-performance": "vitest run tests/pilot-performance",
     "typecheck": "next typegen && tsc --noEmit",
     "schemas:generate": "node --import tsx scripts/generate-schemas.ts",
     "schemas:check": "node --import tsx scripts/generate-schemas.ts --check",

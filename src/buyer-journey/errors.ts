@@ -75,6 +75,13 @@ export const JOURNEY_ERROR_PRESENTATION: Readonly<
     action_label: "Продолжить с текущими данными",
     action_href: "/shortlist",
   },
+  FEATURE_DISABLED: {
+    title: "Функция временно выключена",
+    message:
+      "Текущий результат и история сохранены. Продолжите без автоматического действия.",
+    action_label: "Вернуться к решению",
+    action_href: "/shortlist",
+  },
   ENTITY_NOT_FOUND: {
     title: "Объект не найден",
     message: "Он мог быть удалён из текущего набора данных.",

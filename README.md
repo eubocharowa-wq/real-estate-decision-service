@@ -250,6 +250,10 @@ End-to-end controlled buyer journey:
 
 [`docs/08-roadmap/e2e-buyer-journey.md`](docs/08-roadmap/e2e-buyer-journey.md)
 
+Real-buyer pilot hardening, release gate and rollback:
+
+[`docs/09-pilot/README.md`](docs/09-pilot/README.md)
+
 ---
 
 ## Development Workflow
