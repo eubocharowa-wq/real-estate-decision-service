@@ -53,7 +53,7 @@ export interface SourceIdentification {
   readonly hostname: string;
   readonly knownSourceId: string | null;
   readonly sourceType: Source["source_type"];
-  readonly confidence: "exact" | "unknown";
+  readonly confidence: "exact" | "subdomain" | "unknown";
   readonly policyStatus: "configured" | "unknown_source";
 }
 

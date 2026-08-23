@@ -4,7 +4,7 @@ import {
   normalizeUserUrlCandidate,
   manualFieldsFromRaw,
 } from "./normalization";
-import { FixtureSourcePolicyResolver } from "./policy";
+import { RegistrySourcePolicyResolver } from "./policy";
 import type { SourcePolicyResolver } from "./policy";
 import { identifyUserUrlSource } from "./source-identification";
 import type {
@@ -104,7 +104,7 @@ export class UserUrlIngestionOrchestrator {
 
   constructor(dependencies: UserUrlIngestionDependencies = {}) {
     this.policyResolver =
-      dependencies.policyResolver ?? new FixtureSourcePolicyResolver();
+      dependencies.policyResolver ?? new RegistrySourcePolicyResolver();
     this.adapters = dependencies.adapters ?? [new FixtureUserUrlAdapter()];
     this.now = dependencies.now ?? (() => new Date());
     this.audit = dependencies.audit;

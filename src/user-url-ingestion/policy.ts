@@ -1,3 +1,11 @@
+import {
+  resolveRuntimeSourceEnvironment,
+  sourcePolicyEngine,
+  type PolicyReasonCode,
+  type RegistryCollectionMethod,
+  type SourceEnvironment,
+  type SourcePolicyEngine,
+} from "../data-collection/source-registry";
 import type { SourceIdentification } from "./types";
 
 export const USER_URL_INGESTION_POLICY_V1 = Object.freeze({
@@ -41,6 +49,9 @@ export type AllowedIngestionMethod =
 
 export interface IngestionPolicyDecision {
   readonly policyVersion: string;
+  readonly registryVersion: string;
+  readonly environment: SourceEnvironment;
+  readonly decidedAt: string;
   readonly sourceId: string | null;
   readonly mode: IngestionMode;
   readonly canAccess: boolean;
@@ -50,153 +61,137 @@ export interface IngestionPolicyDecision {
   readonly canRefresh: boolean;
   readonly allowedMethods: readonly AllowedIngestionMethod[];
   readonly requiresManualReview: boolean;
-  readonly reasonCode:
-    | "FIXTURE_APPROVED"
-    | "MANUAL_ONLY"
-    | "SOURCE_BLOCKED"
-    | "PARTNER_API_ONLY"
-    | "PERMISSION_REQUIRED"
-    | "SOURCE_UNKNOWN";
+  readonly reasonCode: PolicyReasonCode;
+  readonly reasonCodes: readonly PolicyReasonCode[];
 }
 
 export interface SourcePolicyResolver {
   resolve(identification: SourceIdentification): IngestionPolicyDecision;
 }
 
-interface SourcePolicyConfig {
-  readonly mode: IngestionMode;
-  readonly canAccess: boolean;
-  readonly canAutomate: boolean;
-  readonly canStore: boolean;
-  readonly canDisplay: boolean;
-  readonly canRefresh: boolean;
-  readonly allowedMethods: readonly AllowedIngestionMethod[];
-  readonly requiresManualReview: boolean;
-  readonly reasonCode: IngestionPolicyDecision["reasonCode"];
+const automaticMethods = new Set<RegistryCollectionMethod>([
+  "api",
+  "partner_feed",
+  "xml_feed",
+  "http",
+  "browser",
+  "openclaw",
+  "fixture_mock",
+]);
+
+const ingestionMethod = (
+  method: RegistryCollectionMethod,
+): AllowedIngestionMethod | null => {
+  switch (method) {
+    case "fixture_mock":
+      return "fixture_mock";
+    case "api":
+      return "api";
+    case "partner_feed":
+    case "xml_feed":
+      return "feed";
+    case "http":
+      return "http_fetch";
+    case "browser":
+      return "browser_agent";
+    case "openclaw":
+      return "openclaw";
+    case "manual":
+    case "user_supplied":
+    case "expert":
+      return "manual";
+    case "none":
+      return null;
+  }
+};
+
+const uniqueMethods = (
+  methods: readonly RegistryCollectionMethod[],
+): AllowedIngestionMethod[] => [
+  ...new Set(
+    methods
+      .map(ingestionMethod)
+      .filter((method): method is AllowedIngestionMethod => method !== null),
+  ),
+];
+
+export interface RegistrySourcePolicyResolverOptions {
+  readonly environment?: SourceEnvironment;
+  readonly now?: () => Date;
+  readonly engine?: SourcePolicyEngine;
 }
 
-const policy = (config: SourcePolicyConfig): Readonly<SourcePolicyConfig> =>
-  Object.freeze(config);
-
 /**
- * TASK-012 policy stub. It is deliberately small and versioned; TASK-013 owns
- * the full runtime registry. Hostname identification never grants permission.
+ * Compatibility adapter from TASK-012 to the centralized TASK-013 policy
+ * engine. Method names are translated here; permissions are never inferred.
  */
-export const SOURCE_POLICY_CONFIG_V1: Readonly<
-  Record<string, SourcePolicyConfig>
-> = Object.freeze({
-  fixture_user_url: policy({
-    mode: "fixture_mock",
-    canAccess: true,
-    canAutomate: true,
-    canStore: true,
-    canDisplay: true,
-    canRefresh: false,
-    allowedMethods: ["fixture_mock", "manual"],
-    requiresManualReview: false,
-    reasonCode: "FIXTURE_APPROVED",
-  }),
-  manual_fixture_source: policy({
-    mode: "manual_confirmation",
-    canAccess: true,
-    canAutomate: false,
-    canStore: false,
-    canDisplay: false,
-    canRefresh: false,
-    allowedMethods: ["manual"],
-    requiresManualReview: true,
-    reasonCode: "MANUAL_ONLY",
-  }),
-  blocked_fixture_source: policy({
-    mode: "blocked",
-    canAccess: false,
-    canAutomate: false,
-    canStore: false,
-    canDisplay: false,
-    canRefresh: false,
-    allowedMethods: ["manual"],
-    requiresManualReview: true,
-    reasonCode: "SOURCE_BLOCKED",
-  }),
-  unsupported_fixture_source: policy({
-    mode: "unsupported",
-    canAccess: false,
-    canAutomate: false,
-    canStore: false,
-    canDisplay: false,
-    canRefresh: false,
-    allowedMethods: ["manual"],
-    requiresManualReview: true,
-    reasonCode: "MANUAL_ONLY",
-  }),
-  source_dev_06: policy({
-    mode: "blocked",
-    canAccess: false,
-    canAutomate: false,
-    canStore: false,
-    canDisplay: false,
-    canRefresh: false,
-    allowedMethods: ["manual"],
-    requiresManualReview: true,
-    reasonCode: "PERMISSION_REQUIRED",
-  }),
-  source_mkt_01: policy({
-    mode: "manual_confirmation",
-    canAccess: false,
-    canAutomate: false,
-    canStore: false,
-    canDisplay: false,
-    canRefresh: false,
-    allowedMethods: ["manual", "partner_connector"],
-    requiresManualReview: true,
-    reasonCode: "PARTNER_API_ONLY",
-  }),
-  source_mkt_03: policy({
-    mode: "manual_confirmation",
-    canAccess: false,
-    canAutomate: false,
-    canStore: false,
-    canDisplay: false,
-    canRefresh: false,
-    allowedMethods: ["manual", "partner_connector"],
-    requiresManualReview: true,
-    reasonCode: "PARTNER_API_ONLY",
-  }),
-  source_mkt_04: policy({
-    mode: "manual_confirmation",
-    canAccess: false,
-    canAutomate: false,
-    canStore: false,
-    canDisplay: false,
-    canRefresh: false,
-    allowedMethods: ["manual", "partner_connector"],
-    requiresManualReview: true,
-    reasonCode: "PARTNER_API_ONLY",
-  }),
-});
+export class RegistrySourcePolicyResolver implements SourcePolicyResolver {
+  private readonly environment: SourceEnvironment;
+  private readonly now: () => Date;
+  private readonly engine: SourcePolicyEngine;
 
-const fallbackPolicy = policy({
-  mode: "manual_confirmation",
-  canAccess: false,
-  canAutomate: false,
-  canStore: false,
-  canDisplay: false,
-  canRefresh: false,
-  allowedMethods: ["manual"],
-  requiresManualReview: true,
-  reasonCode: "SOURCE_UNKNOWN",
-});
+  constructor(options: RegistrySourcePolicyResolverOptions = {}) {
+    this.environment =
+      options.environment ??
+      resolveRuntimeSourceEnvironment({
+        configuredEnvironment: process.env.SOURCE_POLICY_ENV,
+        nodeEnvironment: process.env.NODE_ENV,
+      });
+    this.now = options.now ?? (() => new Date());
+    this.engine = options.engine ?? sourcePolicyEngine;
+  }
 
-export class FixtureSourcePolicyResolver implements SourcePolicyResolver {
   resolve(identification: SourceIdentification): IngestionPolicyDecision {
-    const config = identification.knownSourceId
-      ? SOURCE_POLICY_CONFIG_V1[identification.knownSourceId]
-      : undefined;
-    const resolved = config ?? fallbackPolicy;
-    return {
-      policyVersion: USER_URL_INGESTION_POLICY_V1.version,
+    const decision = this.engine.resolve({
       sourceId: identification.knownSourceId,
-      ...resolved,
+      operation: "user_url_ingest",
+      environment: this.environment,
+      decidedAt: this.now().toISOString(),
+    });
+    const hasAutomaticMethod = decision.allowedMethods.some((method) =>
+      automaticMethods.has(method),
+    );
+    const canAutomate = decision.allowed && hasAutomaticMethod;
+    const allowedMethods = uniqueMethods(decision.allowedMethods);
+    const mode: IngestionMode =
+      decision.sourceStatus === "blocked"
+        ? "blocked"
+        : canAutomate && decision.allowedMethods.includes("fixture_mock")
+          ? "fixture_mock"
+          : canAutomate
+            ? "automatic_allowed"
+            : allowedMethods.includes("manual")
+              ? "manual_confirmation"
+              : "unsupported";
+    const reasonCode = decision.reasonCodes[0] ?? "POLICY_ALLOWED";
+    return {
+      policyVersion: decision.policyVersion,
+      registryVersion: decision.registryVersion,
+      environment: decision.environment,
+      decidedAt: decision.decidedAt,
+      sourceId: decision.sourceId,
+      mode,
+      canAccess: decision.access.allowed,
+      canAutomate,
+      canStore: decision.storage.normalizedData.allowed,
+      canDisplay: decision.display.normalizedFacts.allowed,
+      canRefresh: decision.refresh.permission.allowed,
+      allowedMethods,
+      requiresManualReview:
+        !canAutomate ||
+        decision.reasonCodes.some((reason) =>
+          [
+            "PERMISSION_REQUIRED",
+            "REVIEW_REQUIRED",
+            "MANUAL_ONLY",
+            "SOURCE_UNKNOWN",
+          ].includes(reason),
+        ),
+      reasonCode,
+      reasonCodes: decision.reasonCodes,
     };
   }
 }
+
+/** @deprecated Use RegistrySourcePolicyResolver. */
+export class FixtureSourcePolicyResolver extends RegistrySourcePolicyResolver {}
