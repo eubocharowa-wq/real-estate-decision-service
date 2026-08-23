@@ -4,6 +4,7 @@ import {
   buildPilotComparisonInput,
   comparisonSelectionSchema,
 } from "../../../src/comparison";
+import { parseNormalizedUserUrlCandidate } from "../../../src/user-url-ingestion/matching-adapter";
 
 export const runtime = "nodejs";
 
@@ -53,10 +54,17 @@ export async function POST(request: Request): Promise<Response> {
       { status: 409 },
     );
   try {
+    const importedValue = Reflect.get(body, "importedCandidates");
+    const importedCandidates = Array.isArray(importedValue)
+      ? importedValue
+          .map(parseNormalizedUserUrlCandidate)
+          .filter((item) => item !== null)
+      : [];
     const built = buildComparisonView(
       buildPilotComparisonInput({
         userRequest: userRequest.data,
         selection: selection.data,
+        importedCandidates,
       }),
     );
     if (!built.success)

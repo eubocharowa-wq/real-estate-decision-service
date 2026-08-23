@@ -50,6 +50,12 @@ export function ShortlistPageView({
           >
             Изменить условия
           </Link>
+          <Link
+            href="/add-url"
+            className="button button-secondary button-small"
+          >
+            Добавить по ссылке
+          </Link>
         </div>
         <p className="step-label">Шаг 3 · Короткий список</p>
         <h1>{view.heading}</h1>

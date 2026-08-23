@@ -24,6 +24,7 @@ import {
 import type { ComparisonSelectionItem } from "../selection";
 import type { ComparisonView } from "../types";
 import { ComparisonPageView } from "./comparison-page-view";
+import { readStoredUserUrlCandidates } from "../../user-url-ingestion/storage";
 
 interface ComparisonClientProps {
   readonly initialView?: ComparisonView | null;
@@ -68,6 +69,9 @@ function ComparisonGuard({
       <p>{message}</p>
       <Link className="button button-primary" href="/shortlist">
         Вернуться к подбору
+      </Link>
+      <Link className="button button-secondary" href="/add-url">
+        Добавить объект по ссылке
       </Link>
     </main>
   );
@@ -143,7 +147,17 @@ export function ComparisonClient({
     void fetch("/api/comparison", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ userRequest: confirmation, selection }),
+      body: JSON.stringify({
+        userRequest: confirmation,
+        selection,
+        importedCandidates: readStoredUserUrlCandidates().filter((candidate) =>
+          selection.items.some(
+            (item) =>
+              item.propertyId ===
+              candidate.propertyCandidate.identity.property_id,
+          ),
+        ),
+      }),
       signal: controller.signal,
     })
       .then(async (response) => {

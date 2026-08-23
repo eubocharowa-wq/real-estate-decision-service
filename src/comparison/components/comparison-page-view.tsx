@@ -43,6 +43,12 @@ export function ComparisonPageView({
                 ? "Добавить ещё вариант"
                 : "Вернуться к подбору"}
             </Link>
+            <Link
+              className="button button-secondary button-small"
+              href="/add-url"
+            >
+              Добавить по ссылке
+            </Link>
           </div>
         </nav>
         <p className="step-label">Шаг 5 · Сравнение финалистов</p>
