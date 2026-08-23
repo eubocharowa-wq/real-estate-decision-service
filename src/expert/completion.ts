@@ -70,6 +70,8 @@ export interface CompleteExpertRequestOutcome {
   readonly evidence: ExpertEvidenceIntegrationOutcome;
   readonly canonical: CanonicalUpdateOutcome;
   readonly recompute: ExpertRecomputeOutcome;
+  readonly recomputeStatus: "not_required" | "completed" | "failed";
+  readonly recomputeErrorCode: "RECOMPUTE_FAILED" | null;
 }
 
 const EMPTY_EVIDENCE: ExpertEvidenceIntegrationOutcome = Object.freeze({
@@ -143,6 +145,12 @@ export class ExpertCompletionService {
     let evidence: ExpertEvidenceIntegrationOutcome = EMPTY_EVIDENCE;
     let canonical: CanonicalUpdateOutcome = EMPTY_CANONICAL;
     let recompute: ExpertRecomputeOutcome = EMPTY_RECOMPUTE;
+    let recomputeStatus: CompleteExpertRequestOutcome["recomputeStatus"] =
+      "not_required";
+    let recomputeErrorCode: CompleteExpertRequestOutcome["recomputeErrorCode"] =
+      null;
+    let recomputeInput:
+      Parameters<ExpertRecomputeHook["requestRecompute"]>[0] | null = null;
 
     if (result.evidence_candidates.length > 0) {
       evidence = await this.evidenceHook.integrate({
@@ -199,7 +207,7 @@ export class ExpertCompletionService {
         evidence.createdEvidenceIds.length > 0 ||
         canonical.updateRequestIds.length > 0
       ) {
-        recompute = await this.recomputeHook.requestRecompute({
+        recomputeInput = {
           userRequestId: request.user_request_id,
           propertyIds,
           offerIds: unique([
@@ -212,16 +220,7 @@ export class ExpertCompletionService {
           ]),
           evidenceIds: evidence.createdEvidenceIds,
           canonicalUpdateRequestIds: canonical.updateRequestIds,
-        });
-        this.appendAudit(request.request_id, {
-          event_type: "recompute_requested",
-          actor_type: "system",
-          actor_ref: null,
-          metadata: {
-            data_quality_requests: recompute.dataQualityRequestIds.length,
-            match_result_requests: recompute.matchResultRequestIds.length,
-          },
-        });
+        };
       }
     }
 
@@ -254,7 +253,49 @@ export class ExpertCompletionService {
             : "EXPERT_UNABLE_TO_VERIFY",
       },
     });
-    return { request: updated, result, evidence, canonical, recompute };
+    this.appendAudit(request.request_id, {
+      event_type: "result_completed",
+      actor_type: "expert",
+      actor_ref: result.specialist.specialist_ref,
+      metadata: {
+        result_status: result.status,
+        result_version: result.result_version,
+      },
+    });
+
+    if (recomputeInput) {
+      try {
+        recompute = await this.recomputeHook.requestRecompute(recomputeInput);
+        recomputeStatus = "completed";
+        this.appendAudit(request.request_id, {
+          event_type: "recompute_requested",
+          actor_type: "system",
+          actor_ref: null,
+          metadata: {
+            data_quality_requests: recompute.dataQualityRequestIds.length,
+            match_result_requests: recompute.matchResultRequestIds.length,
+          },
+        });
+      } catch {
+        recomputeStatus = "failed";
+        recomputeErrorCode = "RECOMPUTE_FAILED";
+        this.appendAudit(request.request_id, {
+          event_type: "recompute_failed",
+          actor_type: "system",
+          actor_ref: null,
+          metadata: { error_code: recomputeErrorCode },
+        });
+      }
+    }
+    return {
+      request: updated,
+      result,
+      evidence,
+      canonical,
+      recompute,
+      recomputeStatus,
+      recomputeErrorCode,
+    };
   }
 
   private appendAudit(

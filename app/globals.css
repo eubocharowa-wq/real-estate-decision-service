@@ -190,6 +190,349 @@
   }
 }
 
+.expert-queue-shell,
+.expert-workbench-shell,
+.expert-result-shell {
+  width: min(100% - 2rem, 82rem);
+  margin: 0 auto;
+  padding: 2rem 0 6rem;
+}
+
+.expert-queue-header,
+.expert-workbench-header,
+.expert-result-header {
+  border-bottom: 1px solid var(--line);
+  padding: 1rem 0 2.5rem;
+}
+
+.expert-queue-header h1,
+.expert-workbench-header h1,
+.expert-result-header h1 {
+  max-width: 14ch;
+  margin: 1rem 0;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(2.7rem, 7vw, 6rem);
+  font-weight: 500;
+  letter-spacing: -0.055em;
+  line-height: 0.96;
+}
+
+.expert-queue-header > p:last-child,
+.expert-result-header > dl,
+.workbench-user-question {
+  max-width: 54rem;
+  line-height: 1.6;
+}
+
+.expert-queue-list {
+  display: grid;
+  margin: 0;
+  padding: 2rem 0 0;
+  gap: 1rem;
+  list-style: none;
+}
+
+.expert-queue-card,
+.expert-empty,
+.workbench-context,
+.workbench-editor,
+.workbench-audit,
+.expert-result-section,
+.expert-choice-result,
+.expert-decision-impact {
+  border: 1px solid var(--line);
+  border-radius: 0.4rem;
+  background: var(--surface);
+  padding: clamp(1.25rem, 3vw, 2.25rem);
+}
+
+.expert-queue-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.7rem 2rem;
+  border-left: 5px solid var(--forest);
+}
+
+.expert-queue-card.priority-critical {
+  border-left-color: var(--rose);
+}
+
+.expert-queue-card.priority-high {
+  border-left-color: var(--amber);
+}
+
+.expert-queue-card h2,
+.expert-queue-card p,
+.expert-queue-card dl {
+  grid-column: 1;
+}
+
+.expert-queue-card > a {
+  grid-column: 2;
+  grid-row: 1 / span 4;
+  align-self: center;
+}
+
+.expert-queue-card-meta {
+  display: flex;
+  gap: 0.6rem;
+}
+
+.expert-queue-card-meta span,
+.workbench-saved {
+  border-radius: 999px;
+  background: var(--sage);
+  padding: 0.35rem 0.65rem;
+  font-size: 0.8rem;
+  font-weight: 750;
+}
+
+.expert-queue-question {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.25rem;
+}
+
+.expert-queue-card dl,
+.workbench-header-facts,
+.workbench-property dl,
+.workbench-context dl,
+.expert-result-header dl {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.7rem 1.5rem;
+  margin: 0;
+}
+
+.expert-queue-card dl div,
+.workbench-header-facts div,
+.workbench-property dl div,
+.workbench-context dl div,
+.expert-result-header dl div {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.expert-queue-card dt,
+.workbench-header-facts dt,
+.workbench-property dt,
+.workbench-context dt,
+.expert-result-header dt {
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.expert-queue-card dd,
+.workbench-header-facts dd,
+.workbench-property dd,
+.workbench-context dd,
+.expert-result-header dd {
+  margin: 0;
+}
+
+.expert-workbench-header {
+  display: grid;
+  gap: 1rem;
+}
+
+.workbench-header-facts {
+  max-width: 58rem;
+}
+
+.workbench-user-question {
+  margin-top: 1rem;
+  border-left: 4px solid var(--amber);
+  background: var(--amber-soft);
+  padding: 1.5rem;
+}
+
+.workbench-user-question blockquote {
+  margin: 0;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(1.25rem, 3vw, 1.8rem);
+  line-height: 1.45;
+}
+
+.workbench-status-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.workbench-notice,
+.workbench-error-summary,
+.expert-result-boundary {
+  margin: 1.25rem 0;
+  border-left: 4px solid var(--amber);
+  background: var(--amber-soft);
+  padding: 1rem 1.25rem;
+  line-height: 1.5;
+}
+
+.workbench-error-summary {
+  border-left-color: var(--rose);
+  background: var(--rose-soft);
+}
+
+.workbench-saved {
+  display: inline-block;
+  margin: 1rem 0 0;
+}
+
+.expert-workbench-grid {
+  display: grid;
+  grid-template-columns: minmax(18rem, 0.8fr) minmax(0, 1.4fr);
+  gap: 1.25rem;
+  align-items: start;
+  margin-top: 1.25rem;
+}
+
+.workbench-context,
+.workbench-editor {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.workbench-context > section,
+.workbench-property,
+.workbench-capture,
+.workbench-findings,
+.workbench-recommendation,
+.workbench-completion {
+  border-top: 1px solid var(--line);
+  padding-top: 1.25rem;
+}
+
+.workbench-property {
+  margin: 0;
+}
+
+.workbench-check-list {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.workbench-check-item {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  border: 1px solid var(--line);
+  border-radius: 0.35rem;
+  padding: 1rem;
+}
+
+.workbench-check-item legend {
+  grid-column: 1 / -1;
+  padding: 0 0.35rem;
+}
+
+.workbench-check-item label:last-child {
+  grid-column: 1 / -1;
+}
+
+.workbench-capture,
+.workbench-findings,
+.workbench-recommendation {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.workbench-audit {
+  margin-top: 1.25rem;
+}
+
+.workbench-audit ol {
+  display: grid;
+  margin: 0;
+  padding-left: 1.3rem;
+  gap: 0.55rem;
+}
+
+.workbench-audit li {
+  display: grid;
+  grid-template-columns: minmax(12rem, auto) 1fr;
+  gap: 1rem;
+}
+
+.expert-result-header dl {
+  margin-top: 2rem;
+  grid-template-columns: 1fr;
+}
+
+.expert-result-header dd {
+  max-width: 60rem;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.2rem;
+  line-height: 1.5;
+}
+
+.expert-result-section,
+.expert-choice-result,
+.expert-decision-impact {
+  margin-top: 1rem;
+}
+
+.expert-result-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.expert-decision-impact {
+  background: var(--sage);
+}
+
+.expert-decision-impact > div {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.expert-decision-impact article {
+  border: 1px solid rgb(23 77 60 / 20%);
+  background: rgb(255 253 248 / 60%);
+  padding: 1.25rem;
+}
+
+.expert-decision-impact article p {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 750;
+}
+
+@media (max-width: 800px) {
+  .expert-workbench-grid,
+  .expert-result-grid,
+  .expert-decision-impact > div,
+  .expert-queue-card dl,
+  .workbench-header-facts,
+  .workbench-check-item {
+    grid-template-columns: 1fr;
+  }
+
+  .expert-queue-card {
+    grid-template-columns: 1fr;
+  }
+
+  .expert-queue-card > a {
+    grid-column: 1;
+    grid-row: auto;
+    justify-self: start;
+  }
+
+  .workbench-check-item legend,
+  .workbench-check-item label:last-child {
+    grid-column: 1;
+  }
+
+  .workbench-audit li {
+    grid-template-columns: 1fr;
+    gap: 0.15rem;
+  }
+}
+
 * {
   box-sizing: border-box;
 }

@@ -21,6 +21,7 @@ export interface ExpertRequestRepository {
   get(requestId: string): ExpertRequest | null;
   getContext(contextPackageId: string): ExpertContextPackage | null;
   findActiveByDedupKey(dedupKey: string): ExpertRequest | null;
+  listAll(): readonly ExpertRequest[];
   listQueued(): readonly ExpertRequest[];
   updateStatus(
     requestId: string,
@@ -100,6 +101,10 @@ export class InMemoryExpertRequestRepository implements ExpertRequestRepository 
         activeStatuses.has(candidate.status),
     );
     return request ? clone(request) : null;
+  }
+
+  listAll(): readonly ExpertRequest[] {
+    return [...this.requests.values()].map(clone);
   }
 
   listQueued(): readonly ExpertRequest[] {
