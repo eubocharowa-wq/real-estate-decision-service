@@ -22,6 +22,33 @@ describe("source registry validation", () => {
     expect(() => new SourceRegistry(config)).toThrow("Invalid source domain");
   });
 
+  it("rejects missing scoped policy contracts", () => {
+    const config = cloneConfig();
+    const source = config.sources[0]!;
+    delete (source.policy as Partial<typeof source.policy>).collection_scope;
+    expect(() => new SourceRegistry(config)).toThrow("Invalid source registry");
+  });
+
+  it("rejects collection hosts outside source ownership", () => {
+    const config = cloneConfig();
+    config.sources[0]!.policy.collection_scope.allowed_hosts = [
+      "outside.example",
+    ];
+    expect(() => new SourceRegistry(config)).toThrow(
+      "Collection scope host is outside source ownership",
+    );
+  });
+
+  it("rejects unanchored collection path patterns", () => {
+    const config = cloneConfig();
+    config.sources[0]!.policy.collection_scope.allowed_path_patterns = [
+      "/kvartiry/.*",
+    ];
+    expect(() => new SourceRegistry(config)).toThrow(
+      "Collection path pattern must be anchored",
+    );
+  });
+
   it("rejects invalid source types and statuses at runtime", () => {
     const source = sourceRegistry.list()[0]!;
     expect(

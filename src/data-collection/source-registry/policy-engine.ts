@@ -11,7 +11,7 @@ import type {
   RegistryCollectionMethod,
   SourceRegistryEntry,
 } from "./schema";
-import { SourceRegistry } from "./registry";
+import { normalizeRegistryHostname, SourceRegistry } from "./registry";
 
 const automaticMethods = new Set<RegistryCollectionMethod>([
   "api",
@@ -26,6 +26,10 @@ const manualMethods = new Set<RegistryCollectionMethod>([
   "manual",
   "user_supplied",
   "expert",
+]);
+const scopedCollectionOperations = new Set([
+  "scheduled_collect",
+  "targeted_refresh",
 ]);
 
 const conditionsMissing = (
@@ -65,7 +69,19 @@ const reasonOrder: readonly PolicyReasonCode[] = [
   "REFRESH_NOT_APPROVED",
   "DERIVATION_NOT_APPROVED",
   "CACHE_NOT_APPROVED",
+  "SCOPED_POC_ONLY",
   "REQUIRED_CONDITION_MISSING",
+  "TARGET_SCOPE_REQUIRED",
+  "TARGET_LIMIT_EXCEEDED",
+  "TARGET_URL_NOT_ALLOWED",
+  "REQUESTED_FIELDS_REQUIRED",
+  "FIELD_NOT_ALLOWED",
+  "DISCOVERY_NOT_ALLOWED",
+  "LINK_TRAVERSAL_NOT_ALLOWED",
+  "PAGINATION_NOT_ALLOWED",
+  "SITEMAP_NOT_ALLOWED",
+  "AUTHENTICATION_NOT_ALLOWED",
+  "CHALLENGE_ACTION_NOT_ALLOWED",
   "METHOD_NOT_ALLOWED",
   "OPERATION_NOT_SUPPORTED",
   "ENTITY_NOT_COVERED",
@@ -96,6 +112,94 @@ const matchesFieldPattern = (pattern: string, field: string): boolean =>
   pattern === field ||
   (pattern.endsWith(".*") &&
     field.startsWith(pattern.slice(0, Math.max(0, pattern.length - 1))));
+
+interface CollectionScopeValidation {
+  readonly allowed: boolean;
+  readonly validatedTargetUrls: readonly string[];
+  readonly validatedRequestedFields: readonly string[];
+  readonly reasonCodes: readonly PolicyReasonCode[];
+}
+
+const validateCollectionScope = (
+  source: SourceRegistryEntry,
+  input: ResolvePolicyInput,
+): CollectionScopeValidation => {
+  if (!scopedCollectionOperations.has(input.operation))
+    return {
+      allowed: true,
+      validatedTargetUrls: [],
+      validatedRequestedFields: [],
+      reasonCodes: [],
+    };
+
+  const scope = source.policy.collection_scope;
+  const fieldPolicy = source.policy.field_policy;
+  const targets = input.targetUrls ?? [];
+  const requestedFields = input.requestedFields ?? [];
+  const reasons: PolicyReasonCode[] = [];
+  const validatedTargetUrls: string[] = [];
+
+  if (scope.explicit_targets_only && targets.length === 0)
+    reasons.push("TARGET_SCOPE_REQUIRED");
+  if (targets.length > scope.maximum_target_urls)
+    reasons.push("TARGET_LIMIT_EXCEEDED");
+
+  for (const target of targets) {
+    try {
+      const url = new URL(target);
+      const allowed =
+        url.protocol === "https:" &&
+        !url.username &&
+        !url.password &&
+        !url.port &&
+        !url.search &&
+        !url.hash &&
+        scope.allowed_hosts.some(
+          (hostname) =>
+            normalizeRegistryHostname(hostname) === url.hostname.toLowerCase(),
+        ) &&
+        scope.allowed_path_patterns.some((pattern) =>
+          new RegExp(pattern, "u").test(url.pathname),
+        );
+      if (!allowed) reasons.push("TARGET_URL_NOT_ALLOWED");
+      else validatedTargetUrls.push(url.toString());
+    } catch {
+      reasons.push("TARGET_URL_NOT_ALLOWED");
+    }
+  }
+
+  if (fieldPolicy.requested_fields_required && requestedFields.length === 0)
+    reasons.push("REQUESTED_FIELDS_REQUIRED");
+  for (const field of requestedFields) {
+    if (
+      !field ||
+      !fieldPolicy.allowed_fields.some((pattern) =>
+        matchesFieldPattern(pattern, field),
+      )
+    )
+      reasons.push("FIELD_NOT_ALLOWED");
+  }
+  if (input.discovery && !scope.discovery_allowed)
+    reasons.push("DISCOVERY_NOT_ALLOWED");
+  if (input.followLinks && !scope.follow_links_allowed)
+    reasons.push("LINK_TRAVERSAL_NOT_ALLOWED");
+  if (input.pagination && !scope.pagination_allowed)
+    reasons.push("PAGINATION_NOT_ALLOWED");
+  if (input.sitemap && !scope.sitemap_allowed)
+    reasons.push("SITEMAP_NOT_ALLOWED");
+  if (input.authentication && !scope.authentication_allowed)
+    reasons.push("AUTHENTICATION_NOT_ALLOWED");
+  if ((input.challengeAction ?? "stop") !== scope.challenge_action)
+    reasons.push("CHALLENGE_ACTION_NOT_ALLOWED");
+
+  const allowed = reasons.length === 0;
+  return {
+    allowed,
+    validatedTargetUrls: allowed ? [...new Set(validatedTargetUrls)] : [],
+    validatedRequestedFields: allowed ? [...new Set(requestedFields)] : [],
+    reasonCodes: reasons,
+  };
+};
 
 const mostSpecific = <T extends { readonly field_pattern: string }>(
   values: readonly T[],
@@ -155,6 +259,10 @@ export class SourcePolicyEngine {
         source.policy.storage.normalized_data,
         conditionsSatisfied,
       ),
+      evidenceMetadata: permissionDecision(
+        source.policy.storage.evidence_metadata,
+        conditionsSatisfied,
+      ),
       snapshots: permissionDecision(
         source.policy.storage.snapshots,
         conditionsSatisfied,
@@ -206,6 +314,7 @@ export class SourcePolicyEngine {
     ].includes(source.status);
     const productionBlocksAutomation =
       input.environment === "production" && !allProductionGatesPassed(source);
+    const scopeValidation = validateCollectionScope(source, input);
     const methodPolicies = source.policy.methods
       .filter((method) => method.operations.includes(input.operation))
       .sort(
@@ -222,6 +331,7 @@ export class SourcePolicyEngine {
         if (!isManual && (statusBlocksAutomation || productionBlocksAutomation))
           return false;
         if (!isManual && (!access.allowed || !automation.allowed)) return false;
+        if (!isManual && !scopeValidation.allowed) return false;
         const required = isManual
           ? method.required_conditions
           : [...globalRequired, ...method.required_conditions];
@@ -240,6 +350,7 @@ export class SourcePolicyEngine {
     if (input.operation === "targeted_refresh")
       allowed = allowed && refresh.permission.allowed;
     const reasons: PolicyReasonCode[] = [...source.policy.reason_codes];
+    reasons.push(...scopeValidation.reasonCodes);
     if (source.status === "blocked") reasons.push("SOURCE_BLOCKED");
     if (source.status === "paused") reasons.push("SOURCE_PAUSED");
     if (source.status === "deprecated") reasons.push("SOURCE_DEPRECATED");
@@ -289,6 +400,11 @@ export class SourcePolicyEngine {
       derivation,
       cache,
       attribution: source.policy.attribution,
+      collectionScope: source.policy.collection_scope,
+      fieldPolicy: source.policy.field_policy,
+      retentionPolicy: source.policy.retention_policy,
+      validatedTargetUrls: scopeValidation.validatedTargetUrls,
+      validatedRequestedFields: scopeValidation.validatedRequestedFields,
       allowedMethods: [...new Set(allowedMethods)],
       requiredConditions,
       missingConditions: conditionsMissing(requiredConditions, satisfied),
@@ -306,12 +422,26 @@ export class SourcePolicyEngine {
       sourceId: input.sourceId,
       operation: input.operation,
       environment: input.environment,
+      requestedMethod: input.requestedMethod,
+      targetUrls: input.targetUrls,
+      requestedFields: input.requestedFields,
+      discovery: input.discovery,
+      followLinks: input.followLinks,
+      pagination: input.pagination,
+      sitemap: input.sitemap,
+      authentication: input.authentication,
+      challengeAction: input.challengeAction,
       satisfiedConditions: input.satisfiedConditions,
       decidedAt: input.decidedAt,
     });
     const source = this.registry.get(input.sourceId);
     const health = input.healthOverride ?? source?.health ?? unknownHealth;
-    const methods = [...decision.allowedMethods];
+    const methods = input.requestedMethod
+      ? decision.allowed &&
+        decision.allowedMethods.includes(input.requestedMethod)
+        ? [input.requestedMethod]
+        : []
+      : [...decision.allowedMethods];
     let preferredMethod: RegistryCollectionMethod | null = methods[0] ?? null;
     if (health.status === "degraded" && methods.length > 1)
       preferredMethod = methods[1] ?? null;
@@ -331,23 +461,31 @@ export class SourcePolicyEngine {
     const fieldCovered =
       !input.targetField ||
       (fieldCoverage !== null && fieldCoverage.support !== "none");
+    const targetFieldValidated =
+      !source?.policy.field_policy.requested_fields_required ||
+      !input.targetField ||
+      decision.validatedRequestedFields.includes(input.targetField);
     const healthReasons: PolicyReasonCode[] = [];
     if (health.status === "degraded") healthReasons.push("SOURCE_DEGRADED");
     if (health.status === "failing") healthReasons.push("SOURCE_FAILING");
     if (health.source_changed) healthReasons.push("SOURCE_CHANGED");
     if (!entityCovered) healthReasons.push("ENTITY_NOT_COVERED");
     if (!fieldCovered) healthReasons.push("FIELD_NOT_COVERED");
+    if (!targetFieldValidated) healthReasons.push("FIELD_NOT_ALLOWED");
     return {
       sourceId: input.sourceId,
       operation: input.operation,
       environment: input.environment,
       entityType: input.entityType ?? null,
-      targetField: input.targetField ?? null,
+      targetField: targetFieldValidated ? (input.targetField ?? null) : null,
+      validatedTargetUrls: decision.validatedTargetUrls,
+      validatedRequestedFields: decision.validatedRequestedFields,
       allowed:
         decision.allowed &&
         preferredMethod !== null &&
         entityCovered &&
-        fieldCovered,
+        fieldCovered &&
+        targetFieldValidated,
       preferredMethod,
       fallbackMethods,
       storagePolicy: decision.storage,
@@ -362,6 +500,9 @@ export class SourcePolicyEngine {
         input.targetField ?? null,
       ),
       attributionPolicy: decision.attribution,
+      collectionScope: decision.collectionScope,
+      fieldPolicy: decision.fieldPolicy,
+      retentionPolicy: decision.retentionPolicy,
       requiredConditions: decision.requiredConditions,
       reasonCodes: orderedReasons([...decision.reasonCodes, ...healthReasons]),
       registryVersion: decision.registryVersion,
@@ -398,6 +539,7 @@ export class SourcePolicyEngine {
       storage: {
         rawContent: deniedPermission(),
         normalizedData: normalizedUserData,
+        evidenceMetadata: normalizedUserData,
         snapshots: deniedPermission(),
         derivedData: normalizedUserData,
       },
@@ -420,6 +562,32 @@ export class SourcePolicyEngine {
           "Unknown source data must remain user-provided and unconfirmed.",
         ],
       },
+      collectionScope: {
+        explicit_targets_only: true,
+        allowed_hosts: [],
+        allowed_path_patterns: [],
+        maximum_target_urls: 1,
+        discovery_allowed: false,
+        follow_links_allowed: false,
+        pagination_allowed: false,
+        sitemap_allowed: false,
+        authentication_allowed: false,
+        challenge_action: "stop",
+      },
+      fieldPolicy: {
+        requested_fields_required: true,
+        allowed_fields: [],
+        required_evidence_metadata: ["source_url", "observed_at"],
+        verification_ceilings: [],
+      },
+      retentionPolicy: {
+        normalized_facts: manualAllowed ? "transient_only" : "prohibited",
+        evidence_metadata: manualAllowed ? "transient_only" : "prohibited",
+        raw_content: "prohibited",
+        raw_snapshots: "prohibited",
+      },
+      validatedTargetUrls: [],
+      validatedRequestedFields: [],
       allowedMethods: methods,
       requiredConditions: [],
       missingConditions: [],

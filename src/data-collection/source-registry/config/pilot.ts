@@ -5,8 +5,8 @@ import type {
   SourceRegistryEntry,
 } from "../schema";
 
-export const SOURCE_REGISTRY_VERSION = "source-registry-pilot-v1";
-export const SOURCE_POLICY_VERSION = "source-policy-engine-v1";
+export const SOURCE_REGISTRY_VERSION = "source-registry-pilot-v1.1";
+export const SOURCE_POLICY_VERSION = "source-policy-engine-v1.1";
 
 const manualMethods: SourceRegistryEntry["policy"]["methods"] = [
   {
@@ -136,6 +136,7 @@ const environmentApproval = (
 const defaultStorage = {
   raw_content: "unknown" as const,
   normalized_data: "unknown" as const,
+  evidence_metadata: "unknown" as const,
   snapshots: "unknown" as const,
   derived_data: "unknown" as const,
 };
@@ -147,6 +148,21 @@ const defaultDisplay = {
   raw_content: "denied" as const,
   image_media: "denied" as const,
 };
+
+const defaultFieldPolicy: SourceRegistryEntry["policy"]["field_policy"] = {
+  requested_fields_required: false,
+  allowed_fields: ["*"],
+  required_evidence_metadata: ["source_url", "observed_at"],
+  verification_ceilings: [],
+};
+
+const defaultRetentionPolicy: SourceRegistryEntry["policy"]["retention_policy"] =
+  {
+    normalized_facts: "prohibited",
+    evidence_metadata: "prohibited",
+    raw_content: "prohibited",
+    raw_snapshots: "prohibited",
+  };
 
 interface ExternalEntryInput {
   readonly sourceId: string;
@@ -173,10 +189,15 @@ interface ExternalEntryInput {
   readonly cache?: SourceRegistryEntry["policy"]["cache"];
   readonly methods?: SourceRegistryEntry["policy"]["methods"];
   readonly environmentMethods?: readonly RegistryCollectionMethod[];
+  readonly environmentApproval?: SourceRegistryEntry["environment_approval"];
+  readonly collectionScope?: SourceRegistryEntry["policy"]["collection_scope"];
+  readonly fieldPolicy?: SourceRegistryEntry["policy"]["field_policy"];
+  readonly retentionPolicy?: SourceRegistryEntry["policy"]["retention_policy"];
   readonly requiredConditions?: readonly string[];
   readonly attributionRestrictions?: readonly string[];
   readonly technicallyPossible?: boolean;
   readonly credentialRef?: string | null;
+  readonly reviewedAt?: string;
   readonly notes: string;
 }
 
@@ -201,9 +222,11 @@ const externalEntry = (input: ExternalEntryInput): SourceRegistryEntry => ({
   status: input.status ?? "testing",
   approval_lifecycle: input.lifecycle ?? "review_required",
   trust_level: input.trust ?? "primary",
-  environment_approval: environmentApproval(
-    input.environmentMethods ?? ["manual", "user_supplied"],
-  ),
+  environment_approval:
+    input.environmentApproval ??
+    environmentApproval(
+      input.environmentMethods ?? ["manual", "user_supplied"],
+    ),
   policy: {
     access: input.access ?? "conditional",
     automation: input.automation ?? "conditional",
@@ -215,6 +238,20 @@ const externalEntry = (input: ExternalEntryInput): SourceRegistryEntry => ({
     },
     derivation: input.derivation ?? "unknown",
     cache: input.cache ?? "unknown",
+    collection_scope: input.collectionScope ?? {
+      explicit_targets_only: false,
+      allowed_hosts: [...input.domains],
+      allowed_path_patterns: ["^/.*$"],
+      maximum_target_urls: 100,
+      discovery_allowed: false,
+      follow_links_allowed: false,
+      pagination_allowed: false,
+      sitemap_allowed: false,
+      authentication_allowed: false,
+      challenge_action: "stop",
+    },
+    field_policy: input.fieldPolicy ?? defaultFieldPolicy,
+    retention_policy: input.retentionPolicy ?? defaultRetentionPolicy,
     methods: input.methods ?? manualMethods,
     attribution: {
       attribution_required: true,
@@ -235,7 +272,7 @@ const externalEntry = (input: ExternalEntryInput): SourceRegistryEntry => ({
     daily_budget: null,
   },
   health: healthUnknown,
-  reviewed_at: "2026-08-12T00:00:00.000Z",
+  reviewed_at: input.reviewedAt ?? "2026-08-12T00:00:00.000Z",
   notes: input.notes,
 });
 
@@ -330,15 +367,107 @@ const developerEntries: SourceRegistryEntry[] = [
     entityTypes: ["property", "offer", "promotion"],
     propertyTypes: ["apartment"],
     marketTypes: ["new_build"],
-    fieldCoverage: developerFields,
+    fieldCoverage: [
+      ...developerFields,
+      {
+        field_pattern: "timeline.handover_date",
+        support: "partial",
+        notes: "Only an explicitly published handover/timing fact is in scope.",
+      },
+    ],
     fieldAuthority: developerAuthority,
     capabilities: developerCapabilities,
-    policyReasons: ["REVIEW_REQUIRED"],
-    methods: reviewedBrowserMethods("ACCESS_REVIEW_CONFIRMED"),
-    environmentMethods: ["http", "browser", "manual", "user_supplied"],
-    requiredConditions: ["ACCESS_REVIEW_CONFIRMED"],
+    lifecycle: "testing",
+    policyReasons: ["SCOPED_POC_ONLY"],
+    storage: {
+      raw_content: "denied",
+      normalized_data: "conditional",
+      evidence_metadata: "conditional",
+      snapshots: "denied",
+      derived_data: "denied",
+    },
+    display: {
+      normalized_facts: "conditional",
+      source_link: "approved",
+      evidence_snippet: "denied",
+      raw_content: "denied",
+      image_media: "denied",
+    },
+    refresh: { permission: "denied", modes: ["none"] },
+    derivation: "conditional",
+    cache: "denied",
+    methods: [
+      {
+        method: "http",
+        priority: 100,
+        operations: ["scheduled_collect"],
+        required_conditions: ["TARGETED_UNIT_HTTP_POC_APPROVED"],
+        credential_ref: null,
+      },
+      ...manualMethods,
+    ],
+    environmentApproval: {
+      development: {
+        status: "approved",
+        allowed_methods: ["http", "manual", "user_supplied"],
+        required_conditions: [],
+      },
+      test: {
+        status: "approved",
+        allowed_methods: ["http", "manual", "user_supplied"],
+        required_conditions: [],
+      },
+      pilot: {
+        status: "denied",
+        allowed_methods: ["manual", "user_supplied"],
+        required_conditions: [],
+      },
+      production: {
+        status: "denied",
+        allowed_methods: ["manual", "user_supplied"],
+        required_conditions: [],
+      },
+    },
+    collectionScope: {
+      explicit_targets_only: true,
+      allowed_hosts: ["vneshstroi.ru", "www.vneshstroi.ru"],
+      allowed_path_patterns: ["^/kvartiry/[0-9]+/?$"],
+      maximum_target_urls: 1,
+      discovery_allowed: false,
+      follow_links_allowed: false,
+      pagination_allowed: false,
+      sitemap_allowed: false,
+      authentication_allowed: false,
+      challenge_action: "stop",
+    },
+    fieldPolicy: {
+      requested_fields_required: true,
+      allowed_fields: [
+        "identity.*",
+        "physical.rooms",
+        "physical.floor",
+        "physical.total_area_m2",
+        "listing_price",
+        "timeline.handover_date",
+        "availability",
+      ],
+      required_evidence_metadata: ["source_url", "observed_at"],
+      verification_ceilings: [
+        { field_pattern: "financing.*", maximum_status: "claimed" },
+        { field_pattern: "promotion.*", maximum_status: "claimed" },
+        { field_pattern: "marketing.*", maximum_status: "claimed" },
+      ],
+    },
+    retentionPolicy: {
+      normalized_facts: "transient_only",
+      evidence_metadata: "transient_only",
+      raw_content: "prohibited",
+      raw_snapshots: "prohibited",
+    },
+    requiredConditions: ["TARGETED_UNIT_HTTP_POC_APPROVED"],
+    reviewedAt: "2026-08-23T00:00:00.000Z",
     notes:
-      "DEV-02: technically ready for PoC; production use requires reviewed access terms.",
+      "DEV-02: approved only for one explicit unit URL over HTTP in development/test; no discovery, refresh, raw retention or production use.",
   }),
   externalEntry({
     sourceId: "src_dev_03",
@@ -424,6 +553,7 @@ const developerEntries: SourceRegistryEntry[] = [
     storage: {
       raw_content: "denied",
       normalized_data: "denied",
+      evidence_metadata: "denied",
       snapshots: "denied",
       derived_data: "denied",
     },
@@ -733,6 +863,7 @@ const geoEntry = externalEntry({
   storage: {
     raw_content: "denied",
     normalized_data: "conditional",
+    evidence_metadata: "conditional",
     snapshots: "denied",
     derived_data: "conditional",
   },
@@ -821,6 +952,7 @@ const fixtureEntry = ({
     storage: {
       raw_content: automatic ? "approved" : "denied",
       normalized_data: "approved",
+      evidence_metadata: "approved",
       snapshots: automatic ? "approved" : "denied",
       derived_data: "approved",
     },
@@ -834,6 +966,25 @@ const fixtureEntry = ({
     refresh: { permission: "denied", modes: ["none"] },
     derivation: "approved",
     cache: "approved",
+    collection_scope: {
+      explicit_targets_only: false,
+      allowed_hosts: [hostname],
+      allowed_path_patterns: ["^/.*$"],
+      maximum_target_urls: 1,
+      discovery_allowed: false,
+      follow_links_allowed: false,
+      pagination_allowed: false,
+      sitemap_allowed: false,
+      authentication_allowed: false,
+      challenge_action: "stop",
+    },
+    field_policy: defaultFieldPolicy,
+    retention_policy: {
+      normalized_facts: "transient_only",
+      evidence_metadata: "transient_only",
+      raw_content: automatic ? "transient_only" : "prohibited",
+      raw_snapshots: automatic ? "transient_only" : "prohibited",
+    },
     methods: automatic
       ? [
           {
@@ -927,7 +1078,7 @@ const fixtureEntries: SourceRegistryEntry[] = [
 ];
 
 export const PILOT_SOURCE_REGISTRY_CONFIG: SourceRegistryConfig = {
-  schema_version: "1.0",
+  schema_version: "1.1",
   registry_version: SOURCE_REGISTRY_VERSION,
   policy_version: SOURCE_POLICY_VERSION,
   sources: [

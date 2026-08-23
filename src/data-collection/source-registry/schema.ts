@@ -9,6 +9,7 @@ import {
   ratioSchema,
   sourceTrustSchema,
   urlSchema,
+  verificationStatusSchema,
 } from "../../domain/common/schema";
 import { sourceTypeSchema } from "../../domain/source/schema";
 
@@ -109,6 +110,18 @@ export const policyReasonCodeSchema = z.enum([
   "ACCESS_NOT_APPROVED",
   "DERIVATION_NOT_APPROVED",
   "CACHE_NOT_APPROVED",
+  "SCOPED_POC_ONLY",
+  "TARGET_SCOPE_REQUIRED",
+  "TARGET_LIMIT_EXCEEDED",
+  "TARGET_URL_NOT_ALLOWED",
+  "REQUESTED_FIELDS_REQUIRED",
+  "FIELD_NOT_ALLOWED",
+  "DISCOVERY_NOT_ALLOWED",
+  "LINK_TRAVERSAL_NOT_ALLOWED",
+  "PAGINATION_NOT_ALLOWED",
+  "SITEMAP_NOT_ALLOWED",
+  "AUTHENTICATION_NOT_ALLOWED",
+  "CHALLENGE_ACTION_NOT_ALLOWED",
   "POLICY_ALLOWED",
 ]);
 
@@ -162,6 +175,7 @@ const environmentApprovalSchema = z.strictObject({
 const storagePolicySchema = z.strictObject({
   raw_content: permissionStatusSchema,
   normalized_data: permissionStatusSchema,
+  evidence_metadata: permissionStatusSchema,
   snapshots: permissionStatusSchema,
   derived_data: permissionStatusSchema,
 });
@@ -180,6 +194,47 @@ const attributionPolicySchema = z.strictObject({
   link_required: z.boolean(),
   logo_allowed: z.boolean(),
   display_restrictions: z.array(nonEmptyStringSchema),
+});
+
+export const collectionScopeSchema = z.strictObject({
+  explicit_targets_only: z.boolean(),
+  allowed_hosts: z.array(nonEmptyStringSchema).min(1),
+  allowed_path_patterns: z.array(nonEmptyStringSchema).min(1),
+  maximum_target_urls: z.number().int().positive(),
+  discovery_allowed: z.boolean(),
+  follow_links_allowed: z.boolean(),
+  pagination_allowed: z.boolean(),
+  sitemap_allowed: z.boolean(),
+  authentication_allowed: z.boolean(),
+  challenge_action: z.enum(["stop", "manual_review"]),
+});
+
+export const fieldPolicySchema = z.strictObject({
+  requested_fields_required: z.boolean(),
+  allowed_fields: z.array(nonEmptyStringSchema).min(1),
+  required_evidence_metadata: z.tuple([
+    z.literal("source_url"),
+    z.literal("observed_at"),
+  ]),
+  verification_ceilings: z.array(
+    z.strictObject({
+      field_pattern: nonEmptyStringSchema,
+      maximum_status: verificationStatusSchema,
+    }),
+  ),
+});
+
+export const retentionModeSchema = z.enum([
+  "prohibited",
+  "transient_only",
+  "persistent",
+]);
+
+export const retentionPolicySchema = z.strictObject({
+  normalized_facts: retentionModeSchema,
+  evidence_metadata: retentionModeSchema,
+  raw_content: retentionModeSchema,
+  raw_snapshots: retentionModeSchema,
 });
 
 export const fieldAuthoritySchema = z.strictObject({
@@ -301,6 +356,9 @@ export const sourceRegistryEntrySchema = z.strictObject({
     }),
     derivation: permissionStatusSchema,
     cache: permissionStatusSchema,
+    collection_scope: collectionScopeSchema,
+    field_policy: fieldPolicySchema,
+    retention_policy: retentionPolicySchema,
     methods: z.array(methodPolicySchema).min(1),
     attribution: attributionPolicySchema,
     required_conditions: z.array(nonEmptyStringSchema),
@@ -316,7 +374,7 @@ export const sourceRegistryEntrySchema = z.strictObject({
 });
 
 export const sourceRegistryConfigSchema = z.strictObject({
-  schema_version: z.literal("1.0"),
+  schema_version: z.literal("1.1"),
   registry_version: nonEmptyStringSchema,
   policy_version: nonEmptyStringSchema,
   sources: z.array(sourceRegistryEntrySchema).min(1),
@@ -330,6 +388,9 @@ export type RegistryCollectionMethod = z.infer<
   typeof registryCollectionMethodSchema
 >;
 export type PolicyReasonCode = z.infer<typeof policyReasonCodeSchema>;
+export type CollectionScope = z.infer<typeof collectionScopeSchema>;
+export type FieldPolicy = z.infer<typeof fieldPolicySchema>;
+export type RetentionPolicy = z.infer<typeof retentionPolicySchema>;
 export type FieldCoverage = z.infer<typeof fieldCoverageSchema>;
 export type FieldAuthority = z.infer<typeof fieldAuthoritySchema>;
 export type FreshnessPolicy = z.infer<typeof freshnessPolicySchema>;

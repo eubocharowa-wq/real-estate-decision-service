@@ -68,14 +68,19 @@ describe("source policy integration", () => {
       environment: "test",
       entityType: "offer",
       targetField: "listing_price",
-      satisfiedConditions: ["ACCESS_REVIEW_CONFIRMED"],
+      requestedMethod: "http",
+      targetUrls: ["https://vneshstroi.ru/kvartiry/12345/"],
+      requestedFields: ["listing_price"],
+      satisfiedConditions: ["TARGETED_UNIT_HTTP_POC_APPROVED"],
       decidedAt: NOW,
     });
     expect(plan).toMatchObject({
       allowed: true,
       preferredMethod: "http",
-      fallbackMethods: ["browser"],
+      fallbackMethods: [],
       targetField: "listing_price",
+      validatedTargetUrls: ["https://vneshstroi.ru/kvartiry/12345/"],
+      validatedRequestedFields: ["listing_price"],
       fieldCoverage: { support: "full" },
       freshnessPolicy: {
         target_ttl_hours: 24,
@@ -94,7 +99,10 @@ describe("source policy integration", () => {
       environment: "test",
       entityType: "offer",
       targetField: "legal.title_report",
-      satisfiedConditions: ["ACCESS_REVIEW_CONFIRMED"],
+      requestedMethod: "http",
+      targetUrls: ["https://vneshstroi.ru/kvartiry/12345/"],
+      requestedFields: ["legal.title_report"],
+      satisfiedConditions: ["TARGETED_UNIT_HTTP_POC_APPROVED"],
       decidedAt: NOW,
     });
     expect(plan.allowed).toBe(false);
@@ -104,10 +112,10 @@ describe("source policy integration", () => {
 
   it("uses a degraded fallback without introducing a denied method", () => {
     const degraded = sourcePolicyEngine.resolveCollectionPlan({
-      sourceId: "src_dev_02",
+      sourceId: "src_fin_02",
       operation: "scheduled_collect",
       environment: "test",
-      targetField: "availability",
+      targetField: "financing.rate",
       satisfiedConditions: ["ACCESS_REVIEW_CONFIRMED"],
       decidedAt: NOW,
       healthOverride: {

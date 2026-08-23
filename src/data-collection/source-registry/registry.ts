@@ -98,6 +98,33 @@ export const validateSourceRegistryConfig = (
         sharedRule: domain.shared_ownership_rule,
       });
     }
+    for (const allowedHost of entry.policy.collection_scope.allowed_hosts) {
+      const hostname = normalizeRegistryHostname(allowedHost);
+      const ownedBySource = entry.domains.some((rule) => {
+        const domain = normalizeRegistryHostname(rule.hostname);
+        return (
+          hostname === domain ||
+          (rule.include_subdomains && hostname.endsWith(`.${domain}`))
+        );
+      });
+      if (!ownedBySource)
+        throw new Error(
+          `Collection scope host is outside source ownership: ${entry.source_id} -> ${hostname}`,
+        );
+    }
+    for (const pattern of entry.policy.collection_scope.allowed_path_patterns) {
+      if (!pattern.startsWith("^") || !pattern.endsWith("$"))
+        throw new Error(
+          `Collection path pattern must be anchored: ${entry.source_id} -> ${pattern}`,
+        );
+      try {
+        new RegExp(pattern, "u");
+      } catch {
+        throw new Error(
+          `Invalid collection path pattern: ${entry.source_id} -> ${pattern}`,
+        );
+      }
+    }
     const hasProductionApprovalSignal =
       entry.environment_approval.production.status === "approved" ||
       entry.approval_lifecycle === "production_approved" ||
