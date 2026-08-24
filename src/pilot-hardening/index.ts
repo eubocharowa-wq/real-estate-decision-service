@@ -9,6 +9,7 @@ export * from "./feedback";
 export * from "./openclaw";
 export * from "./performance";
 export * from "./qa-scenarios";
+export * from "./real-pilot-dataset";
 export * from "./release-gate";
 export * from "./reporting";
 export * from "./security";

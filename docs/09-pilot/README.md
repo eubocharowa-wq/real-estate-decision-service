@@ -12,6 +12,8 @@ portal.
 - deterministic matching and separate Data Confidence / Completeness;
 - explicit candidate provenance (`synthetic`, `manual_curated`,
   `approved_live_source`, `user_supplied`, `expert_supplied`);
+- a versioned real-pilot manifest with two validated, restricted/manual-fallback
+  Avito user links and one Edinstvo URL pending unit-specific manual selection;
 - reusable pilot candidate validation, source readiness and coverage summary;
 - vendor-neutral journey telemetry, sensitive-comment-separated feedback,
   structured errors and safe journey diagnostics;
@@ -51,11 +53,18 @@ otherwise blocked. `src_dev_02` (ВНЕШСТРОЙ) remains a one-URL, HTTP-onl
 development/test PoC. Its pilot/production and targeted refresh permissions are
 denied; OpenClaw/browser are not approved.
 
+The real-pilot manifest does not approve any of these websites for automated
+collection. Its Avito records contain only facts explicitly encoded in the
+user-supplied URLs; price, availability, financing and all other absent fields
+remain unknown. The Edinstvo URL is a manual-selection source and is not turned
+into a Property/Offer until a unit-specific URL is supplied.
+
 Therefore no first live OpenClaw use case is selected. Live execution is
 disabled and the diagnostic blocker is
 `NO_PILOT_APPROVED_BROWSER_BENEFICIAL_SOURCE`. This is a release warning plus
-the absence of a real pilot dataset is a hard blocker. A feature flag can never
-override Source Policy or `evaluateSourcePilotReadiness(...)`.
+an empty or invalid real-pilot manifest is a hard blocker. The current manifest
+passes that dataset check without approving automated collection. A feature
+flag can never override Source Policy or `evaluateSourcePilotReadiness(...)`.
 
 OpenClaw is blocked from:
 
@@ -95,11 +104,14 @@ The release gate is `ready=false` if any hard check fails:
 - expert evidence boundary;
 - safe URL fetch boundary;
 - OpenClaw policy/readiness boundary;
-- configuration of a validated real pilot dataset.
+- configuration of a non-empty manifest that passes both
+  `validatePilotCandidate(...)` and dataset-level validation.
 
 Warnings include low coverage, manual-only sources, undefined expert SLA, low
 comparison sample, fixture-backed refresh and live OpenClaw disabled pending
-approval. Current expected blockers include `REAL_PILOT_DATASET_NOT_CONFIGURED`.
+approval. `REAL_PILOT_DATASET_NOT_CONFIGURED` is derived from the manifest and
+is cleared only while at least one real candidate exists and the complete
+manifest validates. It is not a caller-supplied release boolean.
 
 Commands:
 
@@ -142,9 +154,9 @@ decision; and OpenClaw denied with executor not called.
 
 ## Known limitations
 
-- no current pilot-approved live dataset or browser-beneficial source;
-- coverage is synthetic/manual until a source passes human approval and the
-  readiness gate;
+- no current pilot-approved live source or browser-beneficial source;
+- real-pilot coverage is limited to two user-supplied Avito candidates; the
+  Edinstvo URL still requires unit-specific manual selection;
 - refresh and OpenClaw execution are fixture-backed only;
 - expert SLA and production persistence are undefined;
 - the performance benchmark is a reproducible local measurement, not a

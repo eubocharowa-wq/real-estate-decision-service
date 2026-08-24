@@ -16,6 +16,12 @@ import type {
 export const PILOT_CANDIDATE_SCHEMA_VERSION = "pilot-candidate-v1" as const;
 export const PILOT_TELEMETRY_VERSION = "pilot-telemetry-v1" as const;
 export const PILOT_RELEASE_GATE_VERSION = "pilot-release-gate-v1" as const;
+export const REAL_PILOT_DATASET_MANIFEST_VERSION =
+  "real-pilot-dataset-manifest-v1" as const;
+export const REAL_PILOT_DATASET_CANDIDATE_VERSION =
+  "real-pilot-dataset-candidate-v1" as const;
+export const REAL_PILOT_MANUAL_SELECTION_SOURCE_VERSION =
+  "real-pilot-manual-selection-source-v1" as const;
 
 export interface PilotFinancingClaim {
   readonly field: string;
@@ -51,6 +57,81 @@ export interface PilotCandidateValidationResult {
   readonly offer_id: string | null;
   readonly origin: PilotDataOrigin | null;
   readonly policy_version: string;
+}
+
+export type RealPilotDataOrigin =
+  "user_supplied" | "manual_curated" | "approved_live_source";
+
+export interface RealPilotObservedFact {
+  readonly field: string;
+  readonly value: unknown;
+  readonly verification_status:
+    | "confirmed"
+    | "claimed"
+    | "unconfirmed"
+    | "conflicting"
+    | "stale"
+    | "unknown";
+  readonly evidence_refs: readonly string[];
+}
+
+export interface RealPilotDatasetCandidate {
+  readonly schema_version: typeof REAL_PILOT_DATASET_CANDIDATE_VERSION;
+  readonly candidate_id: string;
+  readonly origin: RealPilotDataOrigin;
+  readonly source_url: string;
+  readonly observed_facts: readonly RealPilotObservedFact[];
+  readonly explicit_unknown_fields: readonly string[];
+  readonly evidence_refs: readonly string[];
+  readonly observed_at: string;
+  readonly freshness_status:
+    "fresh" | "aging" | "stale" | "expired" | "unknown";
+  readonly collection_mode:
+    "manual_fallback" | "manual_curated" | "approved_live_source";
+  readonly automated_fetch_performed: boolean;
+  readonly candidate: PilotCandidate;
+}
+
+export interface RealPilotManualSelectionSource {
+  readonly schema_version: typeof REAL_PILOT_MANUAL_SELECTION_SOURCE_VERSION;
+  readonly seed_id: string;
+  readonly origin: "user_supplied";
+  readonly source_url: string;
+  readonly status: "manual_selection_required";
+  readonly explicit_unknown_fields: readonly string[];
+  readonly observed_at: string;
+  readonly freshness_status: "unknown";
+  readonly automated_fetch_performed: false;
+  readonly reason: string;
+}
+
+export interface RealPilotDatasetManifest {
+  readonly schema_version: typeof REAL_PILOT_DATASET_MANIFEST_VERSION;
+  readonly manifest_id: string;
+  readonly dataset_version: string;
+  readonly environment: "pilot";
+  readonly created_at: string;
+  readonly candidates: readonly RealPilotDatasetCandidate[];
+  readonly manual_selection_sources: readonly RealPilotManualSelectionSource[];
+}
+
+export interface RealPilotDatasetValidationResult {
+  readonly schema_version: "real-pilot-dataset-validation-v1";
+  readonly valid: boolean;
+  readonly configured: boolean;
+  readonly errors: readonly string[];
+  readonly warnings: readonly string[];
+  readonly candidate_count: number;
+  readonly valid_candidate_count: number;
+  readonly manual_selection_source_count: number;
+  readonly candidate_results: readonly PilotCandidateValidationResult[];
+  readonly manifest_version: string | null;
+}
+
+export interface RealPilotDatasetRuntime {
+  readonly manifest: RealPilotDatasetManifest | null;
+  readonly validation: RealPilotDatasetValidationResult;
+  readonly candidates: readonly PilotCandidate[];
 }
 
 export interface SourcePilotReadiness {

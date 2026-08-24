@@ -4,6 +4,7 @@ import {
   type PilotReleaseGate,
   type SourcePilotReadiness,
 } from "./contracts";
+import { validateRealPilotDatasetManifest } from "./real-pilot-dataset";
 
 export interface PilotReleaseEvidence {
   readonly buildPassed: boolean;
@@ -16,7 +17,7 @@ export interface PilotReleaseEvidence {
   readonly urlFetchSafetyPassed: boolean;
   readonly openclawPolicyGatePassed: boolean;
   readonly sourceReadiness: readonly SourcePilotReadiness[];
-  readonly realPilotDatasetConfigured: boolean;
+  readonly realPilotDatasetManifest: unknown;
   readonly lowCoverage: boolean;
   readonly expertSlaDefined: boolean;
   readonly comparisonSampleSufficient: boolean;
@@ -42,6 +43,10 @@ export const evaluatePilotReleaseGate = (input: {
 }): PilotReleaseGate => {
   const sourceFailures = input.evidence.sourceReadiness.filter(
     (source) => !source.ready,
+  );
+  const realPilotDataset = validateRealPilotDatasetManifest(
+    input.evidence.realPilotDatasetManifest,
+    { now: input.evaluatedAt },
   );
   const checks: PilotReleaseCheck[] = [
     check("build", input.evidence.buildPassed, "FAILING_BUILD"),
@@ -83,7 +88,7 @@ export const evaluatePilotReleaseGate = (input: {
     ),
     check(
       "real_pilot_dataset",
-      input.evidence.realPilotDatasetConfigured,
+      realPilotDataset.configured,
       "REAL_PILOT_DATASET_NOT_CONFIGURED",
     ),
     {
