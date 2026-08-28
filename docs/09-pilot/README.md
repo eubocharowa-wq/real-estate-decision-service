@@ -123,6 +123,47 @@ npm run test:pilot-performance
 Standard tests do not execute live network or OpenClaw/browser smoke.
 The existing CI runs the offline pilot and performance commands explicitly.
 
+### OpenClaw Gateway prerequisite
+
+The preparatory Gateway executor does not enable or modify OpenClaw. Before an
+operator can use the HTTP boundary, all of these independent prerequisites must
+be completed and reviewed outside this application:
+
+1. `real-estate-collector-v1` is installed for the configured agent;
+2. the agent has a browser-only tool policy that denies search/fetch, shell,
+   filesystem, session, Gateway/admin and messaging capabilities;
+3. the OpenClaw sandbox and runtime policy have been reviewed for this use case;
+4. the Chat Completions endpoint is explicitly enabled as shown below;
+5. the selected source is separately approved by Source Policy and passes
+   Source Pilot Readiness.
+
+The repository contains the version-controlled skill instruction, but does not
+claim or verify that the skill is installed in any OpenClaw environment.
+
+```json5
+{
+  gateway: {
+    http: {
+      endpoints: {
+        chatCompletions: { enabled: true },
+      },
+    },
+  },
+}
+```
+
+This corresponds to
+`gateway.http.endpoints.chatCompletions.enabled=true`; the endpoint is disabled
+by default in OpenClaw 2026.7.1-2. Application configuration accepts only a
+canonical loopback `/v1/chat/completions` URL. The HTTP body targets the agent
+as `openclaw/<agentId>`. An optional backend provider/model override is sent
+only through `x-openclaw-model`; OpenClaw runtime selection remains internal to
+OpenClaw. `REDS_OPENCLAW_MAX_COMPLETION_TOKENS` is mandatory and has no hidden
+production default. The Gateway token is a full operator credential and must
+remain in secret storage. Enabling this endpoint does not approve a source or
+bypass Source Policy, pilot readiness, feature flags, kill switches, or the
+Collection Plan.
+
 ## Outcome review
 
 `buildPilotOutcomeMetrics(...)` calculates confirmation, edit, shortlist,

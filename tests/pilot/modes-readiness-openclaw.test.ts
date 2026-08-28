@@ -54,6 +54,44 @@ const createPilotOpenClawInput = (
   executor: { execute },
 });
 
+const mockCanonicalPolicyAndReadinessAllowed = (
+  input: ReturnType<typeof createPilotOpenClawInput>,
+) => {
+  const canonicalDecision = sourcePolicyEngine.resolve({
+    sourceId: input.request.collection_task.source_id,
+    operation: "targeted_refresh",
+    environment: input.request.environment,
+    requestedMethod: "openclaw",
+    targetUrls: input.request.collection_task.target_urls,
+    requestedFields: input.request.collection_task.requested_fields,
+    discovery: false,
+    followLinks: false,
+    pagination: false,
+    sitemap: false,
+    authentication: false,
+    challengeAction: "stop",
+    satisfiedConditions: input.request.satisfied_conditions,
+    decidedAt: input.request.requested_at,
+  });
+  vi.spyOn(sourcePolicyEngine, "resolve").mockReturnValue({
+    ...canonicalDecision,
+    allowed: true,
+    allowedMethods: ["openclaw"],
+  });
+  vi.spyOn(
+    sourceReadinessModule,
+    "evaluateSourcePilotReadiness",
+  ).mockReturnValue({
+    source_id: "src_dev_02",
+    ready: true,
+    blockers: [],
+    warnings: [],
+    approved_operations: ["targeted_refresh"],
+    approved_environment: "pilot",
+    policy_version: "test-readiness-allowed",
+  });
+};
+
 afterEach(() => vi.restoreAllMocks());
 
 describe("pilot modes and source readiness", () => {
@@ -170,6 +208,32 @@ describe("OpenClaw controlled boundary", () => {
         { request, plan },
       ),
     ).toBeNull();
+    expect(
+      parseOpenClawStagedResult(
+        {
+          ...OPENCLAW_STAGED_RESULT_FIXTURE,
+          unexpected_agent_field: true,
+        },
+        { request, plan },
+      ),
+    ).toBeNull();
+    expect(
+      parseOpenClawStagedResult(
+        {
+          ...OPENCLAW_STAGED_RESULT_FIXTURE,
+          facts: [
+            {
+              ...OPENCLAW_STAGED_RESULT_FIXTURE.facts[0],
+              evidence: {
+                ...OPENCLAW_STAGED_RESULT_FIXTURE.facts[0]!.evidence,
+                evidence_reference: "",
+              },
+            },
+          ],
+        },
+        { request, plan },
+      ),
+    ).toBeNull();
   });
 
   it("does not invoke executor when feature is enabled but policy/readiness deny", async () => {
@@ -264,6 +328,74 @@ describe("OpenClaw controlled boundary", () => {
     expect(result.blocker_code).toBe("SOURCE_NOT_PILOT_READY");
     expect(result.executor_invoked).toBe(false);
     expect(execute).not.toHaveBeenCalled();
+  });
+
+  it("checks feature and kill switch before resolving the Collection Plan", async () => {
+    const execute = vi.fn<OpenClawExecutor["execute"]>();
+    const base = createPilotOpenClawInput(execute);
+    mockCanonicalPolicyAndReadinessAllowed(base);
+    const planSpy = vi.spyOn(sourcePolicyEngine, "resolveCollectionPlan");
+
+    const featureDisabled = await executeControlledOpenClawCollection({
+      ...base,
+      runtimeConfig: createPilotRuntimeConfig({
+        mode: "pilot",
+        features: { openclaw_collection: false, live_source_poc: true },
+        killSwitches: {
+          openclaw_execution: false,
+          live_source_adapter: false,
+        },
+      }),
+    });
+    expect(featureDisabled.blocker_code).toBe("FEATURE_DISABLED");
+    expect(planSpy).not.toHaveBeenCalled();
+    expect(execute).not.toHaveBeenCalled();
+  });
+
+  it("keeps an active kill switch ahead of Collection Plan and executor", async () => {
+    const execute = vi.fn<OpenClawExecutor["execute"]>();
+    const base = createPilotOpenClawInput(execute);
+    mockCanonicalPolicyAndReadinessAllowed(base);
+    const planSpy = vi.spyOn(sourcePolicyEngine, "resolveCollectionPlan");
+
+    const killed = await executeControlledOpenClawCollection({
+      ...base,
+      runtimeConfig: createPilotRuntimeConfig({
+        mode: "pilot",
+        features: { openclaw_collection: true, live_source_poc: true },
+        killSwitches: {
+          openclaw_execution: true,
+          live_source_adapter: false,
+        },
+      }),
+    });
+    expect(killed.blocker_code).toBe("KILL_SWITCH_ACTIVE");
+    expect(planSpy).not.toHaveBeenCalled();
+    expect(execute).not.toHaveBeenCalled();
+  });
+
+  it("invokes the executor only with the canonical approved Collection Plan", async () => {
+    const execute = vi.fn<OpenClawExecutor["execute"]>(async () => ({
+      ...OPENCLAW_STAGED_RESULT_FIXTURE,
+      request_id: "openclaw_request_001",
+    }));
+    const input = createPilotOpenClawInput(execute);
+    mockCanonicalPolicyAndReadinessAllowed(input);
+
+    const result = await executeControlledOpenClawCollection(input);
+    expect(result.status).toBe("staged");
+    expect(result.blocker_code).toBeNull();
+    expect(result.plan).toMatchObject({
+      allowed: true,
+      preferredMethod: "openclaw",
+      validatedTargetUrls: input.request.collection_task.target_urls,
+      validatedRequestedFields: input.request.collection_task.requested_fields,
+    });
+    expect(execute).toHaveBeenCalledOnce();
+    expect(execute).toHaveBeenCalledWith({
+      request: input.request,
+      plan: result.plan,
+    });
   });
 
   it("keeps the kill switch independent of stored evidence and flags", () => {

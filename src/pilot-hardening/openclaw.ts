@@ -1,7 +1,6 @@
 import {
   sourcePolicyEngine,
   sourceRegistry,
-  type CollectionPlan,
   type SourceOperation,
 } from "../data-collection/source-registry";
 import type {
@@ -11,6 +10,9 @@ import type {
   SourcePilotReadiness,
 } from "./contracts";
 import { isFeatureOperational, type PilotRuntimeConfig } from "./config";
+import { OpenClawGatewayExecutionError } from "./openclaw-gateway";
+export { parseOpenClawStagedResult } from "./openclaw-validation";
+import { parseOpenClawStagedResult } from "./openclaw-validation";
 import { evaluateSourcePilotReadiness } from "./source-readiness";
 
 const operationForMode = (
@@ -22,62 +24,6 @@ const environmentForMode = (
   mode: PilotRuntimeConfig["mode"],
 ): OpenClawCollectionRequest["environment"] =>
   mode === "demo" ? "test" : mode;
-
-const stringField = (value: unknown, key: string): string | null => {
-  const field =
-    typeof value === "object" && value !== null
-      ? Reflect.get(value, key)
-      : null;
-  return typeof field === "string" ? field : null;
-};
-
-/** Runtime validation for facts returned by the untrusted capability boundary. */
-export const parseOpenClawStagedResult = (
-  value: unknown,
-  input: {
-    readonly request: OpenClawCollectionRequest;
-    readonly plan: CollectionPlan;
-  },
-): OpenClawExecutionOutcome["staged_result"] => {
-  if (typeof value !== "object" || value === null) return null;
-  const facts = Reflect.get(value, "facts");
-  const warnings = Reflect.get(value, "warnings");
-  const status = stringField(value, "status");
-  const sourceUrl = stringField(value, "source_url");
-  if (
-    stringField(value, "schema_version") !== "openclaw-staged-result-v1" ||
-    stringField(value, "request_id") !== input.request.request_id ||
-    stringField(value, "source_id") !==
-      input.request.collection_task.source_id ||
-    !sourceUrl ||
-    !input.plan.validatedTargetUrls.includes(sourceUrl) ||
-    !["partial", "complete", "source_changed", "failed"].includes(
-      status ?? "",
-    ) ||
-    Reflect.get(value, "raw_content_reference") !== null ||
-    !Array.isArray(facts) ||
-    !Array.isArray(warnings) ||
-    warnings.some((warning) => typeof warning !== "string")
-  )
-    return null;
-  for (const fact of facts) {
-    const field = stringField(fact, "field");
-    const verification = stringField(fact, "verification_status");
-    if (
-      !field ||
-      !input.plan.validatedRequestedFields.includes(field) ||
-      !["claimed", "unconfirmed", "unknown"].includes(verification ?? "") ||
-      !stringField(fact, "evidence_reference")
-    )
-      return null;
-  }
-  if (
-    !stringField(value, "collection_run_id") ||
-    Number.isNaN(Date.parse(stringField(value, "observed_at") ?? ""))
-  )
-    return null;
-  return value as OpenClawExecutionOutcome["staged_result"];
-};
 
 const blocked = (
   code: NonNullable<OpenClawExecutionOutcome["blocker_code"]>,
@@ -164,11 +110,7 @@ export const executeControlledOpenClawCollection = async (input: {
     satisfiedConditions: input.request.satisfied_conditions,
     decidedAt: input.request.requested_at,
   });
-  if (
-    !plan.allowed ||
-    plan.preferredMethod !== "openclaw" ||
-    plan.fallbackMethods.some((method) => method === "browser")
-  )
+  if (!plan.allowed || plan.preferredMethod !== "openclaw")
     return {
       ...blocked("COLLECTION_PLAN_DENIED", policyVersion, readiness),
       plan,
@@ -176,9 +118,8 @@ export const executeControlledOpenClawCollection = async (input: {
 
   try {
     const untrustedResult = await input.executor.execute({
-      task: input.request.collection_task,
+      request: input.request,
       plan,
-      controlledMode: input.request.controlled_mode,
     });
     const staged = parseOpenClawStagedResult(untrustedResult, {
       request: input.request,
@@ -205,10 +146,12 @@ export const executeControlledOpenClawCollection = async (input: {
       plan,
       staged_result: staged,
     };
-  } catch {
+  } catch (error) {
+    const gatewayCode =
+      error instanceof OpenClawGatewayExecutionError ? error.code : null;
     return {
       status: "failed",
-      blocker_code: "EXECUTION_FAILED",
+      blocker_code: gatewayCode ?? "EXECUTION_FAILED",
       executor_invoked: true,
       policy_version: policyVersion,
       collection_method: "openclaw",

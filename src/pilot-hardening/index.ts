@@ -7,6 +7,8 @@ export * from "./diagnostics";
 export * from "./errors";
 export * from "./feedback";
 export * from "./openclaw";
+export * from "./openclaw-gateway";
+export * from "./openclaw-validation";
 export * from "./performance";
 export * from "./qa-scenarios";
 export * from "./real-pilot-dataset";

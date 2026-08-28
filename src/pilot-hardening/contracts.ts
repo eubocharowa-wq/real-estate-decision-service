@@ -160,27 +160,40 @@ export interface OpenClawExtractedFact {
   readonly field: string;
   readonly value: unknown;
   readonly verification_status: "claimed" | "unconfirmed" | "unknown";
-  readonly evidence_reference: string;
+  /** Mirrors the staged subset of FieldEvidence without creating canonical evidence. */
+  readonly evidence: {
+    readonly source_id: string;
+    readonly source_url: string;
+    readonly observed_at: string;
+    readonly evidence_type: "extraction";
+    readonly evidence_reference: string;
+    readonly raw_value: unknown;
+    readonly extraction_confidence: number | null;
+  };
 }
 
 export interface OpenClawStagedResult {
-  readonly schema_version: "openclaw-staged-result-v1";
+  readonly schema_version: "openclaw-staged-result-v2";
   readonly request_id: string;
   readonly collection_run_id: string;
   readonly source_id: string;
   readonly source_url: string;
   readonly observed_at: string;
+  readonly identity_hints: {
+    readonly property_external_id: string | null;
+    readonly offer_external_id: string | null;
+  };
   readonly status: "partial" | "complete" | "source_changed" | "failed";
   readonly facts: readonly OpenClawExtractedFact[];
+  readonly missing_fields: readonly string[];
   readonly raw_content_reference: null;
   readonly warnings: readonly string[];
 }
 
 export interface OpenClawExecutor {
   execute(input: {
-    readonly task: CollectionTask;
+    readonly request: OpenClawCollectionRequest;
     readonly plan: CollectionPlan;
-    readonly controlledMode: OpenClawControlledMode;
   }): Promise<OpenClawStagedResult>;
 }
 
@@ -193,6 +206,14 @@ export interface OpenClawExecutionOutcome {
     | "FEATURE_DISABLED"
     | "KILL_SWITCH_ACTIVE"
     | "COLLECTION_PLAN_DENIED"
+    | "GATEWAY_ENDPOINT_DISABLED"
+    | "GATEWAY_AUTH_DENIED"
+    | "GATEWAY_REQUEST_REJECTED"
+    | "GATEWAY_REDIRECT_BLOCKED"
+    | "GATEWAY_AGENT_MODEL_MISMATCH"
+    | "GATEWAY_TIMEOUT"
+    | "GATEWAY_TRANSPORT_ERROR"
+    | "MALFORMED_GATEWAY_RESPONSE"
     | "EXECUTION_FAILED"
     | null;
   readonly executor_invoked: boolean;
