@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { POST } from "../../app/api/buyer-journeys/route";
 import { resetBuyerJourneyRuntimeForTests } from "../../src/buyer-journey";
@@ -20,7 +20,18 @@ const post = (body: unknown) =>
   );
 
 describe("buyer journey HTTP application boundary", async () => {
-  beforeEach(() => resetBuyerJourneyRuntimeForTests());
+  // This suite exercises the HTTP boundary, not storage. The runtime picks a
+  // backend from DATABASE_URL, so it is unset here to keep these tests on the
+  // in-memory repositories whether or not a database is configured.
+  beforeEach(() => {
+    vi.stubEnv("DATABASE_URL", "");
+    resetBuyerJourneyRuntimeForTests();
+  });
+
+  afterAll(() => {
+    vi.unstubAllEnvs();
+    resetBuyerJourneyRuntimeForTests();
+  });
 
   it("propagates journey/session refs without putting domain objects in URLs", async () => {
     const started = await post({

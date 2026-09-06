@@ -1,3 +1,4 @@
+import { createRepositorySet } from "../persistence/repositories";
 import { BuyerJourneyApplication } from "./application";
 
 /**
@@ -21,8 +22,24 @@ type RuntimeGlobal = typeof globalThis & {
 
 const runtimeGlobal = globalThis as RuntimeGlobal;
 
+/**
+ * The backend follows the configuration: DATABASE_URL present means the
+ * PostgreSQL repositories, absent means in-memory. Nothing else in the
+ * application knows which one it got.
+ */
+const createRuntime = (): BuyerJourneyApplication => {
+  const repositories = createRepositorySet();
+  return new BuyerJourneyApplication({
+    repository: repositories.repository,
+    expertRepository: repositories.expertRepository,
+    instrumentation: repositories.instrumentation,
+    feedbackRepository: repositories.feedbackRepository,
+    errorRepository: repositories.errorRepository,
+  });
+};
+
 export const getBuyerJourneyRuntime = (): BuyerJourneyApplication =>
-  (runtimeGlobal[RUNTIME_KEY] ??= new BuyerJourneyApplication());
+  (runtimeGlobal[RUNTIME_KEY] ??= createRuntime());
 
 export const resetBuyerJourneyRuntimeForTests = (): void => {
   delete runtimeGlobal[RUNTIME_KEY];

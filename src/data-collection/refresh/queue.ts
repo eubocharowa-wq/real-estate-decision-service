@@ -20,7 +20,7 @@ import {
 } from "./dedup";
 import { calculateRefreshPriority } from "./priority";
 
-const activeStatuses = new Set<RefreshTaskStatus>([
+export const activeRefreshStatuses = new Set<RefreshTaskStatus>([
   "queued",
   "ready",
   "running",
@@ -29,13 +29,13 @@ const activeStatuses = new Set<RefreshTaskStatus>([
 
 const clone = <T>(value: T): T => structuredClone(value);
 
-const taskSort = (left: RefreshTask, right: RefreshTask): number =>
+export const taskSort = (left: RefreshTask, right: RefreshTask): number =>
   right.priority_score - left.priority_score ||
   (left.deadline ?? "9999").localeCompare(right.deadline ?? "9999") ||
   left.requested_at.localeCompare(right.requested_at) ||
   left.refresh_task_id.localeCompare(right.refresh_task_id);
 
-const buildTask = (request: RefreshTaskRequest): RefreshTask => {
+export const buildTask = (request: RefreshTaskRequest): RefreshTask => {
   const calculated = calculateRefreshPriority(request.priorityInput);
   const dedupKey = createRefreshDedupKey(request);
   const fieldPaths = normalizeRefreshFields(request.fieldPaths);
@@ -151,7 +151,7 @@ export class InMemoryRefreshQueueRepository implements RefreshQueueRepository {
 
     const related = [...this.tasks.values()].filter(
       (task) =>
-        activeStatuses.has(task.status) &&
+        activeRefreshStatuses.has(task.status) &&
         task.entity_type === candidate.entity_type &&
         task.entity_id === candidate.entity_id &&
         task.source_id === candidate.source_id &&
@@ -302,7 +302,7 @@ export class InMemoryRefreshQueueRepository implements RefreshQueueRepository {
     const task = [...this.tasks.values()].find(
       (candidate) =>
         candidate.dedup_key === dedupKey &&
-        activeStatuses.has(candidate.status),
+        activeRefreshStatuses.has(candidate.status),
     );
     return task ? clone(task) : null;
   }
@@ -318,7 +318,7 @@ export class InMemoryRefreshQueueRepository implements RefreshQueueRepository {
 
   async metrics(now: string): Promise<RefreshQueueMetrics> {
     const active = [...this.tasks.values()].filter((task) =>
-      activeStatuses.has(task.status),
+      activeRefreshStatuses.has(task.status),
     );
     const oldest = active.reduce(
       (minimum, task) => Math.min(minimum, Date.parse(task.requested_at)),

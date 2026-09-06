@@ -36,6 +36,7 @@ export {
   requireDatabaseConfig,
   type DatabaseConfig,
   type DatabaseConfigResult,
+  type EnvironmentSource,
 } from "./config";
 export { closeDatabasePool, getDatabasePool } from "./pool";
 export {
@@ -50,3 +51,17 @@ export {
   type Migration,
   type MigrationStatus,
 } from "./migrator";
+export {
+  createInMemoryRepositorySet,
+  createRepositorySet,
+  type RepositorySet,
+} from "./repositories";
+export {
+  createPostgresContext,
+  createPostgresRepositories,
+  mapDatabaseError,
+  PostgresContext,
+  StorageUnavailableError,
+  type Database,
+  type PostgresRepositories,
+} from "./postgres";
