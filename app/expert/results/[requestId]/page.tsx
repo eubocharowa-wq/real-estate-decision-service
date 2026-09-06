@@ -25,7 +25,7 @@ export default async function ExpertResultPage({
   const runtime = await getExpertWorkbenchFixtureRuntime();
   let view;
   try {
-    const input = runtime.application.openResultReview(
+    const input = await runtime.application.openResultReview(
       EXPERT_FIXTURE_OWNER_ACTOR,
       requestId,
     );

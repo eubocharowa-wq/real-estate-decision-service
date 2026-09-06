@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 
 export default async function ExpertRequestsPage() {
   const runtime = await getExpertWorkbenchFixtureRuntime();
-  const view = runtime.application.listActiveQueue(
+  const view = await runtime.application.listActiveQueue(
     EXPERT_FIXTURE_ACTORS.real_estate_expert,
   );
   return <ExpertQueue view={view} />;

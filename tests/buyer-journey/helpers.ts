@@ -30,7 +30,7 @@ export const confirmParsedJourney = async (
     "2026-08-15T00:00:00.000Z",
   ).confirmation_result;
   if (!confirmation) throw new Error("Golden request did not confirm");
-  application.confirmBuyerRequest(journey.journey_id, confirmation);
+  await application.confirmBuyerRequest(journey.journey_id, confirmation);
   return confirmation;
 };
 
@@ -42,12 +42,12 @@ export const createGoldenJourney = async (input?: {
     clock: clock.now,
     repository: input?.repository,
   });
-  const journey = application.startBuyerJourney({
+  const journey = await application.startBuyerJourney({
     sessionId: "session_golden_buyer",
     rawRequestText: GOLDEN_RAW_REQUEST,
   });
   const confirmation = await confirmParsedJourney(application, journey);
-  const matching = application.runJourneyMatching(journey.journey_id);
+  const matching = await application.runJourneyMatching(journey.journey_id);
   return { application, clock, journey, confirmation, matching };
 };
 

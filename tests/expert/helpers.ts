@@ -242,7 +242,7 @@ export const makeCreateInput = (
 };
 
 export class AllowAllAccessPolicy implements ExpertContextAccessPolicy {
-  canAccess(): boolean {
+  async canAccess(): Promise<boolean> {
     return true;
   }
 }
@@ -335,21 +335,21 @@ export const advanceToInProgress = async (
   harness: ReturnType<typeof createHarness>,
   input = makeCreateInput(),
 ) => {
-  const created = harness.service.createDraft(input);
-  harness.service.submit(created.request.request_id, OWNER);
+  const created = await harness.service.createDraft(input);
+  await harness.service.submit(created.request.request_id, OWNER);
   await harness.service.assignExpertRequest({
     requestId: created.request.request_id,
     specialistRef: "specialist_fixture_1",
     specialistType: created.request.required_specialist,
   });
-  harness.service.transition({
+  await harness.service.transition({
     requestId: created.request.request_id,
     status: "in_progress",
     actorType: "expert",
     actorRef: "specialist_fixture_1",
     reasonCode: "WORK_STARTED",
   });
-  return harness.repository.get(created.request.request_id)!;
+  return (await harness.repository.get(created.request.request_id))!;
 };
 
 export const makeResult = (

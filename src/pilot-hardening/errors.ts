@@ -1,29 +1,37 @@
+import {
+  runInMemoryTransaction,
+  type TransactionalRepository,
+} from "../persistence";
 import type {
   ApplicationErrorLayer,
   ApplicationErrorRecord,
 } from "./contracts";
 import type { BuyerJourneyStage } from "../buyer-journey/contracts";
 
-export interface ApplicationErrorRepository {
-  record(error: ApplicationErrorRecord): void;
-  markRecovered(errorId: string, recoveredAt: string): void;
-  list(journeyId?: string): readonly ApplicationErrorRecord[];
+export interface ApplicationErrorRepository extends TransactionalRepository {
+  record(error: ApplicationErrorRecord): Promise<void>;
+  markRecovered(errorId: string, recoveredAt: string): Promise<void>;
+  list(journeyId?: string): Promise<readonly ApplicationErrorRecord[]>;
 }
 
 export class InMemoryApplicationErrorRepository implements ApplicationErrorRepository {
   private readonly errors = new Map<string, ApplicationErrorRecord>();
 
-  record(error: ApplicationErrorRecord): void {
+  transaction<T>(work: () => Promise<T>): Promise<T> {
+    return runInMemoryTransaction(work);
+  }
+
+  async record(error: ApplicationErrorRecord): Promise<void> {
     this.errors.set(error.error_id, structuredClone(error));
   }
 
-  markRecovered(errorId: string, recoveredAt: string): void {
+  async markRecovered(errorId: string, recoveredAt: string): Promise<void> {
     const current = this.errors.get(errorId);
     if (current)
       this.errors.set(errorId, { ...current, recovered_at: recoveredAt });
   }
 
-  list(journeyId?: string): readonly ApplicationErrorRecord[] {
+  async list(journeyId?: string): Promise<readonly ApplicationErrorRecord[]> {
     return [...this.errors.values()]
       .filter((error) => !journeyId || error.journey_id === journeyId)
       .map((error) => structuredClone(error));

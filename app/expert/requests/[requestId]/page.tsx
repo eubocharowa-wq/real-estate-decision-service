@@ -20,7 +20,7 @@ export default async function ExpertWorkbenchPage({
   const runtime = await getExpertWorkbenchFixtureRuntime();
   let input;
   try {
-    input = runtime.application.openWorkbench(
+    input = await runtime.application.openWorkbench(
       EXPERT_FIXTURE_ACTORS.real_estate_expert,
       requestId,
     );

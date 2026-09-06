@@ -44,9 +44,9 @@ const failure = (error: unknown, errorId?: string): Response => {
   );
 };
 
-const requireOwnedJourney = (
+const requireOwnedJourney = async (
   body: object,
-): { readonly journeyId: string; readonly sessionId: string } => {
+): Promise<{ readonly journeyId: string; readonly sessionId: string }> => {
   const journeyId = stringValue(body, "journeyId");
   const sessionId = stringValue(body, "sessionId");
   if (!journeyId || !sessionId)
@@ -55,7 +55,7 @@ const requireOwnedJourney = (
       "Journey and session are required",
       true,
     );
-  const journey = getBuyerJourneyRuntime().getJourney(journeyId);
+  const journey = await getBuyerJourneyRuntime().getJourney(journeyId);
   if (journey.session_id !== sessionId)
     throw new BuyerJourneyError(
       "MISSING_JOURNEY_CONTEXT",
@@ -91,7 +91,7 @@ export async function POST(request: Request): Promise<Response> {
           "Session and request text are required",
           true,
         );
-      const journey = application.startBuyerJourney({
+      const journey = await application.startBuyerJourney({
         sessionId,
         rawRequestText,
       });
@@ -99,24 +99,27 @@ export async function POST(request: Request): Promise<Response> {
         journey.journey_id,
       );
       return Response.json(
-        { journey: application.getJourney(journey.journey_id), parserOutcome },
+        {
+          journey: await application.getJourney(journey.journey_id),
+          parserOutcome,
+        },
         { status: parserOutcome.success ? 201 : 422 },
       );
     }
 
-    const { journeyId } = requireOwnedJourney(body);
+    const { journeyId } = await requireOwnedJourney(body);
     if (action === "confirm_and_match") {
-      application.confirmBuyerRequest(
+      await application.confirmBuyerRequest(
         journeyId,
         Reflect.get(body, "confirmationResult"),
       );
-      const result = application.runJourneyMatching(journeyId);
+      const result = await application.runJourneyMatching(journeyId);
       return Response.json(result);
     }
     if (action === "shortlist")
       return Response.json({
-        view: application.getShortlist(journeyId),
-        coverage: application.getJourneyCoverage(journeyId),
+        view: await application.getShortlist(journeyId),
+        coverage: await application.getJourneyCoverage(journeyId),
       });
     if (action === "open_property") {
       const propertyId = stringValue(body, "propertyId");
@@ -127,11 +130,11 @@ export async function POST(request: Request): Promise<Response> {
           false,
         );
       return Response.json({
-        view: application.openJourneyProperty(journeyId, propertyId),
+        view: await application.openJourneyProperty(journeyId, propertyId),
       });
     }
     if (action === "comparison") {
-      const result = application.createJourneyComparison(
+      const result = await application.createJourneyComparison(
         journeyId,
         stringList(body, "propertyIds"),
       );
@@ -146,7 +149,7 @@ export async function POST(request: Request): Promise<Response> {
           true,
         );
       return Response.json(
-        application.addUserUrlCandidate(journeyId, candidate),
+        await application.addUserUrlCandidate(journeyId, candidate),
       );
     }
     if (action === "create_expert_request") {
@@ -159,7 +162,12 @@ export async function POST(request: Request): Promise<Response> {
           true,
         );
       return Response.json(
-        { request: application.createJourneyExpertRequest(journeyId, input) },
+        {
+          request: await application.createJourneyExpertRequest(
+            journeyId,
+            input,
+          ),
+        },
         { status: 201 },
       );
     }
@@ -177,7 +185,7 @@ export async function POST(request: Request): Promise<Response> {
           "Feedback boundary requires stage, question and answer",
           true,
         );
-      const feedback = application.submitJourneyFeedback({
+      const feedback = await application.submitJourneyFeedback({
         journeyId,
         stage: stage as Parameters<
           typeof application.submitJourneyFeedback
@@ -192,9 +200,9 @@ export async function POST(request: Request): Promise<Response> {
     }
     if (action === "snapshot")
       return Response.json({
-        journey: application.getJourney(journeyId),
-        snapshot: application.getJourneySnapshot(journeyId),
-        diagnostics: application.getJourneyDiagnostics(journeyId),
+        journey: await application.getJourney(journeyId),
+        snapshot: await application.getJourneySnapshot(journeyId),
+        diagnostics: await application.getJourneyDiagnostics(journeyId),
       });
     throw new BuyerJourneyError(
       "INVALID_TRANSITION",
@@ -221,7 +229,7 @@ export async function POST(request: Request): Promise<Response> {
                   : action === "create_expert_request"
                     ? ("expert_workflow" as const)
                     : ("recompute" as const);
-    const record = application.recordApplicationError({
+    const record = await application.recordApplicationError({
       errorCode,
       layer,
       journeyId,

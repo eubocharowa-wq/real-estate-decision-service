@@ -18,7 +18,7 @@ const percentile = (values: readonly number[], ratio: number): number => {
   );
 };
 
-describe("TASK-019 reproducible pilot performance benchmark", () => {
+describe("TASK-019 reproducible pilot performance benchmark", async () => {
   vi.setConfig({ testTimeout: BENCHMARK_TIMEOUT_MS });
 
   it("measures matching/DataQuality and the instrumented golden journey", async () => {
@@ -109,12 +109,12 @@ describe("TASK-019 reproducible pilot performance benchmark", () => {
     expect(totalMs).toBeLessThan(BENCHMARK_BUDGET_MS);
 
     const { application, journey, matching } = await createGoldenJourney();
-    application.getShortlist(journey.journey_id);
+    await application.getShortlist(journey.journey_id);
     const finalistIds = matching.shortlist.cards
       .slice(0, 2)
       .map((card) => card.propertyId);
-    application.createJourneyComparison(journey.journey_id, finalistIds);
-    application.createJourneyExpertRequest(journey.journey_id, {
+    await application.createJourneyComparison(journey.journey_id, finalistIds);
+    await application.createJourneyExpertRequest(journey.journey_id, {
       requestType: "choice_assistance",
       triggerType: "comparison_uncertainty",
       questionCategory: "comparison",

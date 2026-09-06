@@ -151,7 +151,7 @@ const expectGatewayFailure = async (
   await expect(action).rejects.toMatchObject({ code });
 };
 
-describe("OpenClaw Gateway executor", () => {
+describe("OpenClaw Gateway executor", async () => {
   it("requires deployment-supplied endpoint, agent, timeout and output limit", () => {
     expect(() => resolveOpenClawGatewayConfig({})).toThrow(
       "OPENCLAW_GATEWAY_CONFIG_MISSING:ENDPOINT",

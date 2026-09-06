@@ -1,4 +1,8 @@
 import {
+  runInMemoryTransaction,
+  type TransactionalRepository,
+} from "../../persistence";
+import {
   REFRESH_POLICY_VERSION,
   refreshTaskSchema,
   type RefreshErrorCode,
@@ -87,53 +91,57 @@ export interface RefreshQueueMetrics {
   readonly oldestTaskAgeMs: number;
 }
 
-export interface RefreshQueueRepository {
-  enqueue(request: RefreshTaskRequest): RefreshEnqueueResult;
-  peek(now: string): RefreshTask | null;
+export interface RefreshQueueRepository extends TransactionalRepository {
+  enqueue(request: RefreshTaskRequest): Promise<RefreshEnqueueResult>;
+  peek(now: string): Promise<RefreshTask | null>;
   claim(
     taskId: string,
     workerId: string,
     now: string,
     leaseSeconds?: number,
-  ): RefreshTask | null;
+  ): Promise<RefreshTask | null>;
   complete(
     taskId: string,
     status: "succeeded" | "partial",
     completedAt: string,
-  ): RefreshTask;
+  ): Promise<RefreshTask>;
   fail(
     taskId: string,
     errorCode: RefreshErrorCode,
     completedAt: string,
-  ): RefreshTask;
+  ): Promise<RefreshTask>;
   retry(
     taskId: string,
     errorCode: RefreshErrorCode,
     notBefore: string,
-  ): RefreshTask;
+  ): Promise<RefreshTask>;
   block(
     taskId: string,
     errorCode: RefreshErrorCode,
     completedAt: string,
-  ): RefreshTask;
-  cancel(taskId: string, completedAt: string): RefreshTask;
+  ): Promise<RefreshTask>;
+  cancel(taskId: string, completedAt: string): Promise<RefreshTask>;
   recordPolicyVersions(
     taskId: string,
     policyVersion: string,
     registryVersion: string,
-  ): RefreshTask;
-  findActiveDuplicate(dedupKey: string): RefreshTask | null;
-  get(taskId: string): RefreshTask | null;
-  list(): readonly RefreshTask[];
-  metrics(now: string): RefreshQueueMetrics;
+  ): Promise<RefreshTask>;
+  findActiveDuplicate(dedupKey: string): Promise<RefreshTask | null>;
+  get(taskId: string): Promise<RefreshTask | null>;
+  list(): Promise<readonly RefreshTask[]>;
+  metrics(now: string): Promise<RefreshQueueMetrics>;
 }
 
 export class InMemoryRefreshQueueRepository implements RefreshQueueRepository {
   private readonly tasks = new Map<string, RefreshTask>();
 
-  enqueue(request: RefreshTaskRequest): RefreshEnqueueResult {
+  transaction<T>(work: () => Promise<T>): Promise<T> {
+    return runInMemoryTransaction(work);
+  }
+
+  async enqueue(request: RefreshTaskRequest): Promise<RefreshEnqueueResult> {
     const candidate = buildTask(request);
-    const exact = this.findActiveDuplicate(candidate.dedup_key);
+    const exact = await this.findActiveDuplicate(candidate.dedup_key);
     if (exact)
       return {
         task: this.mergeEscalation(exact, candidate),
@@ -187,7 +195,7 @@ export class InMemoryRefreshQueueRepository implements RefreshQueueRepository {
     };
   }
 
-  peek(now: string): RefreshTask | null {
+  async peek(now: string): Promise<RefreshTask | null> {
     const nowMs = Date.parse(now);
     const next = [...this.tasks.values()]
       .filter(
@@ -199,12 +207,12 @@ export class InMemoryRefreshQueueRepository implements RefreshQueueRepository {
     return next ? clone(next) : null;
   }
 
-  claim(
+  async claim(
     taskId: string,
     workerId: string,
     now: string,
     leaseSeconds = REFRESH_OPERATIONAL_CONFIG.defaultClaimLeaseSeconds,
-  ): RefreshTask | null {
+  ): Promise<RefreshTask | null> {
     const current = this.tasks.get(taskId);
     if (
       !current ||
@@ -226,30 +234,30 @@ export class InMemoryRefreshQueueRepository implements RefreshQueueRepository {
     return clone(claimed);
   }
 
-  complete(
+  async complete(
     taskId: string,
     status: "succeeded" | "partial",
     completedAt: string,
-  ): RefreshTask {
+  ): Promise<RefreshTask> {
     return this.updateTerminal(taskId, status, null, completedAt);
   }
 
-  fail(
+  async fail(
     taskId: string,
     errorCode: RefreshErrorCode,
     completedAt: string,
-  ): RefreshTask {
+  ): Promise<RefreshTask> {
     return this.updateTerminal(taskId, "failed", errorCode, completedAt);
   }
 
-  retry(
+  async retry(
     taskId: string,
     errorCode: RefreshErrorCode,
     notBefore: string,
-  ): RefreshTask {
+  ): Promise<RefreshTask> {
     const current = this.require(taskId);
     if (current.attempt_count >= current.max_attempts)
-      return this.fail(taskId, errorCode, notBefore);
+      return await this.fail(taskId, errorCode, notBefore);
     return this.store({
       ...current,
       status: "retry_scheduled",
@@ -265,23 +273,23 @@ export class InMemoryRefreshQueueRepository implements RefreshQueueRepository {
     });
   }
 
-  block(
+  async block(
     taskId: string,
     errorCode: RefreshErrorCode,
     completedAt: string,
-  ): RefreshTask {
+  ): Promise<RefreshTask> {
     return this.updateTerminal(taskId, "blocked", errorCode, completedAt);
   }
 
-  cancel(taskId: string, completedAt: string): RefreshTask {
+  async cancel(taskId: string, completedAt: string): Promise<RefreshTask> {
     return this.updateTerminal(taskId, "cancelled", null, completedAt);
   }
 
-  recordPolicyVersions(
+  async recordPolicyVersions(
     taskId: string,
     policyVersion: string,
     registryVersion: string,
-  ): RefreshTask {
+  ): Promise<RefreshTask> {
     const current = this.require(taskId);
     return this.store({
       ...current,
@@ -290,7 +298,7 @@ export class InMemoryRefreshQueueRepository implements RefreshQueueRepository {
     });
   }
 
-  findActiveDuplicate(dedupKey: string): RefreshTask | null {
+  async findActiveDuplicate(dedupKey: string): Promise<RefreshTask | null> {
     const task = [...this.tasks.values()].find(
       (candidate) =>
         candidate.dedup_key === dedupKey &&
@@ -299,16 +307,16 @@ export class InMemoryRefreshQueueRepository implements RefreshQueueRepository {
     return task ? clone(task) : null;
   }
 
-  get(taskId: string): RefreshTask | null {
+  async get(taskId: string): Promise<RefreshTask | null> {
     const task = this.tasks.get(taskId);
     return task ? clone(task) : null;
   }
 
-  list(): readonly RefreshTask[] {
+  async list(): Promise<readonly RefreshTask[]> {
     return [...this.tasks.values()].sort(taskSort).map(clone);
   }
 
-  metrics(now: string): RefreshQueueMetrics {
+  async metrics(now: string): Promise<RefreshQueueMetrics> {
     const active = [...this.tasks.values()].filter((task) =>
       activeStatuses.has(task.status),
     );

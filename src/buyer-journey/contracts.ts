@@ -220,6 +220,7 @@ export const JOURNEY_ERROR_CODES = [
   "SOURCE_POLICY_BLOCKED",
   "FEATURE_DISABLED",
   "ENTITY_NOT_FOUND",
+  "STORAGE_UNAVAILABLE",
 ] as const;
 
 export type JourneyErrorCode = (typeof JOURNEY_ERROR_CODES)[number];

@@ -74,37 +74,40 @@ export class ExpertWorkbenchApplicationService {
     private readonly clock: () => string,
   ) {}
 
-  listActiveQueue(actor: ExpertWorkbenchActor): ExpertQueueViewModel {
+  async listActiveQueue(
+    actor: ExpertWorkbenchActor,
+  ): Promise<ExpertQueueViewModel> {
     if (actor.actor_type !== "expert")
       throw new Error("EXPERT_QUEUE_ACCESS_DENIED");
-    const items = this.repository
-      .listAll()
+    const visible = (await this.repository.listAll())
       .filter((request) =>
         ACTIVE_QUEUE_STATUSES.includes(request.status as never),
       )
       .filter((request) =>
         this.permissions.canViewExpertRequest(actor, request),
-      )
-      .map((request) => {
-        const submittedAt =
-          this.repository
-            .listAudit(request.request_id)
-            .find((event) => event.event_type === "request_submitted")
-            ?.created_at ?? request.created_at;
-        return {
-          request,
-          submittedAt,
-          shortQuestion: shortQuestion(request.question),
-          contextLabel: contextLabel(request),
-        };
-      })
-      .sort(
-        (left, right) =>
-          priorityRank[right.request.priority] -
-            priorityRank[left.request.priority] ||
-          left.submittedAt.localeCompare(right.submittedAt) ||
-          left.request.request_id.localeCompare(right.request.request_id),
       );
+    const items = (
+      await Promise.all(
+        visible.map(async (request) => {
+          const submittedAt =
+            (await this.repository.listAudit(request.request_id)).find(
+              (event) => event.event_type === "request_submitted",
+            )?.created_at ?? request.created_at;
+          return {
+            request,
+            submittedAt,
+            shortQuestion: shortQuestion(request.question),
+            contextLabel: contextLabel(request),
+          };
+        }),
+      )
+    ).sort(
+      (left, right) =>
+        priorityRank[right.request.priority] -
+          priorityRank[left.request.priority] ||
+        left.submittedAt.localeCompare(right.submittedAt) ||
+        left.request.request_id.localeCompare(right.request.request_id),
+    );
     return { items, activeStatuses: ACTIVE_QUEUE_STATUSES };
   }
 
@@ -112,7 +115,7 @@ export class ExpertWorkbenchApplicationService {
     actor: ExpertWorkbenchActor,
     requestId: string,
   ): Promise<ExpertRequest> {
-    const request = this.requireRequest(requestId);
+    const request = await this.requireRequest(requestId);
     if (
       actor.actor_type !== "expert" ||
       request.status !== "queued" ||
@@ -126,30 +129,31 @@ export class ExpertWorkbenchApplicationService {
     });
   }
 
-  openWorkbench(
+  async openWorkbench(
     actor: ExpertWorkbenchActor,
     requestId: string,
-  ): ExpertWorkbenchInput {
-    const request = this.requireRequest(requestId);
+  ): Promise<ExpertWorkbenchInput> {
+    const request = await this.requireRequest(requestId);
     if (
       actor.actor_type !== "expert" ||
       !this.permissions.canViewExpertRequest(actor, request)
     )
       throw new Error("EXPERT_WORKBENCH_ACCESS_DENIED");
-    const contextPackage = this.repository.getContext(
+    const contextPackage = await this.repository.getContext(
       request.context_package_id,
     );
     if (!contextPackage) throw new Error("EXPERT_CONTEXT_NOT_FOUND");
+    const storedDraft = await this.drafts.get(requestId);
     const currentResultDraft =
-      this.drafts.get(requestId) ??
+      storedDraft ??
       buildInitialExpertResultDraft({
         request,
         context: contextPackage,
         specialistRef: request.assigned_specialist_ref ?? actor.actor_ref,
         updatedAt: this.clock(),
       });
-    if (!this.drafts.get(requestId)) this.drafts.save(currentResultDraft);
-    this.appendActivity(requestId, {
+    if (!storedDraft) await this.drafts.save(currentResultDraft);
+    await this.appendActivity(requestId, {
       event_type: "expert_workbench_opened",
       actor_type: "expert",
       actor_ref: actor.actor_ref,
@@ -160,19 +164,19 @@ export class ExpertWorkbenchApplicationService {
       expertRequest: request,
       contextPackage,
       currentResultDraft,
-      auditEvents: this.repository.listAudit(requestId),
+      auditEvents: await this.repository.listAudit(requestId),
       canEdit: this.permissions.canEditExpertRequest(actor, request),
       canComplete: this.permissions.canCompleteExpertRequest(actor, request),
     });
   }
 
-  updateCheckItem(input: {
+  async updateCheckItem(input: {
     readonly actor: ExpertWorkbenchActor;
     readonly requestId: string;
     readonly item: ExpertCheckItemDraft;
-  }): ExpertResultDraft {
-    const request = this.requireEditable(input.actor, input.requestId);
-    const draft = this.requireDraft(request);
+  }): Promise<ExpertResultDraft> {
+    const request = await this.requireEditable(input.actor, input.requestId);
+    const draft = await this.requireDraft(request);
     const index = draft.check_items.findIndex(
       (item) => item.item_id === input.item.item_id,
     );
@@ -186,12 +190,12 @@ export class ExpertWorkbenchApplicationService {
       throw new Error("EXPERT_CHECK_PLAN_IS_IMMUTABLE");
     const checkItems = [...draft.check_items];
     checkItems[index] = input.item;
-    const updated = this.drafts.save({
+    const updated = await this.drafts.save({
       ...draft,
       check_items: checkItems,
       updated_at: this.clock(),
     });
-    this.appendActivity(request.request_id, {
+    await this.appendActivity(request.request_id, {
       event_type: "check_item_updated",
       actor_type: "expert",
       actor_ref:
@@ -204,13 +208,15 @@ export class ExpertWorkbenchApplicationService {
     return updated;
   }
 
-  addFinding(input: {
+  async addFinding(input: {
     readonly actor: ExpertWorkbenchActor;
     readonly requestId: string;
     readonly finding: ExpertFindingDraft;
-  }): ExpertResultDraft {
-    const request = this.requireEditable(input.actor, input.requestId);
-    const context = this.repository.getContext(request.context_package_id);
+  }): Promise<ExpertResultDraft> {
+    const request = await this.requireEditable(input.actor, input.requestId);
+    const context = await this.repository.getContext(
+      request.context_package_id,
+    );
     if (!context) throw new Error("EXPERT_CONTEXT_NOT_FOUND");
     const finding = expertFindingDraftSchema.parse(input.finding);
     const contextualIds = new Set([
@@ -220,10 +226,14 @@ export class ExpertWorkbenchApplicationService {
     ]);
     if (finding.related_entity_ids.some((id) => !contextualIds.has(id)))
       throw new Error("FINDING_ENTITY_OUTSIDE_CONTEXT");
-    const updated = this.drafts.save(
-      addFindingToDraft(this.requireDraft(request), finding, this.clock()),
+    const updated = await this.drafts.save(
+      addFindingToDraft(
+        await this.requireDraft(request),
+        finding,
+        this.clock(),
+      ),
     );
-    this.appendActivity(request.request_id, {
+    await this.appendActivity(request.request_id, {
       event_type: "finding_added",
       actor_type: "expert",
       actor_ref:
@@ -237,12 +247,12 @@ export class ExpertWorkbenchApplicationService {
     return updated;
   }
 
-  saveDraft(input: {
+  async saveDraft(input: {
     readonly actor: ExpertWorkbenchActor;
     readonly requestId: string;
     readonly draft: ExpertResultDraft;
-  }): ExpertResultDraft {
-    const request = this.requireEditable(input.actor, input.requestId);
+  }): Promise<ExpertResultDraft> {
+    const request = await this.requireEditable(input.actor, input.requestId);
     const draft = expertResultDraftSchema.parse(input.draft);
     if (
       draft.request_id !== request.request_id ||
@@ -250,7 +260,7 @@ export class ExpertWorkbenchApplicationService {
       draft.specialist_type !== request.required_specialist
     )
       throw new Error("EXPERT_DRAFT_ASSIGNMENT_MISMATCH");
-    const original = this.requireDraft(request);
+    const original = await this.requireDraft(request);
     const originalChecks = new Map(
       original.check_items.map((item) => [item.item_id, item]),
     );
@@ -279,7 +289,9 @@ export class ExpertWorkbenchApplicationService {
     ];
     if (referencedEntityIds.some((id) => !contextualIds.has(id)))
       throw new Error("EXPERT_DRAFT_ENTITY_OUTSIDE_CONTEXT");
-    const context = this.repository.getContext(request.context_package_id);
+    const context = await this.repository.getContext(
+      request.context_package_id,
+    );
     if (!context) throw new Error("EXPERT_CONTEXT_NOT_FOUND");
     const contextualConflicts = new Map(
       context.conflicts.map((conflict) => [conflict.conflict_id, conflict]),
@@ -303,14 +315,14 @@ export class ExpertWorkbenchApplicationService {
     return this.drafts.save({ ...draft, updated_at: this.clock() });
   }
 
-  transition(input: {
+  async transition(input: {
     readonly actor: ExpertWorkbenchActor;
     readonly requestId: string;
     readonly status:
       "in_progress" | "waiting_for_user" | "waiting_for_external_info";
     readonly reasonCode: string;
-  }): ExpertRequest {
-    const request = this.requireRequest(input.requestId);
+  }): Promise<ExpertRequest> {
+    const request = await this.requireRequest(input.requestId);
     if (
       actorRef(input.actor) !== request.assigned_specialist_ref ||
       !this.permissions.canEditExpertRequest(input.actor, request)
@@ -329,17 +341,19 @@ export class ExpertWorkbenchApplicationService {
     readonly actor: ExpertWorkbenchActor;
     readonly requestId: string;
   }): Promise<CompleteExpertRequestOutcome> {
-    const request = this.requireRequest(input.requestId);
+    const request = await this.requireRequest(input.requestId);
     if (!this.permissions.canCompleteExpertRequest(input.actor, request))
       throw new Error("EXPERT_REQUEST_COMPLETION_DENIED");
-    const context = this.repository.getContext(request.context_package_id);
+    const context = await this.repository.getContext(
+      request.context_package_id,
+    );
     if (!context) throw new Error("EXPERT_CONTEXT_NOT_FOUND");
     const oldMatch = context.match_results[0]?.match_score ?? null;
     const oldConfidence =
       context.data_quality[0]?.data_confidence_score ?? null;
     const result = buildFinalExpertResult({
       request,
-      draft: mergeEvidenceRefs(this.requireDraft(request)),
+      draft: mergeEvidenceRefs(await this.requireDraft(request)),
       expertResultId: this.createId("result"),
       completedAt: this.clock(),
     });
@@ -377,21 +391,21 @@ export class ExpertWorkbenchApplicationService {
     return outcome;
   }
 
-  openResultReview(
+  async openResultReview(
     actor: ExpertWorkbenchActor,
     requestId: string,
-  ): ExpertResultReviewInput {
-    const request = this.requireRequest(requestId);
+  ): Promise<ExpertResultReviewInput> {
+    const request = await this.requireRequest(requestId);
     if (
       actor.actor_type !== "owner" ||
       !this.permissions.canViewExpertRequest(actor, request)
     )
       throw new Error("EXPERT_RESULT_ACCESS_DENIED");
-    const contextPackage = this.repository.getContext(
+    const contextPackage = await this.repository.getContext(
       request.context_package_id,
     );
     if (!contextPackage) throw new Error("EXPERT_CONTEXT_NOT_FOUND");
-    this.appendActivity(requestId, {
+    await this.appendActivity(requestId, {
       event_type: "result_viewed_by_user",
       actor_type: "user",
       actor_ref: actor.actor_ref,
@@ -400,8 +414,8 @@ export class ExpertWorkbenchApplicationService {
     return validateExpertResultReviewInput({
       request,
       contextPackage,
-      result: this.repository.getResult(requestId),
-      auditEvents: this.repository.listAudit(requestId),
+      result: await this.repository.getResult(requestId),
+      auditEvents: await this.repository.listAudit(requestId),
       recompute:
         this.recomputeByRequest.get(requestId) ??
         defaultRecomputePresentation(contextPackage),
@@ -427,33 +441,35 @@ export class ExpertWorkbenchApplicationService {
     return `/expert/request?${params.toString()}`;
   }
 
-  private requireRequest(requestId: string): ExpertRequest {
-    const request = this.repository.get(requestId);
+  private async requireRequest(requestId: string): Promise<ExpertRequest> {
+    const request = await this.repository.get(requestId);
     if (!request) throw new Error("EXPERT_REQUEST_NOT_FOUND");
     return request;
   }
 
-  private requireEditable(
+  private async requireEditable(
     actor: ExpertWorkbenchActor,
     requestId: string,
-  ): ExpertRequest {
-    const request = this.requireRequest(requestId);
+  ): Promise<ExpertRequest> {
+    const request = await this.requireRequest(requestId);
     if (!this.permissions.canEditExpertRequest(actor, request))
       throw new Error("EXPERT_REQUEST_EDIT_DENIED");
     return request;
   }
 
-  private requireDraft(request: ExpertRequest): ExpertResultDraft {
-    const draft = this.drafts.get(request.request_id);
+  private async requireDraft(
+    request: ExpertRequest,
+  ): Promise<ExpertResultDraft> {
+    const draft = await this.drafts.get(request.request_id);
     if (!draft) throw new Error("EXPERT_RESULT_DRAFT_NOT_FOUND");
     return draft;
   }
 
-  private appendActivity(
+  private async appendActivity(
     requestId: string,
     input: Omit<ExpertAuditEvent, "event_id" | "request_id" | "created_at">,
-  ): void {
-    this.repository.appendAudit(
+  ): Promise<void> {
+    await this.repository.appendAudit(
       expertAuditEventSchema.parse({
         event_id: this.createId("audit"),
         request_id: requestId,

@@ -62,7 +62,10 @@ const execute = async ({
   const queue = new InMemoryRefreshQueueRepository();
   const policy = new FixtureRefreshPolicyGateway();
   const service = new RefreshTaskService(queue, policy);
-  service.enqueue(request, { environment: "test", satisfiedConditions: [] });
+  await service.enqueue(request, {
+    environment: "test",
+    satisfiedConditions: [],
+  });
   const executor = new RefreshExecutor({
     queue,
     policy,
@@ -82,7 +85,7 @@ const execute = async ({
   };
 };
 
-describe("refresh orchestration integration", () => {
+describe("refresh orchestration integration", async () => {
   it("stale price produces evidence, a changed field and narrow recompute", async () => {
     const plan = planScheduledRefreshes({
       now: NOW,
@@ -155,7 +158,7 @@ describe("refresh orchestration integration", () => {
       evidence_ids: [],
       retry: { retryable: false },
     });
-    expect(execution.queue.list()[0]?.status).toBe("partial");
+    expect((await execution.queue.list())[0]?.status).toBe("partial");
   });
 
   it("routes a critical conflict to manual review when automation is unavailable", () => {

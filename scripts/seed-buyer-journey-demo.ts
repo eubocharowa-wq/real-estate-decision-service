@@ -10,7 +10,7 @@ const rawRequestText = `Найди 5 квартир до 5 млн.
 Первый этаж не рассматриваю.`;
 const now = "2026-08-15T00:00:00.000Z";
 const application = new BuyerJourneyApplication({ clock: () => now });
-const journey = application.startBuyerJourney({
+const journey = await application.startBuyerJourney({
   sessionId: "session_demo_seed",
   rawRequestText,
 });
@@ -21,8 +21,8 @@ const confirmation = confirmRequest(
   now,
 ).confirmation_result;
 if (!confirmation) throw new Error("Demo request cannot be confirmed");
-application.confirmBuyerRequest(journey.journey_id, confirmation);
-const matching = application.runJourneyMatching(journey.journey_id);
+await application.confirmBuyerRequest(journey.journey_id, confirmation);
+const matching = await application.runJourneyMatching(journey.journey_id);
 
 process.stdout.write(
   `${JSON.stringify(

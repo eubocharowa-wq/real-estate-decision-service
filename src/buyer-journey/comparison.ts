@@ -76,12 +76,12 @@ export const createComparisonState = (input: {
   };
 };
 
-export const buildComparisonFromState = (input: {
+export const buildComparisonFromState = async (input: {
   readonly repository: BuyerJourneyRepository;
   readonly confirmed: ConfirmedRequestRecord;
   readonly bundle: MatchingBundle;
   readonly comparison: ComparisonState;
-}): ComparisonView => {
+}): Promise<ComparisonView> => {
   if (
     input.comparison.status !== "active" ||
     input.comparison.user_request_id !== input.confirmed.user_request_id ||
@@ -110,20 +110,22 @@ export const buildComparisonFromState = (input: {
     comparisonId: input.comparison.comparison_id,
     userRequest: input.confirmed.request,
     selection,
-    items: input.comparison.items.map((item) => ({
-      status: "ready",
-      selection: {
-        propertyId: item.property_id,
-        offerId: item.offer_id,
-        scenarioId: item.purchase_scenario_id,
-      },
-      detail: resolveBundlePropertyDetail({
-        repository: input.repository,
-        confirmed: input.confirmed,
-        bundle: input.bundle,
-        propertyId: item.property_id,
-      }),
-    })),
+    items: await Promise.all(
+      input.comparison.items.map(async (item) => ({
+        status: "ready" as const,
+        selection: {
+          propertyId: item.property_id,
+          offerId: item.offer_id,
+          scenarioId: item.purchase_scenario_id,
+        },
+        detail: await resolveBundlePropertyDetail({
+          repository: input.repository,
+          confirmed: input.confirmed,
+          bundle: input.bundle,
+          propertyId: item.property_id,
+        }),
+      })),
+    ),
     createdAt: input.comparison.created_at,
     partial: input.bundle.partial,
   };

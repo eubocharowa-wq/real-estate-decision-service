@@ -94,7 +94,7 @@ const mockCanonicalPolicyAndReadinessAllowed = (
 
 afterEach(() => vi.restoreAllMocks());
 
-describe("pilot modes and source readiness", () => {
+describe("pilot modes and source readiness", async () => {
   it("centralizes mode datasets, operations and risky defaults", () => {
     expect(PILOT_MODE_POLICIES.demo.allowedOrigins).toContain("synthetic");
     expect(PILOT_MODE_POLICIES.pilot.allowedOrigins).not.toContain("synthetic");
@@ -133,12 +133,12 @@ describe("pilot modes and source readiness", () => {
       clock: () => "2026-08-24T00:00:00.000Z",
       pilotRuntimeConfig: createPilotRuntimeConfig({ mode: "pilot" }),
     });
-    const journey = application.startBuyerJourney({
+    const journey = await application.startBuyerJourney({
       sessionId: "session_pilot_no_fixture",
       rawRequestText: GOLDEN_RAW_REQUEST,
     });
     await confirmParsedJourney(application, journey);
-    const result = application.runJourneyMatching(journey.journey_id);
+    const result = await application.runJourneyMatching(journey.journey_id);
     expect(result.bundle.dataset_snapshot.dataset_type).toBe("empty_pilot");
     expect(result.bundle.entries).toEqual([]);
     expect(result.shortlist.cards).toEqual([]);
@@ -148,7 +148,7 @@ describe("pilot modes and source readiness", () => {
   });
 });
 
-describe("OpenClaw controlled boundary", () => {
+describe("OpenClaw controlled boundary", async () => {
   it("accepts only scoped evidence-bearing staged facts, never canonical entities", () => {
     const plan = sourcePolicyEngine.resolveCollectionPlan({
       sourceId: "src_dev_02",

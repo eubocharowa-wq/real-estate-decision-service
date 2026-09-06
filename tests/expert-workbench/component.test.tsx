@@ -31,7 +31,7 @@ const editableWorkbench = async () => {
   const actor = EXPERT_FIXTURE_ACTORS.real_estate_expert;
   const requestId = runtime.scenarioRequestIds.queue_first!;
   await runtime.application.claimRequest(actor, requestId);
-  runtime.application.transition({
+  await runtime.application.transition({
     actor,
     requestId,
     status: "in_progress",
@@ -41,14 +41,14 @@ const editableWorkbench = async () => {
     runtime,
     actor,
     requestId,
-    input: runtime.application.openWorkbench(actor, requestId),
+    input: await runtime.application.openWorkbench(actor, requestId),
   };
 };
 
 const renderScenarioResult = async (scenario: string) => {
   const runtime = await createExpertWorkbenchFixtureRuntime();
   const requestId = runtime.scenarioRequestIds[scenario]!;
-  const input = runtime.application.openResultReview(
+  const input = await runtime.application.openResultReview(
     EXPERT_FIXTURE_OWNER_ACTOR,
     requestId,
   );
@@ -58,10 +58,10 @@ const renderScenarioResult = async (scenario: string) => {
   return { runtime, input, view };
 };
 
-describe("TASK-017 Expert Queue and Workbench UI", () => {
+describe("TASK-017 Expert Queue and Workbench UI", async () => {
   it("renders the semantic queue order, status and open links", async () => {
     const runtime = await createExpertWorkbenchFixtureRuntime();
-    const view = runtime.application.listActiveQueue(
+    const view = await runtime.application.listActiveQueue(
       EXPERT_FIXTURE_ACTORS.real_estate_expert,
     );
     render(<ExpertQueue view={view} />);
@@ -190,8 +190,8 @@ describe("TASK-017 Expert Queue and Workbench UI", () => {
   it("renders all explicit choice-assistance outcomes", async () => {
     const runtime = await createExpertWorkbenchFixtureRuntime();
     const requestId = runtime.scenarioRequestIds.choice_assistance_conditional!;
-    const request = runtime.repository.get(requestId)!;
-    const input = runtime.application.openWorkbench(
+    const request = (await runtime.repository.get(requestId))!;
+    const input = await runtime.application.openWorkbench(
       EXPERT_FIXTURE_ACTORS[request.required_specialist],
       requestId,
     );
@@ -213,7 +213,7 @@ describe("TASK-017 Expert Queue and Workbench UI", () => {
   });
 });
 
-describe("TASK-017 user Result Review UI", () => {
+describe("TASK-017 user Result Review UI", async () => {
   it("shows confirmed facts and keeps Match separate from Data Confidence", async () => {
     await renderScenarioResult("financing_verification_completed");
     expect(screen.getByRole("heading", { name: "Подтверждено" })).toBeTruthy();
@@ -234,7 +234,7 @@ describe("TASK-017 user Result Review UI", () => {
     const runtime = await createExpertWorkbenchFixtureRuntime();
     const requestId =
       runtime.scenarioRequestIds.financing_verification_completed!;
-    const input = runtime.application.openResultReview(
+    const input = await runtime.application.openResultReview(
       EXPERT_FIXTURE_OWNER_ACTOR,
       requestId,
     );
@@ -269,7 +269,7 @@ describe("TASK-017 user Result Review UI", () => {
     const runtime = await createExpertWorkbenchFixtureRuntime();
     const requestId =
       runtime.scenarioRequestIds.financing_verification_completed!;
-    const input = runtime.application.openResultReview(
+    const input = await runtime.application.openResultReview(
       EXPERT_FIXTURE_OWNER_ACTOR,
       requestId,
     );

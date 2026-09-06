@@ -16,7 +16,7 @@ import {
 
 const dataset = loadPilotDataset();
 
-describe("critical cross-module semantic regressions", () => {
+describe("critical cross-module semantic regressions", async () => {
   it("keeps unknown distinct from false, true and zero", () => {
     const unknownValues = dataset.properties.flatMap((property) => [
       property.physical.floor,
@@ -154,7 +154,7 @@ describe("critical cross-module semantic regressions", () => {
   it("labels mortgage calculations as estimates, not bank approval", async () => {
     const { application, journey, matching } = await createGoldenJourney();
     const propertyId = matching.shortlist.cards[0]!.propertyId;
-    const view = application.openJourneyProperty(
+    const view = await application.openJourneyProperty(
       journey.journey_id,
       propertyId,
     );

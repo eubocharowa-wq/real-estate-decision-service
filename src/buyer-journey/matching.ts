@@ -104,12 +104,12 @@ const applyOverlays = <T extends object>(
     return next;
   });
 
-export const loadJourneyDataset = (
+export const loadJourneyDataset = async (
   repository: BuyerJourneyRepository,
-): EvaluatedDataset => {
+): Promise<EvaluatedDataset> => {
   const dataset = loadPilotDataset();
-  const overlays = repository.listCanonicalOverlays();
-  const additionalEvidence = repository.listEvidence();
+  const overlays = await repository.listCanonicalOverlays();
+  const additionalEvidence = await repository.listEvidence();
   return {
     ...dataset,
     properties: applyOverlays(
@@ -217,12 +217,12 @@ const evaluateCandidate = (
   };
 };
 
-const evaluateImportedCandidate = (
+const evaluateImportedCandidate = async (
   request: UserRequest,
   repository: BuyerJourneyRepository,
   ingestionId: string,
-): MatchingBundleEntry | null => {
-  const candidate = repository.getImportedCandidate(ingestionId);
+): Promise<MatchingBundleEntry | null> => {
+  const candidate = await repository.getImportedCandidate(ingestionId);
   if (!candidate) return null;
   const detail = buildUserUrlPropertyDetailInput({
     candidate,
@@ -240,7 +240,7 @@ const evaluateImportedCandidate = (
   };
 };
 
-export const runMatchingForConfirmedRequest = (input: {
+export const runMatchingForConfirmedRequest = async (input: {
   readonly repository: BuyerJourneyRepository;
   readonly confirmed: ConfirmedRequestRecord;
   readonly previousBundle: MatchingBundle | null;
@@ -250,8 +250,8 @@ export const runMatchingForConfirmedRequest = (input: {
   readonly affectedPropertyIds?: readonly string[] | null;
   readonly performanceRecorder?: PilotPerformanceRecorder;
   readonly includeSyntheticDataset?: boolean;
-}): MatchingBundle => {
-  const dataset = loadJourneyDataset(input.repository);
+}): Promise<MatchingBundle> => {
+  const dataset = await loadJourneyDataset(input.repository);
   const includeSyntheticDataset = input.includeSyntheticDataset ?? true;
   const affected = input.affectedPropertyIds
     ? new Set(input.affectedPropertyIds)
@@ -299,14 +299,14 @@ export const runMatchingForConfirmedRequest = (input: {
   }
 
   for (const ingestionId of input.importedCandidateIds) {
-    const candidate = input.repository.getImportedCandidate(ingestionId);
+    const candidate = await input.repository.getImportedCandidate(ingestionId);
     const propertyId = candidate?.propertyCandidate.identity.property_id;
     if (propertyId && affected && !affected.has(propertyId)) {
       const previous = previousByProperty.get(propertyId);
       if (previous) entries.push(previous);
       continue;
     }
-    const evaluated = evaluateImportedCandidate(
+    const evaluated = await evaluateImportedCandidate(
       input.confirmed.request,
       input.repository,
       ingestionId,
@@ -350,14 +350,14 @@ export const runMatchingForConfirmedRequest = (input: {
   };
 };
 
-const importedDetail = (
+const importedDetail = async (
   repository: BuyerJourneyRepository,
   bundle: MatchingBundle,
   propertyId: string,
   request: UserRequest,
-): PropertyDetailInput | null => {
+): Promise<PropertyDetailInput | null> => {
   for (const ingestionId of bundle.imported_candidate_ids) {
-    const candidate = repository.getImportedCandidate(ingestionId);
+    const candidate = await repository.getImportedCandidate(ingestionId);
     if (candidate?.propertyCandidate.identity.property_id === propertyId)
       return buildUserUrlPropertyDetailInput({
         candidate,
@@ -367,12 +367,12 @@ const importedDetail = (
   return null;
 };
 
-export const resolveBundlePropertyDetail = (input: {
+export const resolveBundlePropertyDetail = async (input: {
   readonly repository: BuyerJourneyRepository;
   readonly confirmed: ConfirmedRequestRecord;
   readonly bundle: MatchingBundle;
   readonly propertyId: string;
-}): PropertyDetailInput => {
+}): Promise<PropertyDetailInput> => {
   const entry = input.bundle.entries.find(
     (candidate) => candidate.property_id === input.propertyId,
   );
@@ -395,7 +395,7 @@ export const resolveBundlePropertyDetail = (input: {
     );
 
   if (entry.origin === "user_supplied") {
-    const detail = importedDetail(
+    const detail = await importedDetail(
       input.repository,
       input.bundle,
       input.propertyId,
@@ -414,7 +414,7 @@ export const resolveBundlePropertyDetail = (input: {
     };
   }
 
-  const dataset = loadJourneyDataset(input.repository);
+  const dataset = await loadJourneyDataset(input.repository);
   const property = dataset.properties.find(
     (candidate) => candidate.identity.property_id === input.propertyId,
   );
@@ -471,19 +471,19 @@ export const resolveBundlePropertyDetail = (input: {
   };
 };
 
-export const buildShortlistFromMatchingBundle = (input: {
+export const buildShortlistFromMatchingBundle = async (input: {
   readonly repository: BuyerJourneyRepository;
   readonly confirmed: ConfirmedRequestRecord;
   readonly bundle: MatchingBundle;
-}): ShortlistView => {
+}): Promise<ShortlistView> => {
   const origins = [
     ...new Set(input.bundle.entries.map((entry) => entry.origin)),
   ]
     .sort()
     .join(",");
-  const candidates: ShortlistCandidateInput[] = input.bundle.entries.map(
-    (entry) => {
-      const detail = resolveBundlePropertyDetail({
+  const candidates: ShortlistCandidateInput[] = await Promise.all(
+    input.bundle.entries.map(async (entry) => {
+      const detail = await resolveBundlePropertyDetail({
         repository: input.repository,
         confirmed: input.confirmed,
         bundle: input.bundle,
@@ -500,7 +500,7 @@ export const buildShortlistFromMatchingBundle = (input: {
         sources: detail.sources,
         fieldEvidence: detail.fieldEvidence,
       };
-    },
+    }),
   );
   const shortlistInput: ShortlistInput = {
     userRequest: input.confirmed.request,
@@ -530,13 +530,15 @@ export const buildShortlistFromMatchingBundle = (input: {
   return outcome.view;
 };
 
-export const buildPropertyViewFromMatchingBundle = (input: {
+export const buildPropertyViewFromMatchingBundle = async (input: {
   readonly repository: BuyerJourneyRepository;
   readonly confirmed: ConfirmedRequestRecord;
   readonly bundle: MatchingBundle;
   readonly propertyId: string;
 }) => {
-  const outcome = buildPropertyDetailView(resolveBundlePropertyDetail(input));
+  const outcome = buildPropertyDetailView(
+    await resolveBundlePropertyDetail(input),
+  );
   if (!outcome.success)
     throw new BuyerJourneyError(
       "ENTITY_NOT_FOUND",

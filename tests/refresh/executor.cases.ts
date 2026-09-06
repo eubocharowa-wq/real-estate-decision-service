@@ -50,10 +50,10 @@ const makeExecutor = ({
     })(),
   });
 
-describe("refresh executor", () => {
+describe("refresh executor", async () => {
   it("runs an approved offline adapter through evidence and affected-only recompute", async () => {
     const queue = new InMemoryRefreshQueueRepository();
-    queue.enqueue(makeRefreshRequest());
+    await queue.enqueue(makeRefreshRequest());
     const policy = new FixtureRefreshPolicyGateway();
     const adapter = new FixtureRefreshAdapter({});
     const pipeline = new FixtureEvidencePipeline(makeIngestionOutcome());
@@ -88,7 +88,7 @@ describe("refresh executor", () => {
     });
     expect(adapter.calls).toBe(1);
     expect(pipeline.calls).toBe(1);
-    expect(queue.list()[0]?.status).toBe("succeeded");
+    expect((await queue.list())[0]?.status).toBe("succeeded");
     expect(policy.calls[0]).toMatchObject({
       operation: "targeted_refresh",
       discovery: false,
@@ -109,10 +109,12 @@ describe("refresh executor", () => {
     const policy = new FixtureRefreshPolicyGateway();
     const service = new RefreshTaskService(queue, policy);
     expect(
-      service.enqueue(makeRefreshRequest(), {
-        environment: "test",
-        satisfiedConditions: [],
-      }).policyAllowedAtEnqueue,
+      (
+        await service.enqueue(makeRefreshRequest(), {
+          environment: "test",
+          satisfiedConditions: [],
+        })
+      ).policyAllowedAtEnqueue,
     ).toBe(true);
     policy.allowed = false;
     const adapter = new FixtureRefreshAdapter({});
@@ -130,7 +132,7 @@ describe("refresh executor", () => {
       error_code: "POLICY_DENIED",
       selected_method: null,
     });
-    expect(queue.list()[0]?.status).toBe("blocked");
+    expect((await queue.list())[0]?.status).toBe("blocked");
     expect(adapter.calls).toBe(0);
     expect(pipeline.calls).toBe(0);
   });
@@ -139,7 +141,7 @@ describe("refresh executor", () => {
     "does not execute or fall back through %s",
     async (method) => {
       const queue = new InMemoryRefreshQueueRepository();
-      queue.enqueue(makeRefreshRequest());
+      await queue.enqueue(makeRefreshRequest());
       const policy = new FixtureRefreshPolicyGateway();
       policy.method = method;
       const adapter = new FixtureRefreshAdapter({}, "fixture_refresh", method);
@@ -160,7 +162,7 @@ describe("refresh executor", () => {
 
   it("never traverses CollectionPlan fallback methods after an HTTP failure", async () => {
     const queue = new InMemoryRefreshQueueRepository();
-    queue.enqueue(makeRefreshRequest());
+    await queue.enqueue(makeRefreshRequest());
     const basePolicy = new FixtureRefreshPolicyGateway();
     const policy: RefreshPolicyGateway = {
       resolveCollectionPlan(input): CollectionPlan {
@@ -201,7 +203,7 @@ describe("refresh executor", () => {
     "does not retry %s",
     async (errorCode) => {
       const queue = new InMemoryRefreshQueueRepository();
-      queue.enqueue(makeRefreshRequest());
+      await queue.enqueue(makeRefreshRequest());
       const adapter = new FixtureRefreshAdapter({
         status: "failed",
         error_code: errorCode,
@@ -219,7 +221,7 @@ describe("refresh executor", () => {
         error_code: errorCode,
         retry: { retryable: false },
       });
-      expect(queue.list()[0]?.status).toBe(
+      expect((await queue.list())[0]?.status).toBe(
         errorCode === "POLICY_DENIED" ? "blocked" : "failed",
       );
     },
@@ -227,7 +229,7 @@ describe("refresh executor", () => {
 
   it("retries a critical partial only within max_attempts", async () => {
     const queue = new InMemoryRefreshQueueRepository();
-    queue.enqueue(
+    await queue.enqueue(
       makeRefreshRequest({
         fieldPaths: ["listing_price", "availability"],
         criticalFieldPaths: ["availability"],
@@ -265,12 +267,12 @@ describe("refresh executor", () => {
       missing_fields: ["availability"],
       retry: { retryable: false, max_attempts: 1 },
     });
-    expect(queue.list()[0]?.status).toBe("partial");
+    expect((await queue.list())[0]?.status).toBe("partial");
   });
 
   it("defers a degraded normal-priority source without calling the adapter", async () => {
     const queue = new InMemoryRefreshQueueRepository();
-    queue.enqueue(makeRefreshRequest());
+    await queue.enqueue(makeRefreshRequest());
     const policy = new FixtureRefreshPolicyGateway();
     policy.runtime = {
       ...policy.runtime,
@@ -298,7 +300,7 @@ describe("refresh executor", () => {
     "honors source-health metadata for %s",
     async (healthOverride, errorCode, status, retryable) => {
       const queue = new InMemoryRefreshQueueRepository();
-      queue.enqueue(makeRefreshRequest());
+      await queue.enqueue(makeRefreshRequest());
       const policy = new FixtureRefreshPolicyGateway();
       policy.runtime = {
         ...policy.runtime,
@@ -322,7 +324,7 @@ describe("refresh executor", () => {
 
   it("keeps a critical conflict explicit instead of selecting a silent winner", async () => {
     const queue = new InMemoryRefreshQueueRepository();
-    queue.enqueue(
+    await queue.enqueue(
       makeRefreshRequest({
         reason: "SOURCE_CONFLICT",
         criticalFieldPaths: ["listing_price"],
@@ -357,7 +359,7 @@ describe("refresh executor", () => {
 
   it("keeps live src_dev_02 targeted refresh blocked by the real policy", async () => {
     const queue = new InMemoryRefreshQueueRepository();
-    queue.enqueue(
+    await queue.enqueue(
       makeRefreshRequest({
         sourceId: "src_dev_02",
         entityId: "offer_vneshstroi_73124",

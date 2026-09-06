@@ -5,12 +5,12 @@ import { getBuyerJourneyRuntime } from "../../../../src/buyer-journey/runtime";
 
 export const dynamic = "force-dynamic";
 
-const loadDecision = (journeyId: string) => {
+const loadDecision = async (journeyId: string) => {
   try {
     const application = getBuyerJourneyRuntime();
     return {
-      journey: application.getJourney(journeyId),
-      update: application.getJourneySnapshot(journeyId).decision_update,
+      journey: await application.getJourney(journeyId),
+      update: (await application.getJourneySnapshot(journeyId)).decision_update,
     };
   } catch {
     return null;
@@ -23,7 +23,7 @@ export default async function UpdatedDecisionPage({
   readonly params: Promise<{ readonly journeyId: string }>;
 }) {
   const { journeyId } = await params;
-  const state = loadDecision(journeyId);
+  const state = await loadDecision(journeyId);
   if (!state)
     return (
       <main className="empty-state">

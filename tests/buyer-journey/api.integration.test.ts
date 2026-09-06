@@ -19,7 +19,7 @@ const post = (body: unknown) =>
     }),
   );
 
-describe("buyer journey HTTP application boundary", () => {
+describe("buyer journey HTTP application boundary", async () => {
   beforeEach(() => resetBuyerJourneyRuntimeForTests());
 
   it("propagates journey/session refs without putting domain objects in URLs", async () => {

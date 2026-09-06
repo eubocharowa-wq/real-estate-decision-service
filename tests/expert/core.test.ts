@@ -83,7 +83,7 @@ describe("TASK-016 deterministic routing", () => {
   });
 });
 
-describe("TASK-016 priority and state machine", () => {
+describe("TASK-016 priority and state machine", async () => {
   it("uses centralized non-commercial factors", () => {
     const decision = calculateExpertPriority({
       preDecision: true,
@@ -114,10 +114,10 @@ describe("TASK-016 priority and state machine", () => {
     );
   });
 
-  it("rejects draft to completed and keeps cancellation final", () => {
+  it("rejects draft to completed and keeps cancellation final", async () => {
     const harness = createHarness();
-    const created = harness.service.createDraft(makeCreateInput());
-    expect(() =>
+    const created = await harness.service.createDraft(makeCreateInput());
+    await expect(
       harness.service.transition({
         requestId: created.request.request_id,
         status: "completed",
@@ -125,21 +125,21 @@ describe("TASK-016 priority and state machine", () => {
         actorRef: null,
         reasonCode: "INVALID",
       }),
-    ).toThrow("INVALID_EXPERT_REQUEST_TRANSITION");
-    harness.service.cancel(created.request.request_id, OWNER);
-    expect(() =>
+    ).rejects.toThrow("INVALID_EXPERT_REQUEST_TRANSITION");
+    await harness.service.cancel(created.request.request_id, OWNER);
+    await expect(
       harness.service.submit(created.request.request_id, OWNER),
-    ).toThrow("INVALID_EXPERT_REQUEST_TRANSITION");
+    ).rejects.toThrow("INVALID_EXPERT_REQUEST_TRANSITION");
   });
 });
 
-describe("TASK-016 context, validation, queue and dedup", () => {
-  it("builds a minimized, versioned context with relevant domain projections", () => {
+describe("TASK-016 context, validation, queue and dedup", async () => {
+  it("builds a minimized, versioned context with relevant domain projections", async () => {
     const harness = createHarness();
-    const created = harness.service.createDraft(makeCreateInput());
-    const context = harness.repository.getContext(
+    const created = await harness.service.createDraft(makeCreateInput());
+    const context = (await harness.repository.getContext(
       created.request.context_package_id,
-    )!;
+    ))!;
     expect(context.package_version).toBe(EXPERT_CONTEXT_PACKAGE_VERSION);
     expect(context.properties).toHaveLength(1);
     expect(context.match_results).toHaveLength(1);
@@ -154,9 +154,9 @@ describe("TASK-016 context, validation, queue and dedup", () => {
     expect(context).not.toHaveProperty("raw_source_content");
   });
 
-  it("supports 3-finalist choice context with trade-offs and decision drivers", () => {
+  it("supports 3-finalist choice context with trade-offs and decision drivers", async () => {
     const harness = createHarness();
-    const created = harness.service.createDraft(
+    const created = await harness.service.createDraft(
       makeCreateInput({
         requestType: "choice_assistance",
         triggerType: "comparison_uncertainty",
@@ -165,18 +165,18 @@ describe("TASK-016 context, validation, queue and dedup", () => {
         question: "Помогите выбрать лучший компромисс между тремя финалистами.",
       }),
     );
-    const context = harness.repository.getContext(
+    const context = (await harness.repository.getContext(
       created.request.context_package_id,
-    )!;
+    ))!;
     expect(context.properties).toHaveLength(3);
     expect(context.choice_context?.finalist_property_ids).toHaveLength(3);
     expect(context.choice_context?.trade_offs).toHaveLength(1);
     expect(context.choice_context?.decision_drivers).toContain("Бюджет");
   });
 
-  it("implements document-review and onsite boundaries without engines", () => {
+  it("implements document-review and onsite boundaries without engines", async () => {
     const documentHarness = createHarness();
-    const document = documentHarness.service.createDraft(
+    const document = await documentHarness.service.createDraft(
       makeCreateInput({
         requestType: "document_review",
         triggerType: "document_question",
@@ -188,12 +188,15 @@ describe("TASK-016 context, validation, queue and dedup", () => {
     );
     expect(document.request.required_specialist).toBe("lawyer");
     expect(
-      documentHarness.repository.getContext(document.request.context_package_id)
-        ?.document_refs,
+      (
+        await documentHarness.repository.getContext(
+          document.request.context_package_id,
+        )
+      )?.document_refs,
     ).toEqual(["document_fixture_1"]);
 
     const onsiteHarness = createHarness();
-    const onsite = onsiteHarness.service.createDraft(
+    const onsite = await onsiteHarness.service.createDraft(
       makeCreateInput({
         requestType: "onsite_check",
         triggerType: "onsite_needed",
@@ -203,17 +206,20 @@ describe("TASK-016 context, validation, queue and dedup", () => {
       }),
     );
     expect(
-      onsiteHarness.repository.getContext(onsite.request.context_package_id)
-        ?.onsite_context?.boundary_notice,
+      (
+        await onsiteHarness.repository.getContext(
+          onsite.request.context_package_id,
+        )
+      )?.onsite_context?.boundary_notice,
     ).toMatch(/не является/);
   });
 
-  it("returns an existing active request for the same question and allows a different question", () => {
+  it("returns an existing active request for the same question and allows a different question", async () => {
     const harness = createHarness();
     const input = makeCreateInput();
-    const first = harness.service.createDraft(input);
-    const duplicate = harness.service.createDraft(input);
-    const different = harness.service.createDraft(
+    const first = await harness.service.createDraft(input);
+    const duplicate = await harness.service.createDraft(input);
+    const different = await harness.service.createDraft(
       makeCreateInput({
         question:
           "Подтвердите точную цену предложения на дату принятия решения.",
@@ -227,16 +233,18 @@ describe("TASK-016 context, validation, queue and dedup", () => {
 
   it("queues, assigns and records privacy-safe audit metadata", async () => {
     const harness = createHarness();
-    const created = harness.service.createDraft(makeCreateInput());
-    harness.service.submit(created.request.request_id, OWNER);
-    expect(harness.repository.listQueued()).toHaveLength(1);
+    const created = await harness.service.createDraft(makeCreateInput());
+    await harness.service.submit(created.request.request_id, OWNER);
+    expect(await harness.repository.listQueued()).toHaveLength(1);
     await harness.service.assignExpertRequest({
       requestId: created.request.request_id,
       specialistRef: "specialist_fixture_1",
       specialistType: "mortgage_specialist",
     });
     expect(harness.assignmentCalls).toEqual([created.request.request_id]);
-    const audit = harness.repository.listAudit(created.request.request_id);
+    const audit = await harness.repository.listAudit(
+      created.request.request_id,
+    );
     expect(audit.map((event) => event.event_type)).toEqual([
       "request_created",
       "request_submitted",
@@ -246,14 +254,14 @@ describe("TASK-016 context, validation, queue and dedup", () => {
     expect(JSON.stringify(audit)).not.toContain(created.request.question);
   });
 
-  it("orders the minimal work queue by semantic priority", () => {
+  it("orders the minimal work queue by semantic priority", async () => {
     const harness = createHarness();
-    const critical = harness.service.createDraft(makeCreateInput());
-    harness.service.submit(critical.request.request_id, OWNER);
+    const critical = await harness.service.createDraft(makeCreateInput());
+    await harness.service.submit(critical.request.request_id, OWNER);
     const base = makeCreateInput({
       question: "Уточните дополнительную некритичную характеристику объекта.",
     });
-    const low = harness.service.createDraft({
+    const low = await harness.service.createDraft({
       ...base,
       priority: {
         preDecision: false,
@@ -264,23 +272,23 @@ describe("TASK-016 context, validation, queue and dedup", () => {
         explicitUrgency: "low",
       },
     });
-    harness.service.submit(low.request.request_id, OWNER);
+    await harness.service.submit(low.request.request_id, OWNER);
     expect(
-      harness.repository.listQueued().map((item) => item.priority),
+      (await harness.repository.listQueued()).map((item) => item.priority),
     ).toEqual(["critical", "low"]);
   });
 
-  it("rejects a generic callback lead and marks newer source data as stale context", () => {
+  it("rejects a generic callback lead and marks newer source data as stale context", async () => {
     const harness = createHarness();
-    expect(() =>
+    await expect(
       harness.service.createDraft(
         makeCreateInput({ question: "Свяжитесь со мной" }),
       ),
-    ).toThrow("EMPTY_EXPERT_LEAD_NOT_ALLOWED");
+    ).rejects.toThrow("EMPTY_EXPERT_LEAD_NOT_ALLOWED");
     const input = makeCreateInput({
       question: "Подтвердите текущую доступность выбранного предложения.",
     });
-    const created = harness.service.createDraft({
+    const created = await harness.service.createDraft({
       ...input,
       context: {
         ...input.context,
@@ -288,21 +296,24 @@ describe("TASK-016 context, validation, queue and dedup", () => {
       },
     });
     expect(
-      harness.repository.getContext(created.request.context_package_id)?.stale,
+      (await harness.repository.getContext(created.request.context_package_id))
+        ?.stale,
     ).toBe(true);
   });
 
   it("reports later source updates without mutating or replacing an in-progress snapshot", async () => {
     const harness = createHarness();
     const request = await advanceToInProgress(harness);
-    const original = harness.repository.getContext(request.context_package_id)!;
+    const original = (await harness.repository.getContext(
+      request.context_package_id,
+    ))!;
     const presented = evaluateExpertContextFreshness(
       original,
       "2026-08-24T12:00:00.000Z",
     );
     expect(presented.stale).toBe(true);
     expect(original.stale).toBe(false);
-    expect(() =>
+    await expect(
       harness.repository.replaceContext(
         request.request_id,
         {
@@ -311,11 +322,11 @@ describe("TASK-016 context, validation, queue and dedup", () => {
         },
         NOW,
       ),
-    ).toThrow("CONTEXT_SNAPSHOT_LOCKED_AFTER_WORK_START");
+    ).rejects.toThrow("CONTEXT_SNAPSHOT_LOCKED_AFTER_WORK_START");
   });
 });
 
-describe("TASK-016 structured completion pipeline", () => {
+describe("TASK-016 structured completion pipeline", async () => {
   it("integrates expert evidence, requests canonical update and recomputation", async () => {
     const harness = createHarness();
     const request = await advanceToInProgress(harness);
@@ -329,9 +340,9 @@ describe("TASK-016 structured completion pipeline", () => {
     expect(outcome.recompute.dataQualityRequestIds).toHaveLength(1);
     expect(outcome.recompute.matchResultRequestIds).toHaveLength(1);
     expect(
-      harness.repository
-        .listAudit(request.request_id)
-        .map((event) => event.event_type),
+      (await harness.repository.listAudit(request.request_id)).map(
+        (event) => event.event_type,
+      ),
     ).toEqual(
       expect.arrayContaining([
         "evidence_created",
@@ -468,11 +479,13 @@ describe("TASK-016 structured completion pipeline", () => {
     await expect(
       harness.completion.complete(makeResult(request.request_id)),
     ).rejects.toThrow("EXPERT_REQUEST_NOT_IN_PROGRESS");
-    expect(harness.repository.getResult(request.request_id)).not.toBeNull();
+    expect(
+      await harness.repository.getResult(request.request_id),
+    ).not.toBeNull();
   });
 });
 
-describe("TASK-016 document and onsite application boundaries", () => {
+describe("TASK-016 document and onsite application boundaries", async () => {
   const baseSubmission = {
     propertyIds: [boundaryProperty.identity.property_id],
     comparisonRef: null,

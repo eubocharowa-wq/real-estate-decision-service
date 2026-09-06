@@ -11,14 +11,14 @@ import {
   GOLDEN_RAW_REQUEST,
 } from "./helpers";
 
-describe("golden buyer journey", () => {
+describe("golden buyer journey", async () => {
   it("propagates one confirmed request through decision and expert recompute", async () => {
     const { application, clock, journey, confirmation, matching } =
       await createGoldenJourney();
 
-    expect(application.getJourney(journey.journey_id).raw_request_text).toBe(
-      GOLDEN_RAW_REQUEST,
-    );
+    expect(
+      (await application.getJourney(journey.journey_id)).raw_request_text,
+    ).toBe(GOLDEN_RAW_REQUEST);
     expect(confirmation.confirmed_request.must_have).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -44,9 +44,9 @@ describe("golden buyer journey", () => {
       "synthetic_pilot",
     );
     expect(matching.shortlist.cards).toHaveLength(5);
-    const repeated = runMatchingForConfirmedRequest({
+    const repeated = await runMatchingForConfirmedRequest({
       repository: application.repository,
-      confirmed: application.getJourneySnapshot(journey.journey_id)
+      confirmed: (await application.getJourneySnapshot(journey.journey_id))
         .confirmed_request!,
       previousBundle: null,
       importedCandidateIds: [],
@@ -89,17 +89,17 @@ describe("golden buyer journey", () => {
       ),
     ).toMatchObject({ status: "unknown" });
 
-    const detail = application.openJourneyProperty(
+    const detail = await application.openJourneyProperty(
       journey.journey_id,
       "prop_nb_002",
     );
     expect(detail.selectedOfferId).toBe("offer_nb_002_primary");
     expect(detail.selectedScenarioId).toBe("scenario_nb_002_claimed");
 
-    const comparison = application.createJourneyComparison(journey.journey_id, [
-      "prop_nb_002",
-      "prop_nb_003",
-    ]);
+    const comparison = await application.createJourneyComparison(
+      journey.journey_id,
+      ["prop_nb_002", "prop_nb_003"],
+    );
     expect(comparison.state.user_request_version).toBe(1);
     expect(
       comparison.state.items.every(
@@ -108,7 +108,7 @@ describe("golden buyer journey", () => {
       ),
     ).toBe(true);
 
-    const expertRequest = application.createJourneyExpertRequest(
+    const expertRequest = await application.createJourneyExpertRequest(
       journey.journey_id,
       {
         requestType: "information_verification",
@@ -119,8 +119,8 @@ describe("golden buyer journey", () => {
         field: "financing.program_type",
       },
     );
-    const context = application.getJourneySnapshot(journey.journey_id).expert!
-      .context;
+    const context = (await application.getJourneySnapshot(journey.journey_id))
+      .expert!.context;
     expect(context.user_request_ref).toBe(
       confirmation.confirmed_request.user_request_id,
     );
@@ -151,10 +151,10 @@ describe("golden buyer journey", () => {
     );
     expect(completion.recomputeStatus).toBe("completed");
 
-    const final = application.getJourneySnapshot(journey.journey_id);
-    expect(application.getJourney(journey.journey_id).current_stage).toBe(
-      "updated_decision",
-    );
+    const final = await application.getJourneySnapshot(journey.journey_id);
+    expect(
+      (await application.getJourney(journey.journey_id)).current_stage,
+    ).toBe("updated_decision");
     expect(final.expert?.result?.expert_result_id).toBe(
       "expert_result_family_eligibility",
     );
@@ -197,7 +197,7 @@ describe("golden buyer journey", () => {
       ),
     );
 
-    const dataset = loadJourneyDataset(application.repository);
+    const dataset = await loadJourneyDataset(application.repository);
     for (const entry of final.matching_bundle!.entries) {
       const property =
         dataset.properties.find(
@@ -227,9 +227,9 @@ describe("golden buyer journey", () => {
       }
     }
 
-    const eventTypes = application.instrumentation
-      .list(journey.journey_id)
-      .map((event) => event.event_type);
+    const eventTypes = (
+      await application.instrumentation.list(journey.journey_id)
+    ).map((event) => event.event_type);
     expect(eventTypes).toEqual(
       expect.arrayContaining([
         "journey_started",
@@ -244,9 +244,9 @@ describe("golden buyer journey", () => {
       ]),
     );
     expect(
-      application.instrumentation
-        .list(journey.journey_id)
-        .some((event) => "raw_request_text" in event.metadata),
+      (await application.instrumentation.list(journey.journey_id)).some(
+        (event) => "raw_request_text" in event.metadata,
+      ),
     ).toBe(false);
   });
 });

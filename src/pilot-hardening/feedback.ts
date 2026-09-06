@@ -3,23 +3,31 @@ import type {
   PilotFeedbackStage,
   PilotTelemetryEvent,
 } from "./contracts";
+import {
+  runInMemoryTransaction,
+  type TransactionalRepository,
+} from "../persistence";
 import type { PilotTelemetry } from "./telemetry";
 
-export interface FeedbackRepository {
-  save(feedback: JourneyFeedback): void;
-  list(journeyId: string): readonly JourneyFeedback[];
+export interface FeedbackRepository extends TransactionalRepository {
+  save(feedback: JourneyFeedback): Promise<void>;
+  list(journeyId: string): Promise<readonly JourneyFeedback[]>;
 }
 
 export class InMemoryFeedbackRepository implements FeedbackRepository {
   private readonly values = new Map<string, JourneyFeedback[]>();
 
-  save(feedback: JourneyFeedback): void {
+  transaction<T>(work: () => Promise<T>): Promise<T> {
+    return runInMemoryTransaction(work);
+  }
+
+  async save(feedback: JourneyFeedback): Promise<void> {
     const current = this.values.get(feedback.journey_id) ?? [];
     current.push(structuredClone(feedback));
     this.values.set(feedback.journey_id, current);
   }
 
-  list(journeyId: string): readonly JourneyFeedback[] {
+  async list(journeyId: string): Promise<readonly JourneyFeedback[]> {
     return (this.values.get(journeyId) ?? []).map((value) =>
       structuredClone(value),
     );
@@ -48,7 +56,7 @@ export class JourneyFeedbackService {
     private readonly clock: () => string = () => new Date().toISOString(),
   ) {}
 
-  submit(input: {
+  async submit(input: {
     readonly journeyId: string;
     readonly sessionId: string;
     readonly journeyStage: PilotTelemetryEvent["stage"];
@@ -56,7 +64,7 @@ export class JourneyFeedbackService {
     readonly questionCode: string;
     readonly answer: JourneyFeedback["answer"];
     readonly optionalComment?: string | null;
-  }): JourneyFeedback {
+  }): Promise<JourneyFeedback> {
     if (
       !input.journeyId.trim() ||
       !input.sessionId.trim() ||
@@ -77,7 +85,7 @@ export class JourneyFeedbackService {
       optional_comment: comment,
       created_at: this.clock(),
     };
-    this.repository.save(feedback);
+    await this.repository.save(feedback);
     this.telemetry.record({
       eventName: "journey_feedback_submitted",
       journeyId: input.journeyId,

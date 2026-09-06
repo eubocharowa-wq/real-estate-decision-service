@@ -8,13 +8,13 @@ import {
 } from "../../src/data-collection/refresh";
 import { HEALTHY_RUNTIME, makeRefreshRequest, NOW } from "./helpers";
 
-const claimedTask = (maxAttempts = 3) => {
+const claimedTask = async (maxAttempts = 3) => {
   const queue = new InMemoryRefreshQueueRepository();
-  const task = queue.enqueue(makeRefreshRequest({ maxAttempts })).task;
-  return queue.claim(task.refresh_task_id, "worker_test", NOW)!;
+  const task = (await queue.enqueue(makeRefreshRequest({ maxAttempts }))).task;
+  return (await queue.claim(task.refresh_task_id, "worker_test", NOW))!;
 };
 
-describe("centralized retry and operational policies", () => {
+describe("centralized retry and operational policies", async () => {
   it.each([
     "TIMEOUT",
     "TEMPORARY_5XX",
@@ -39,8 +39,8 @@ describe("centralized retry and operational policies", () => {
     expect(classifyRefreshError("AUTH_REQUIRED", true)).toBe(true);
   });
 
-  it("uses deterministic controlled backoff and honors retry-after", () => {
-    const task = claimedTask();
+  it("uses deterministic controlled backoff and honors retry-after", async () => {
+    const task = await claimedTask();
     const timeout = decideRefreshRetry({
       task,
       errorCode: "TIMEOUT",
@@ -63,15 +63,15 @@ describe("centralized retry and operational policies", () => {
     expect(limited.notBefore).toBe("2026-08-23T12:10:00.000Z");
   });
 
-  it("stops at max attempts and does not schedule beyond a deadline", () => {
+  it("stops at max attempts and does not schedule beyond a deadline", async () => {
     expect(
       decideRefreshRetry({
-        task: claimedTask(1),
+        task: await claimedTask(1),
         errorCode: "TIMEOUT",
         now: NOW,
       }),
     ).toMatchObject({ retryable: false, reason: "attempts_exhausted" });
-    const withDeadline = claimedTask();
+    const withDeadline = await claimedTask();
     expect(
       decideRefreshRetry({
         task: {

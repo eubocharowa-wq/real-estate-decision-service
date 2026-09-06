@@ -17,6 +17,7 @@ import {
   type ExpertContextAccessPolicy,
   type ExpertEvidenceIntegrationHook,
   type ExpertRecomputeHook,
+  type ExpertRequest,
   type ExpertRequestType,
   type ExpertQuestionCategory,
   type ExpertTriggerType,
@@ -303,9 +304,9 @@ const makeInput = (
 };
 
 class FixtureAccessPolicy implements ExpertContextAccessPolicy {
-  canAccess(
+  async canAccess(
     input: Parameters<ExpertContextAccessPolicy["canAccess"]>[0],
-  ): boolean {
+  ): Promise<boolean> {
     if (input.entityType === "document")
       return canAccessSessionDocumentReference({
         owner: input.owner,
@@ -432,19 +433,26 @@ export const createExpertWorkbenchFixtureRuntime =
       clock,
     );
     const scenarioRequestIds: Record<string, string> = {};
+    // The scenario mutators below need the request just created; the repository
+    // read that used to provide it is now asynchronous, so the fixture keeps
+    // the reference instead of re-reading the whole list.
+    let lastCreatedRequest: ExpertRequest | null = null;
 
     const createInProgress = async (options: FixtureRequestOptions) => {
-      const created = requestService.createDraft(
+      const created = await requestService.createDraft(
         makeInput(options, knownEvidence),
       );
-      requestService.submit(created.request.request_id, EXPERT_FIXTURE_OWNER);
+      await requestService.submit(
+        created.request.request_id,
+        EXPERT_FIXTURE_OWNER,
+      );
       const actor = EXPERT_FIXTURE_ACTORS[created.request.required_specialist];
       await requestService.assignExpertRequest({
         requestId: created.request.request_id,
         specialistRef: actor.actor_ref,
         specialistType: actor.specialist_type,
       });
-      requestService.transition({
+      await requestService.transition({
         requestId: created.request.request_id,
         status: "in_progress",
         actorType: "expert",
@@ -452,7 +460,8 @@ export const createExpertWorkbenchFixtureRuntime =
         reasonCode: "FIXTURE_WORK_STARTED",
       });
       scenarioRequestIds[options.scenarioId] = created.request.request_id;
-      return { request: repository.get(created.request.request_id)!, actor };
+      lastCreatedRequest = (await repository.get(created.request.request_id))!;
+      return { request: lastCreatedRequest, actor };
     };
 
     const completeScenario = async (
@@ -463,9 +472,12 @@ export const createExpertWorkbenchFixtureRuntime =
       ) => ExpertResultDraft,
     ) => {
       const { request, actor } = await createInProgress(options);
-      const workbench = application.openWorkbench(actor, request.request_id);
+      const workbench = await application.openWorkbench(
+        actor,
+        request.request_id,
+      );
       const evidenceRef = workbench.contextPackage.source_evidence_refs[0]!;
-      drafts.save(
+      await drafts.save(
         mutate(
           checkedDraft(workbench.currentResultDraft, evidenceRef),
           evidenceRef,
@@ -483,7 +495,7 @@ export const createExpertWorkbenchFixtureRuntime =
         ...draft,
         confirmed: [
           {
-            entity_id: repository.listAll().at(-1)!.property_ids[0]!,
+            entity_id: lastCreatedRequest!.property_ids[0]!,
             field: "financing.family_mortgage",
             value: true,
             evidence_refs: [evidenceRef],
@@ -492,7 +504,7 @@ export const createExpertWorkbenchFixtureRuntime =
         recommendation: {
           statement: "Программа подтверждена для выбранного предложения.",
           conditions: [],
-          related_property_ids: repository.listAll().at(-1)!.property_ids,
+          related_property_ids: lastCreatedRequest!.property_ids,
         },
       }),
     );
@@ -509,7 +521,7 @@ export const createExpertWorkbenchFixtureRuntime =
         ...draft,
         confirmed: [
           {
-            entity_id: repository.listAll().at(-1)!.property_ids[0]!,
+            entity_id: lastCreatedRequest!.property_ids[0]!,
             field: "listing_price",
             value: 4_900_000,
             evidence_refs: [evidenceRef],
@@ -544,7 +556,7 @@ export const createExpertWorkbenchFixtureRuntime =
         recommendation: {
           statement: "Не принимать решение по цене до дополнительной проверки.",
           conditions: [],
-          related_property_ids: repository.listAll().at(-1)!.property_ids,
+          related_property_ids: lastCreatedRequest!.property_ids,
         },
         next_actions: ["verify_again"],
       }),
@@ -567,7 +579,7 @@ export const createExpertWorkbenchFixtureRuntime =
             preferred_property_id:
               status === "near_tie"
                 ? null
-                : repository.listAll().at(-1)!.property_ids[0]!,
+                : lastCreatedRequest!.property_ids[0]!,
             conditions:
               status === "conditional"
                 ? ["Если подтвердится финансовое условие"]
@@ -595,7 +607,7 @@ export const createExpertWorkbenchFixtureRuntime =
             category: "document",
             severity: "important",
             statement: "Срок в документе отличается от карточки объекта.",
-            related_entity_ids: repository.listAll().at(-1)!.property_ids,
+            related_entity_ids: lastCreatedRequest!.property_ids,
             related_field: "handover_date",
             evidence_refs: [evidenceRef],
             verification_effect: "conflicting",
@@ -647,7 +659,7 @@ export const createExpertWorkbenchFixtureRuntime =
             severity: "critical",
             statement:
               "Наблюдается трещина; причина требует отдельной технической оценки.",
-            related_entity_ids: repository.listAll().at(-1)!.property_ids,
+            related_entity_ids: lastCreatedRequest!.property_ids,
             related_field: "condition.visible_crack",
             evidence_refs: [evidenceRef],
             verification_effect: "none",
@@ -665,8 +677,8 @@ export const createExpertWorkbenchFixtureRuntime =
       questionCategory: "document",
       question: "Нужна дополнительная версия документа от пользователя.",
     });
-    application.openWorkbench(waiting.actor, waiting.request.request_id);
-    application.transition({
+    await application.openWorkbench(waiting.actor, waiting.request.request_id);
+    await application.transition({
       actor: waiting.actor,
       requestId: waiting.request.request_id,
       status: "waiting_for_user",
@@ -688,7 +700,7 @@ export const createExpertWorkbenchFixtureRuntime =
         },
         knownEvidence,
       );
-      const created = requestService.createDraft({
+      const created = await requestService.createDraft({
         ...base,
         priority: {
           preDecision: priority === "critical",
@@ -702,7 +714,10 @@ export const createExpertWorkbenchFixtureRuntime =
           explicitUrgency: "none",
         },
       });
-      requestService.submit(created.request.request_id, EXPERT_FIXTURE_OWNER);
+      await requestService.submit(
+        created.request.request_id,
+        EXPERT_FIXTURE_OWNER,
+      );
       if (index === 0)
         scenarioRequestIds.queue_first = created.request.request_id;
     }

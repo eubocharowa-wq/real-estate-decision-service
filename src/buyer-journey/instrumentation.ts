@@ -13,8 +13,8 @@ export interface JourneyInstrumentation {
     readonly metadata?: Readonly<
       Record<string, string | number | boolean | null>
     >;
-  }): void;
-  list(journeyId: string): readonly JourneyAuditEvent[];
+  }): Promise<void>;
+  list(journeyId: string): Promise<readonly JourneyAuditEvent[]>;
 }
 
 const safeMetadata = (
@@ -36,14 +36,14 @@ export class InMemoryJourneyInstrumentation implements JourneyInstrumentation {
   private readonly events = new Map<string, JourneyAuditEvent[]>();
   private sequence = 0;
 
-  record(input: {
+  async record(input: {
     readonly journey: BuyerJourney;
     readonly eventType: JourneyAuditEventType;
     readonly occurredAt: string;
     readonly metadata?: Readonly<
       Record<string, string | number | boolean | null>
     >;
-  }): void {
+  }): Promise<void> {
     const event: JourneyAuditEvent = {
       instrumentation_version: JOURNEY_INSTRUMENTATION_VERSION,
       event_id: `journey_event_${++this.sequence}`,
@@ -58,7 +58,7 @@ export class InMemoryJourneyInstrumentation implements JourneyInstrumentation {
     this.events.set(input.journey.journey_id, current);
   }
 
-  list(journeyId: string): readonly JourneyAuditEvent[] {
+  async list(journeyId: string): Promise<readonly JourneyAuditEvent[]> {
     return (this.events.get(journeyId) ?? []).map((event) =>
       structuredClone(event),
     );

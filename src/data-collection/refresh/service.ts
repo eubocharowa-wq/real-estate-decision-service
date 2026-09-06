@@ -21,13 +21,13 @@ export class RefreshTaskService {
     private readonly policy: RefreshPolicyGateway,
   ) {}
 
-  enqueue(
+  async enqueue(
     request: RefreshTaskRequest,
     context: {
       readonly environment: SourceEnvironment;
       readonly satisfiedConditions: readonly string[];
     },
-  ): RefreshEnqueueAudit {
+  ): Promise<RefreshEnqueueAudit> {
     const plan = this.policy.resolveCollectionPlan({
       sourceId: request.sourceId,
       operation: "targeted_refresh",
@@ -46,8 +46,8 @@ export class RefreshTaskService {
       satisfiedConditions: context.satisfiedConditions,
       decidedAt: request.requestedAt,
     });
-    const enqueueResult = this.queue.enqueue(request);
-    this.queue.recordPolicyVersions(
+    const enqueueResult = await this.queue.enqueue(request);
+    await this.queue.recordPolicyVersions(
       enqueueResult.task.refresh_task_id,
       plan.policyVersion,
       plan.registryVersion,
@@ -55,7 +55,7 @@ export class RefreshTaskService {
     return {
       enqueueResult: {
         ...enqueueResult,
-        task: this.queue.get(enqueueResult.task.refresh_task_id)!,
+        task: (await this.queue.get(enqueueResult.task.refresh_task_id))!,
       },
       policyAllowedAtEnqueue: plan.allowed,
       preferredMethodAtEnqueue: plan.preferredMethod,

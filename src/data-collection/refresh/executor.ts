@@ -82,9 +82,9 @@ export class RefreshExecutor {
   async processNextRefreshTask(
     context: RefreshExecutionContext,
   ): Promise<RefreshResult | null> {
-    const next = this.dependencies.queue.peek(context.now);
+    const next = await this.dependencies.queue.peek(context.now);
     if (!next) return null;
-    const task = this.dependencies.queue.claim(
+    const task = await this.dependencies.queue.claim(
       next.refresh_task_id,
       context.workerId,
       context.now,
@@ -108,7 +108,7 @@ export class RefreshExecutor {
       satisfiedConditions: context.satisfiedConditions,
       decidedAt: context.now,
     });
-    this.dependencies.queue.recordPolicyVersions(
+    await this.dependencies.queue.recordPolicyVersions(
       task.refresh_task_id,
       plan.policyVersion,
       plan.registryVersion,
@@ -245,19 +245,19 @@ export class RefreshExecutor {
           not_before: retryDecision.notBefore,
         };
         if (retryDecision.retryable && retryDecision.notBefore)
-          this.dependencies.queue.retry(
+          await this.dependencies.queue.retry(
             task.refresh_task_id,
             "PARTIAL_CRITICAL_MISSING",
             retryDecision.notBefore,
           );
         else
-          this.dependencies.queue.complete(
+          await this.dependencies.queue.complete(
             task.refresh_task_id,
             "partial",
             context.now,
           );
       } else {
-        this.dependencies.queue.complete(
+        await this.dependencies.queue.complete(
           task.refresh_task_id,
           partial ? "partial" : "succeeded",
           context.now,
@@ -317,7 +317,7 @@ export class RefreshExecutor {
     return this.telemetry;
   }
 
-  private finishFailure(input: {
+  private async finishFailure(input: {
     readonly task: RefreshTask;
     readonly plan: CollectionPlan;
     readonly context: RefreshExecutionContext;
@@ -328,7 +328,7 @@ export class RefreshExecutor {
     readonly collectionRunId?: string;
     readonly idempotencyKey?: string;
     readonly sourceHealthEffect?: RefreshResult["source_health_effect"];
-  }): RefreshResult {
+  }): Promise<RefreshResult> {
     if (input.errorCode === "POLICY_DENIED")
       return this.finishWithoutAdapter({
         ...input,
@@ -341,13 +341,13 @@ export class RefreshExecutor {
       retryAfterSeconds: input.retryAfterSeconds,
     });
     if (retryDecision.retryable && retryDecision.notBefore)
-      this.dependencies.queue.retry(
+      await this.dependencies.queue.retry(
         input.task.refresh_task_id,
         input.errorCode,
         retryDecision.notBefore,
       );
     else
-      this.dependencies.queue.fail(
+      await this.dependencies.queue.fail(
         input.task.refresh_task_id,
         input.errorCode,
         input.context.now,
@@ -387,22 +387,22 @@ export class RefreshExecutor {
     return result;
   }
 
-  private finishWithoutAdapter(input: {
+  private async finishWithoutAdapter(input: {
     readonly task: RefreshTask;
     readonly plan: CollectionPlan;
     readonly context: RefreshExecutionContext;
     readonly started: number;
     readonly status: "blocked" | "failed";
     readonly errorCode: RefreshErrorCode;
-  }): RefreshResult {
+  }): Promise<RefreshResult> {
     if (input.status === "blocked")
-      this.dependencies.queue.block(
+      await this.dependencies.queue.block(
         input.task.refresh_task_id,
         input.errorCode,
         input.context.now,
       );
     else
-      this.dependencies.queue.fail(
+      await this.dependencies.queue.fail(
         input.task.refresh_task_id,
         input.errorCode,
         input.context.now,

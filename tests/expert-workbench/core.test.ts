@@ -14,10 +14,10 @@ import {
   makeResult,
 } from "../expert/helpers";
 
-describe("TASK-017 queue, permissions and workbench application", () => {
+describe("TASK-017 queue, permissions and workbench application", async () => {
   it("orders active work by semantic priority and oldest submission", async () => {
     const runtime = await createExpertWorkbenchFixtureRuntime();
-    const queue = runtime.application.listActiveQueue(
+    const queue = await runtime.application.listActiveQueue(
       EXPERT_FIXTURE_ACTORS.real_estate_expert,
     );
     expect(queue.items.map((item) => item.request.priority)).toEqual([
@@ -43,31 +43,33 @@ describe("TASK-017 queue, permissions and workbench application", () => {
 
   it("fails closed for an unknown actor", async () => {
     const runtime = await createExpertWorkbenchFixtureRuntime();
-    const request = runtime.repository.listAll()[0]!;
+    const request = (await runtime.repository.listAll())[0]!;
     const policy = new ScopedExpertWorkbenchPermissionPolicy();
     const unknown = { actor_type: "unknown" as const, actor_ref: null };
     expect(policy.canViewExpertRequest(unknown, request)).toBe(false);
     expect(policy.canEditExpertRequest(unknown, request)).toBe(false);
     expect(policy.canCompleteExpertRequest(unknown, request)).toBe(false);
-    expect(() =>
+    await expect(
       runtime.application.openWorkbench(unknown, request.request_id),
-    ).toThrow("EXPERT_WORKBENCH_ACCESS_DENIED");
+    ).rejects.toThrow("EXPERT_WORKBENCH_ACCESS_DENIED");
   });
 
   it("does not expose an unrelated lawyer request to another specialist", async () => {
     const runtime = await createExpertWorkbenchFixtureRuntime();
     const waitingId = runtime.scenarioRequestIds.waiting_for_user!;
     expect(
-      runtime.application
-        .listActiveQueue(EXPERT_FIXTURE_ACTORS.real_estate_expert)
-        .items.some((item) => item.request.request_id === waitingId),
+      (
+        await runtime.application.listActiveQueue(
+          EXPERT_FIXTURE_ACTORS.real_estate_expert,
+        )
+      ).items.some((item) => item.request.request_id === waitingId),
     ).toBe(false);
-    expect(() =>
+    await expect(
       runtime.application.openWorkbench(
         EXPERT_FIXTURE_ACTORS.real_estate_expert,
         waitingId,
       ),
-    ).toThrow("EXPERT_WORKBENCH_ACCESS_DENIED");
+    ).rejects.toThrow("EXPERT_WORKBENCH_ACCESS_DENIED");
   });
 
   it("opens only the saved context snapshot without fetch or hidden refresh", async () => {
@@ -75,16 +77,16 @@ describe("TASK-017 queue, permissions and workbench application", () => {
     const requestId = runtime.scenarioRequestIds.waiting_for_user!;
     const fetchSpy = vi.fn();
     vi.stubGlobal("fetch", fetchSpy);
-    const input = runtime.application.openWorkbench(
+    const input = await runtime.application.openWorkbench(
       EXPERT_FIXTURE_ACTORS.lawyer,
       requestId,
     );
     expect(input.contextPackage.expert_request_id).toBe(requestId);
     expect(fetchSpy).not.toHaveBeenCalled();
     expect(
-      runtime.repository
-        .listAudit(requestId)
-        .some((event) => event.event_type === "expert_workbench_opened"),
+      (await runtime.repository.listAudit(requestId)).some(
+        (event) => event.event_type === "expert_workbench_opened",
+      ),
     ).toBe(true);
     vi.unstubAllGlobals();
   });
@@ -94,13 +96,13 @@ describe("TASK-017 queue, permissions and workbench application", () => {
     const actor = EXPERT_FIXTURE_ACTORS.real_estate_expert;
     const requestId = runtime.scenarioRequestIds.queue_first!;
     await runtime.application.claimRequest(actor, requestId);
-    runtime.application.transition({
+    await runtime.application.transition({
       actor,
       requestId,
       status: "in_progress",
       reasonCode: "TEST_STARTED",
     });
-    const workbench = runtime.application.openWorkbench(actor, requestId);
+    const workbench = await runtime.application.openWorkbench(actor, requestId);
     const evidenceRef = workbench.contextPackage.source_evidence_refs[0]!;
     const item = {
       ...workbench.currentResultDraft.check_items[0]!,
@@ -108,8 +110,8 @@ describe("TASK-017 queue, permissions and workbench application", () => {
       verification_method: "source_review" as const,
       evidence_refs: [evidenceRef],
     };
-    runtime.application.updateCheckItem({ actor, requestId, item });
-    runtime.application.addFinding({
+    await runtime.application.updateCheckItem({ actor, requestId, item });
+    await runtime.application.addFinding({
       actor,
       requestId,
       finding: {
@@ -124,7 +126,7 @@ describe("TASK-017 queue, permissions and workbench application", () => {
         requires_technical_specialist: false,
       },
     });
-    const audit = runtime.repository.listAudit(requestId);
+    const audit = await runtime.repository.listAudit(requestId);
     expect(audit.map((event) => event.event_type)).toEqual(
       expect.arrayContaining(["check_item_updated", "finding_added"]),
     );
@@ -138,17 +140,17 @@ describe("TASK-017 queue, permissions and workbench application", () => {
     const actor = EXPERT_FIXTURE_ACTORS.real_estate_expert;
     const requestId = runtime.scenarioRequestIds.queue_first!;
     await runtime.application.claimRequest(actor, requestId);
-    runtime.application.transition({
+    await runtime.application.transition({
       actor,
       requestId,
       status: "in_progress",
       reasonCode: "TEST_STARTED",
     });
-    runtime.application.openWorkbench(actor, requestId);
+    await runtime.application.openWorkbench(actor, requestId);
     await expect(
       runtime.application.complete({ actor, requestId }),
     ).rejects.toThrow("INVALID_EXPERT_RESULT_DRAFT");
-    expect(runtime.repository.getResult(requestId)).toBeNull();
+    expect(await runtime.repository.getResult(requestId)).toBeNull();
   });
 
   it("does not let a draft rewrite the saved check plan or escape its context", async () => {
@@ -156,22 +158,22 @@ describe("TASK-017 queue, permissions and workbench application", () => {
     const actor = EXPERT_FIXTURE_ACTORS.real_estate_expert;
     const requestId = runtime.scenarioRequestIds.queue_first!;
     await runtime.application.claimRequest(actor, requestId);
-    runtime.application.transition({
+    await runtime.application.transition({
       actor,
       requestId,
       status: "in_progress",
       reasonCode: "TEST_STARTED",
     });
-    const workbench = runtime.application.openWorkbench(actor, requestId);
+    const workbench = await runtime.application.openWorkbench(actor, requestId);
     const first = workbench.currentResultDraft.check_items[0]!;
-    expect(() =>
+    await expect(
       runtime.application.updateCheckItem({
         actor,
         requestId,
         item: { ...first, subject: "Injected replacement check" },
       }),
-    ).toThrow("EXPERT_CHECK_PLAN_IS_IMMUTABLE");
-    expect(() =>
+    ).rejects.toThrow("EXPERT_CHECK_PLAN_IS_IMMUTABLE");
+    await expect(
       runtime.application.saveDraft({
         actor,
         requestId,
@@ -188,8 +190,8 @@ describe("TASK-017 queue, permissions and workbench application", () => {
           ],
         },
       }),
-    ).toThrow("EXPERT_DRAFT_ENTITY_OUTSIDE_CONTEXT");
-    expect(() =>
+    ).rejects.toThrow("EXPERT_DRAFT_ENTITY_OUTSIDE_CONTEXT");
+    await expect(
       runtime.application.saveDraft({
         actor,
         requestId,
@@ -209,13 +211,13 @@ describe("TASK-017 queue, permissions and workbench application", () => {
           ],
         },
       }),
-    ).toThrow("EXPERT_CONFLICT_OUTSIDE_SAVED_CONTEXT");
+    ).rejects.toThrow("EXPERT_CONFLICT_OUTSIDE_SAVED_CONTEXT");
   });
 
   it("resumes waiting_for_user through the existing state machine", async () => {
     const runtime = await createExpertWorkbenchFixtureRuntime();
     const requestId = runtime.scenarioRequestIds.waiting_for_user!;
-    const resumed = runtime.application.transition({
+    const resumed = await runtime.application.transition({
       actor: EXPERT_FIXTURE_ACTORS.lawyer,
       requestId,
       status: "in_progress",
@@ -223,7 +225,8 @@ describe("TASK-017 queue, permissions and workbench application", () => {
     });
     expect(resumed.status).toBe("in_progress");
     expect(
-      runtime.repository.listAudit(requestId).at(-1)?.metadata.reason_code,
+      (await runtime.repository.listAudit(requestId)).at(-1)?.metadata
+        .reason_code,
     ).toBe("USER_INFO_RECEIVED");
   });
 
@@ -232,18 +235,18 @@ describe("TASK-017 queue, permissions and workbench application", () => {
     const actor = EXPERT_FIXTURE_ACTORS.real_estate_expert;
     const requestId = runtime.scenarioRequestIds.queue_first!;
     await runtime.application.claimRequest(actor, requestId);
-    expect(() =>
+    await expect(
       runtime.application.transition({
         actor,
         requestId,
         status: "waiting_for_user",
         reasonCode: "INVALID_DIRECT_WAIT",
       }),
-    ).toThrow("INVALID_EXPERT_REQUEST_TRANSITION");
+    ).rejects.toThrow("INVALID_EXPERT_REQUEST_TRANSITION");
   });
 });
 
-describe("TASK-017 result review integration scenarios", () => {
+describe("TASK-017 result review integration scenarios", async () => {
   it("provides all ten required deterministic scenario fixtures", async () => {
     const runtime = await createExpertWorkbenchFixtureRuntime();
     expect(Object.keys(runtime.scenarioRequestIds)).toEqual(
@@ -266,7 +269,7 @@ describe("TASK-017 result review integration scenarios", () => {
     const runtime = await createExpertWorkbenchFixtureRuntime();
     const requestId =
       runtime.scenarioRequestIds.financing_verification_completed!;
-    const input = runtime.application.openResultReview(
+    const input = await runtime.application.openResultReview(
       EXPERT_FIXTURE_OWNER_ACTOR,
       requestId,
     );
@@ -283,7 +286,7 @@ describe("TASK-017 result review integration scenarios", () => {
   it("keeps unresolved price conflict visible and performs no canonical overwrite", async () => {
     const runtime = await createExpertWorkbenchFixtureRuntime();
     const requestId = runtime.scenarioRequestIds.price_conflict_unresolved!;
-    const input = runtime.application.openResultReview(
+    const input = await runtime.application.openResultReview(
       EXPERT_FIXTURE_OWNER_ACTOR,
       requestId,
     );
@@ -314,7 +317,7 @@ describe("TASK-017 result review integration scenarios", () => {
   it("renders conditional choice assistance from a three-finalist snapshot", async () => {
     const runtime = await createExpertWorkbenchFixtureRuntime();
     const requestId = runtime.scenarioRequestIds.choice_assistance_conditional!;
-    const input = runtime.application.openResultReview(
+    const input = await runtime.application.openResultReview(
       EXPERT_FIXTURE_OWNER_ACTOR,
       requestId,
     );
@@ -331,7 +334,7 @@ describe("TASK-017 result review integration scenarios", () => {
   it("does not force a winner for near_tie", async () => {
     const runtime = await createExpertWorkbenchFixtureRuntime();
     const requestId = runtime.scenarioRequestIds.choice_assistance_near_tie!;
-    const input = runtime.application.openResultReview(
+    const input = await runtime.application.openResultReview(
       EXPERT_FIXTURE_OWNER_ACTOR,
       requestId,
     );
@@ -343,8 +346,8 @@ describe("TASK-017 result review integration scenarios", () => {
   it("validates clear and non-winner choice semantics before completion", async () => {
     const runtime = await createExpertWorkbenchFixtureRuntime();
     const clearId = runtime.scenarioRequestIds.choice_assistance_clear!;
-    const clearRequest = runtime.repository.get(clearId)!;
-    const clearDraft = runtime.drafts.get(clearId)!;
+    const clearRequest = (await runtime.repository.get(clearId))!;
+    const clearDraft = (await runtime.drafts.get(clearId))!;
     expect(() =>
       buildFinalExpertResult({
         request: clearRequest,
@@ -361,8 +364,8 @@ describe("TASK-017 result review integration scenarios", () => {
     ).toThrow("CLEAR_CHOICE_REQUIRES_PREFERRED_PROPERTY");
 
     const tieId = runtime.scenarioRequestIds.choice_assistance_near_tie!;
-    const tieRequest = runtime.repository.get(tieId)!;
-    const tieDraft = runtime.drafts.get(tieId)!;
+    const tieRequest = (await runtime.repository.get(tieId))!;
+    const tieDraft = (await runtime.drafts.get(tieId))!;
     expect(() =>
       buildFinalExpertResult({
         request: tieRequest,
@@ -382,8 +385,8 @@ describe("TASK-017 result review integration scenarios", () => {
   it("requires a concrete value before requesting canonical conflict resolution", async () => {
     const runtime = await createExpertWorkbenchFixtureRuntime();
     const requestId = runtime.scenarioRequestIds.price_conflict_resolved!;
-    const request = runtime.repository.get(requestId)!;
-    const draft = runtime.drafts.get(requestId)!;
+    const request = (await runtime.repository.get(requestId))!;
+    const draft = (await runtime.drafts.get(requestId))!;
     expect(() =>
       buildFinalExpertResult({
         request,
@@ -403,7 +406,7 @@ describe("TASK-017 result review integration scenarios", () => {
   it("shows waiting_for_user honestly before a final result exists", async () => {
     const runtime = await createExpertWorkbenchFixtureRuntime();
     const requestId = runtime.scenarioRequestIds.waiting_for_user!;
-    const input = runtime.application.openResultReview(
+    const input = await runtime.application.openResultReview(
       EXPERT_FIXTURE_OWNER_ACTOR,
       requestId,
     );
@@ -415,7 +418,7 @@ describe("TASK-017 result review integration scenarios", () => {
   it("creates a prefilled technical escalation boundary without scheduling", async () => {
     const runtime = await createExpertWorkbenchFixtureRuntime();
     const requestId = runtime.scenarioRequestIds.technical_escalation!;
-    const input = runtime.application.openResultReview(
+    const input = await runtime.application.openResultReview(
       EXPERT_FIXTURE_OWNER_ACTOR,
       requestId,
     );
@@ -437,8 +440,10 @@ describe("TASK-017 result review integration scenarios", () => {
     );
     expect(outcome.recomputeStatus).toBe("failed");
     expect(outcome.recomputeErrorCode).toBe("RECOMPUTE_FAILED");
-    expect(harness.repository.getResult(request.request_id)).not.toBeNull();
-    expect(harness.repository.get(request.request_id)?.status).toBe(
+    expect(
+      await harness.repository.getResult(request.request_id),
+    ).not.toBeNull();
+    expect((await harness.repository.get(request.request_id))?.status).toBe(
       "completed",
     );
   });

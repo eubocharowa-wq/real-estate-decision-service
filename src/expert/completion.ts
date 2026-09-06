@@ -17,7 +17,9 @@ export interface ExpertEvidenceIntegrationOutcome {
 }
 
 export interface ExpertEvidenceIntegrationHook {
-  validateExistingReferences(evidenceRefs: readonly string[]): boolean;
+  validateExistingReferences(
+    evidenceRefs: readonly string[],
+  ): boolean | Promise<boolean>;
   integrate(input: {
     readonly request: ExpertRequest;
     readonly candidates: readonly ExpertEvidenceCandidate[];
@@ -105,7 +107,7 @@ export class ExpertCompletionService {
     candidate: ExpertResult,
   ): Promise<CompleteExpertRequestOutcome> {
     const result = expertResultSchema.parse(candidate);
-    const request = this.repository.get(result.request_id);
+    const request = await this.repository.get(result.request_id);
     if (!request) throw new Error("EXPERT_REQUEST_NOT_FOUND");
     if (request.status !== "in_progress")
       throw new Error("EXPERT_REQUEST_NOT_IN_PROGRESS");
@@ -131,7 +133,11 @@ export class ExpertCompletionService {
       !result.disclaimer
     )
       throw new Error("LEGAL_BOUNDARY_DISCLAIMER_REQUIRED");
-    if (!this.evidenceHook.validateExistingReferences(result.evidence_refs))
+    if (
+      !(await this.evidenceHook.validateExistingReferences(
+        result.evidence_refs,
+      ))
+    )
       throw new Error("UNKNOWN_EVIDENCE_REFERENCE");
     if (
       result.evidence_candidates.some(
@@ -158,7 +164,7 @@ export class ExpertCompletionService {
         candidates: result.evidence_candidates,
         idempotencyKey: `${request.request_id}:${result.expert_result_id}:${result.result_version}`,
       });
-      this.appendAudit(request.request_id, {
+      await this.appendAudit(request.request_id, {
         event_type: "evidence_created",
         actor_type: "expert",
         actor_ref: result.specialist.specialist_ref,
@@ -189,7 +195,7 @@ export class ExpertCompletionService {
           ]),
           conflictResolutions,
         });
-        this.appendAudit(request.request_id, {
+        await this.appendAudit(request.request_id, {
           event_type: "canonical_update_requested",
           actor_type: "system",
           actor_ref: null,
@@ -224,8 +230,8 @@ export class ExpertCompletionService {
       }
     }
 
-    this.repository.saveResult(result);
-    this.appendAudit(request.request_id, {
+    await this.repository.saveResult(result);
+    await this.appendAudit(request.request_id, {
       event_type: "result_saved",
       actor_type: "expert",
       actor_ref: result.specialist.specialist_ref,
@@ -236,12 +242,12 @@ export class ExpertCompletionService {
     });
     const nextStatus =
       result.status === "unable_to_verify" ? "unable_to_complete" : "completed";
-    const updated = this.repository.updateStatus(
+    const updated = await this.repository.updateStatus(
       request.request_id,
       nextStatus,
       this.clock(),
     );
-    this.appendAudit(request.request_id, {
+    await this.appendAudit(request.request_id, {
       event_type: "status_changed",
       actor_type: "expert",
       actor_ref: result.specialist.specialist_ref,
@@ -253,7 +259,7 @@ export class ExpertCompletionService {
             : "EXPERT_UNABLE_TO_VERIFY",
       },
     });
-    this.appendAudit(request.request_id, {
+    await this.appendAudit(request.request_id, {
       event_type: "result_completed",
       actor_type: "expert",
       actor_ref: result.specialist.specialist_ref,
@@ -267,7 +273,7 @@ export class ExpertCompletionService {
       try {
         recompute = await this.recomputeHook.requestRecompute(recomputeInput);
         recomputeStatus = "completed";
-        this.appendAudit(request.request_id, {
+        await this.appendAudit(request.request_id, {
           event_type: "recompute_requested",
           actor_type: "system",
           actor_ref: null,
@@ -279,7 +285,7 @@ export class ExpertCompletionService {
       } catch {
         recomputeStatus = "failed";
         recomputeErrorCode = "RECOMPUTE_FAILED";
-        this.appendAudit(request.request_id, {
+        await this.appendAudit(request.request_id, {
           event_type: "recompute_failed",
           actor_type: "system",
           actor_ref: null,
@@ -298,11 +304,11 @@ export class ExpertCompletionService {
     };
   }
 
-  private appendAudit(
+  private async appendAudit(
     requestId: string,
     input: Omit<ExpertAuditEvent, "event_id" | "request_id" | "created_at">,
-  ): void {
-    this.repository.appendAudit(
+  ): Promise<void> {
+    await this.repository.appendAudit(
       expertAuditEventSchema.parse({
         event_id: this.createId("audit"),
         request_id: requestId,

@@ -7,10 +7,10 @@ import {
 import type { RefreshResult } from "../../src/data-collection/refresh";
 import { createGoldenJourney } from "./helpers";
 
-describe("buyer journey URL and refresh boundaries", () => {
+describe("buyer journey URL and refresh boundaries", async () => {
   it("adds an offline user URL candidate through the same matching pipeline", async () => {
     const { application, journey, matching } = await createGoldenJourney();
-    application.createJourneyComparison(journey.journey_id, [
+    await application.createJourneyComparison(journey.journey_id, [
       "prop_nb_002",
       "prop_nb_003",
     ]);
@@ -26,7 +26,7 @@ describe("buyer journey URL and refresh boundaries", () => {
     );
     const confirmed = ingestion.confirm(preview, preview.editableFields);
     if (!confirmed.success) throw new Error(confirmed.error.message);
-    const result = application.addUserUrlCandidate(
+    const result = await application.addUserUrlCandidate(
       journey.journey_id,
       confirmed.candidate,
     );
@@ -42,18 +42,21 @@ describe("buyer journey URL and refresh boundaries", () => {
     expect(result.update.affected_property_ids).toEqual([
       confirmed.candidate.propertyCandidate.identity.property_id,
     ]);
-    const comparison = application.createJourneyComparison(journey.journey_id, [
-      "prop_nb_002",
-      "prop_nb_003",
-      confirmed.candidate.propertyCandidate.identity.property_id,
-    ]);
+    const comparison = await application.createJourneyComparison(
+      journey.journey_id,
+      [
+        "prop_nb_002",
+        "prop_nb_003",
+        confirmed.candidate.propertyCandidate.identity.property_id,
+      ],
+    );
     expect(comparison.state.items).toHaveLength(3);
     expect(comparison.view.columns).toHaveLength(3);
   });
 
   it("keeps src_dev_02 live refresh policy-blocked without breaking the journey", async () => {
     const { application, journey } = await createGoldenJourney();
-    const outcome = application.requestJourneyRefresh({
+    const outcome = await application.requestJourneyRefresh({
       journeyId: journey.journey_id,
       propertyId: "prop_nb_002",
       offerId: "offer_nb_002_primary",
@@ -67,7 +70,9 @@ describe("buyer journey URL and refresh boundaries", () => {
     });
     expect(outcome.audit.policyAllowedAtEnqueue).toBe(false);
     expect(outcome.audit.preferredMethodAtEnqueue).toBeNull();
-    expect(application.getShortlist(journey.journey_id).cards.length).toBe(5);
+    expect(
+      (await application.getShortlist(journey.journey_id)).cards.length,
+    ).toBe(5);
   });
 
   it("applies a successful fixture RefreshResult to affected entities only", async () => {
@@ -111,7 +116,7 @@ describe("buyer journey URL and refresh boundaries", () => {
       error_code: null,
       retry: null,
     };
-    const applied = application.applyRefreshResultToJourney(
+    const applied = await application.applyRefreshResultToJourney(
       journey.journey_id,
       result,
     );

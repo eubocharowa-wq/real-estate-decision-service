@@ -1,4 +1,8 @@
 import type { FieldEvidence } from "../domain";
+import {
+  runInMemoryTransaction,
+  type TransactionalRepository,
+} from "../persistence";
 import type { NormalizedUserUrlCandidate } from "../user-url-ingestion";
 import type { UserRequestParserResult } from "../user-request-parser";
 import type {
@@ -10,33 +14,41 @@ import type {
   MatchingBundle,
 } from "./contracts";
 
-export interface BuyerJourneyRepository {
-  saveJourney(journey: BuyerJourney): void;
-  getJourney(journeyId: string): BuyerJourney | null;
-  saveParsedRequest(ref: string, result: UserRequestParserResult): void;
-  getParsedRequest(ref: string): UserRequestParserResult | null;
-  saveConfirmedRequest(record: ConfirmedRequestRecord): void;
+export interface BuyerJourneyRepository extends TransactionalRepository {
+  saveJourney(journey: BuyerJourney): Promise<void>;
+  getJourney(journeyId: string): Promise<BuyerJourney | null>;
+  saveParsedRequest(
+    ref: string,
+    result: UserRequestParserResult,
+  ): Promise<void>;
+  getParsedRequest(ref: string): Promise<UserRequestParserResult | null>;
+  saveConfirmedRequest(record: ConfirmedRequestRecord): Promise<void>;
   getConfirmedRequest(
     userRequestId: string,
     userRequestVersion: number,
-  ): ConfirmedRequestRecord | null;
-  saveMatchingBundle(bundle: MatchingBundle): void;
-  getMatchingBundle(bundleId: string): MatchingBundle | null;
-  markMatchingBundleStale(bundleId: string): void;
-  saveComparison(comparison: ComparisonState): void;
-  getComparison(comparisonId: string): ComparisonState | null;
-  saveDecisionUpdate(update: DecisionUpdate): void;
-  getDecisionUpdate(updateId: string): DecisionUpdate | null;
-  saveImportedCandidate(candidate: NormalizedUserUrlCandidate): void;
-  getImportedCandidate(ingestionId: string): NormalizedUserUrlCandidate | null;
+  ): Promise<ConfirmedRequestRecord | null>;
+  saveMatchingBundle(bundle: MatchingBundle): Promise<void>;
+  getMatchingBundle(bundleId: string): Promise<MatchingBundle | null>;
+  markMatchingBundleStale(bundleId: string): Promise<void>;
+  saveComparison(comparison: ComparisonState): Promise<void>;
+  getComparison(comparisonId: string): Promise<ComparisonState | null>;
+  saveDecisionUpdate(update: DecisionUpdate): Promise<void>;
+  getDecisionUpdate(updateId: string): Promise<DecisionUpdate | null>;
+  saveImportedCandidate(candidate: NormalizedUserUrlCandidate): Promise<void>;
+  getImportedCandidate(
+    ingestionId: string,
+  ): Promise<NormalizedUserUrlCandidate | null>;
   listImportedCandidates(
     journeyId: string,
-  ): readonly NormalizedUserUrlCandidate[];
-  attachImportedCandidate(journeyId: string, ingestionId: string): void;
-  appendEvidence(evidence: FieldEvidence): void;
-  listEvidence(): readonly FieldEvidence[];
-  saveCanonicalOverlay(overlay: CanonicalDecisionOverlay): void;
-  listCanonicalOverlays(): readonly CanonicalDecisionOverlay[];
+  ): Promise<readonly NormalizedUserUrlCandidate[]>;
+  attachImportedCandidate(
+    journeyId: string,
+    ingestionId: string,
+  ): Promise<void>;
+  appendEvidence(evidence: FieldEvidence): Promise<void>;
+  listEvidence(): Promise<readonly FieldEvidence[]>;
+  saveCanonicalOverlay(overlay: CanonicalDecisionOverlay): Promise<void>;
+  listCanonicalOverlays(): Promise<readonly CanonicalDecisionOverlay[]>;
 }
 
 const clone = <T>(value: T): T => structuredClone(value);
@@ -54,92 +66,106 @@ export class InMemoryBuyerJourneyRepository implements BuyerJourneyRepository {
   private readonly evidence = new Map<string, FieldEvidence>();
   private readonly overlays = new Map<string, CanonicalDecisionOverlay>();
 
-  saveJourney(journey: BuyerJourney): void {
+  transaction<T>(work: () => Promise<T>): Promise<T> {
+    return runInMemoryTransaction(work);
+  }
+
+  async saveJourney(journey: BuyerJourney): Promise<void> {
     this.journeys.set(journey.journey_id, clone(journey));
   }
 
-  getJourney(journeyId: string): BuyerJourney | null {
+  async getJourney(journeyId: string): Promise<BuyerJourney | null> {
     const value = this.journeys.get(journeyId);
     return value ? clone(value) : null;
   }
 
-  saveParsedRequest(ref: string, result: UserRequestParserResult): void {
+  async saveParsedRequest(
+    ref: string,
+    result: UserRequestParserResult,
+  ): Promise<void> {
     this.parsed.set(ref, clone(result));
   }
 
-  getParsedRequest(ref: string): UserRequestParserResult | null {
+  async getParsedRequest(ref: string): Promise<UserRequestParserResult | null> {
     const value = this.parsed.get(ref);
     return value ? clone(value) : null;
   }
 
-  saveConfirmedRequest(record: ConfirmedRequestRecord): void {
+  async saveConfirmedRequest(record: ConfirmedRequestRecord): Promise<void> {
     this.confirmed.set(
       confirmedKey(record.user_request_id, record.user_request_version),
       clone(record),
     );
   }
 
-  getConfirmedRequest(
+  async getConfirmedRequest(
     userRequestId: string,
     userRequestVersion: number,
-  ): ConfirmedRequestRecord | null {
+  ): Promise<ConfirmedRequestRecord | null> {
     const value = this.confirmed.get(
       confirmedKey(userRequestId, userRequestVersion),
     );
     return value ? clone(value) : null;
   }
 
-  saveMatchingBundle(bundle: MatchingBundle): void {
+  async saveMatchingBundle(bundle: MatchingBundle): Promise<void> {
     this.bundles.set(bundle.matching_bundle_id, clone(bundle));
   }
 
-  getMatchingBundle(bundleId: string): MatchingBundle | null {
+  async getMatchingBundle(bundleId: string): Promise<MatchingBundle | null> {
     const value = this.bundles.get(bundleId);
     return value ? clone(value) : null;
   }
 
-  markMatchingBundleStale(bundleId: string): void {
+  async markMatchingBundleStale(bundleId: string): Promise<void> {
     const current = this.bundles.get(bundleId);
     if (current) this.bundles.set(bundleId, { ...clone(current), stale: true });
   }
 
-  saveComparison(comparison: ComparisonState): void {
+  async saveComparison(comparison: ComparisonState): Promise<void> {
     this.comparisons.set(comparison.comparison_id, clone(comparison));
   }
 
-  getComparison(comparisonId: string): ComparisonState | null {
+  async getComparison(comparisonId: string): Promise<ComparisonState | null> {
     const value = this.comparisons.get(comparisonId);
     return value ? clone(value) : null;
   }
 
-  saveDecisionUpdate(update: DecisionUpdate): void {
+  async saveDecisionUpdate(update: DecisionUpdate): Promise<void> {
     this.updates.set(update.update_id, clone(update));
   }
 
-  getDecisionUpdate(updateId: string): DecisionUpdate | null {
+  async getDecisionUpdate(updateId: string): Promise<DecisionUpdate | null> {
     const value = this.updates.get(updateId);
     return value ? clone(value) : null;
   }
 
-  saveImportedCandidate(candidate: NormalizedUserUrlCandidate): void {
+  async saveImportedCandidate(
+    candidate: NormalizedUserUrlCandidate,
+  ): Promise<void> {
     this.imported.set(candidate.ingestionId, clone(candidate));
   }
 
-  getImportedCandidate(ingestionId: string): NormalizedUserUrlCandidate | null {
+  async getImportedCandidate(
+    ingestionId: string,
+  ): Promise<NormalizedUserUrlCandidate | null> {
     const value = this.imported.get(ingestionId);
     return value ? clone(value) : null;
   }
 
-  listImportedCandidates(
+  async listImportedCandidates(
     journeyId: string,
-  ): readonly NormalizedUserUrlCandidate[] {
+  ): Promise<readonly NormalizedUserUrlCandidate[]> {
     return [...(this.importsByJourney.get(journeyId) ?? [])]
       .map((id) => this.imported.get(id))
       .filter((item): item is NormalizedUserUrlCandidate => Boolean(item))
       .map(clone);
   }
 
-  attachImportedCandidate(journeyId: string, ingestionId: string): void {
+  async attachImportedCandidate(
+    journeyId: string,
+    ingestionId: string,
+  ): Promise<void> {
     if (!this.imported.has(ingestionId))
       throw new Error("IMPORTED_CANDIDATE_NOT_FOUND");
     const ids = this.importsByJourney.get(journeyId) ?? new Set<string>();
@@ -147,25 +173,25 @@ export class InMemoryBuyerJourneyRepository implements BuyerJourneyRepository {
     this.importsByJourney.set(journeyId, ids);
   }
 
-  appendEvidence(evidence: FieldEvidence): void {
+  async appendEvidence(evidence: FieldEvidence): Promise<void> {
     const current = this.evidence.get(evidence.evidence_id);
     if (current && JSON.stringify(current) !== JSON.stringify(evidence))
       throw new Error("EVIDENCE_ID_CONFLICT");
     this.evidence.set(evidence.evidence_id, clone(evidence));
   }
 
-  listEvidence(): readonly FieldEvidence[] {
+  async listEvidence(): Promise<readonly FieldEvidence[]> {
     return [...this.evidence.values()].map(clone);
   }
 
-  saveCanonicalOverlay(overlay: CanonicalDecisionOverlay): void {
+  async saveCanonicalOverlay(overlay: CanonicalDecisionOverlay): Promise<void> {
     const current = this.overlays.get(overlay.overlay_id);
     if (current && JSON.stringify(current) !== JSON.stringify(overlay))
       throw new Error("CANONICAL_OVERLAY_ID_CONFLICT");
     this.overlays.set(overlay.overlay_id, clone(overlay));
   }
 
-  listCanonicalOverlays(): readonly CanonicalDecisionOverlay[] {
+  async listCanonicalOverlays(): Promise<readonly CanonicalDecisionOverlay[]> {
     return [...this.overlays.values()].map(clone);
   }
 }

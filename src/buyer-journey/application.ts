@@ -41,7 +41,6 @@ import {
   buildJourneyDiagnosticReport,
   buildCoverageSummary,
   isFeatureOperational,
-  measurePilotOperation,
   measurePilotOperationAsync,
   validatePilotCandidate,
   type PilotPerformanceRecorder,
@@ -132,10 +131,10 @@ const ownerForJourney = (journey: BuyerJourney): RequestOwner => ({
   owner_id: journey.session_id,
 });
 
-const activeRequest = (
+const activeRequest = async (
   repository: BuyerJourneyRepository,
   journey: BuyerJourney,
-): ConfirmedRequestRecord => {
+): Promise<ConfirmedRequestRecord> => {
   if (
     journey.confirmed_user_request_id === null ||
     journey.confirmed_user_request_version === null
@@ -145,7 +144,7 @@ const activeRequest = (
       "Confirmed request is missing",
       true,
     );
-  const confirmed = repository.getConfirmedRequest(
+  const confirmed = await repository.getConfirmedRequest(
     journey.confirmed_user_request_id,
     journey.confirmed_user_request_version,
   );
@@ -158,13 +157,13 @@ const activeRequest = (
   return confirmed;
 };
 
-const activeBundle = (
+const activeBundle = async (
   repository: BuyerJourneyRepository,
   journey: BuyerJourney,
   confirmed: ConfirmedRequestRecord,
-): MatchingBundle => {
+): Promise<MatchingBundle> => {
   const bundleId = journey.shortlist_state.matching_bundle_id;
-  const bundle = bundleId ? repository.getMatchingBundle(bundleId) : null;
+  const bundle = bundleId ? await repository.getMatchingBundle(bundleId) : null;
   if (!bundle)
     throw new BuyerJourneyError(
       "MISSING_JOURNEY_CONTEXT",
@@ -252,42 +251,39 @@ export class BuyerJourneyApplication {
     this.expertService = new ExpertRequestService(
       this.expertRepository,
       {
-        canAccess: ({ owner, entityType, entityId }) => {
+        canAccess: async ({ owner, entityType, entityId }) => {
           if (entityType === "document") return false;
+          const journeys = await this.listJourneysForSession(owner.owner_id);
           if (entityType === "user_request")
-            return [...this.listJourneysForSession(owner.owner_id)].some(
+            return journeys.some(
               (journey) => journey.confirmed_user_request_id === entityId,
             );
           if (entityType === "comparison")
-            return [...this.listJourneysForSession(owner.owner_id)].some(
+            return journeys.some(
               (journey) => journey.comparison_id === entityId,
             );
-          const dataset = loadJourneyDataset(this.repository);
+          const dataset = await loadJourneyDataset(this.repository);
+          const importedByJourney = await Promise.all(
+            journeys.map((journey) =>
+              this.repository.listImportedCandidates(journey.journey_id),
+            ),
+          );
+          const imported = importedByJourney.flat();
           if (entityType === "property")
             return (
               dataset.properties.some(
                 (property) => property.identity.property_id === entityId,
               ) ||
-              [...this.listJourneysForSession(owner.owner_id)].some((journey) =>
-                this.repository
-                  .listImportedCandidates(journey.journey_id)
-                  .some(
-                    (candidate) =>
-                      candidate.propertyCandidate.identity.property_id ===
-                      entityId,
-                  ),
+              imported.some(
+                (candidate) =>
+                  candidate.propertyCandidate.identity.property_id === entityId,
               )
             );
           if (entityType === "offer")
             return (
               dataset.offers.some((offer) => offer.offer_id === entityId) ||
-              [...this.listJourneysForSession(owner.owner_id)].some((journey) =>
-                this.repository
-                  .listImportedCandidates(journey.journey_id)
-                  .some(
-                    (candidate) =>
-                      candidate.offerCandidate.offer_id === entityId,
-                  ),
+              imported.some(
+                (candidate) => candidate.offerCandidate.offer_id === entityId,
               )
             );
           return dataset.purchaseScenarios.some(
@@ -301,10 +297,10 @@ export class BuyerJourneyApplication {
     );
   }
 
-  startBuyerJourney(input: {
+  async startBuyerJourney(input: {
     readonly sessionId: string;
     readonly rawRequestText: string;
-  }): BuyerJourney {
+  }): Promise<BuyerJourney> {
     if (!input.sessionId.trim() || !input.rawRequestText.trim())
       throw new BuyerJourneyError(
         "MISSING_JOURNEY_CONTEXT",
@@ -340,8 +336,8 @@ export class BuyerJourneyApplication {
       created_at: now,
       updated_at: now,
     };
-    this.repository.saveJourney(journey);
-    this.record(journey, "journey_started", {});
+    await this.repository.saveJourney(journey);
+    await this.record(journey, "journey_started", {});
     this.recordPilot(journey, "request_submitted", {
       request_length_bucket:
         input.rawRequestText.length < 100
@@ -356,7 +352,7 @@ export class BuyerJourneyApplication {
   async parseBuyerRequest(
     journeyId: string,
   ): Promise<UserRequestParserOutcome> {
-    const journey = this.requireJourney(journeyId);
+    const journey = await this.requireJourney(journeyId);
     if (journey.current_stage !== "request_entry")
       throw new BuyerJourneyError(
         "INVALID_TRANSITION",
@@ -380,7 +376,7 @@ export class BuyerJourneyApplication {
         }),
     });
     if (!outcome.success) {
-      this.recordApplicationError({
+      await this.recordApplicationError({
         errorCode: outcome.error.type,
         layer: "parser",
         journeyId,
@@ -390,11 +386,11 @@ export class BuyerJourneyApplication {
       return outcome;
     }
     const parsedRef = this.createId("parsed_request");
-    this.repository.saveParsedRequest(parsedRef, outcome.result);
-    const updated = this.transition(journey, "request_confirmation", {
+    await this.repository.saveParsedRequest(parsedRef, outcome.result);
+    const updated = await this.transition(journey, "request_confirmation", {
       parsed_request_ref: parsedRef,
     });
-    this.record(updated, "request_parsed", {
+    await this.record(updated, "request_parsed", {
       parser_version: outcome.result.parser_version,
       parsed_request_ref: parsedRef,
     });
@@ -404,23 +400,23 @@ export class BuyerJourneyApplication {
     return outcome;
   }
 
-  beginRequestEdit(journeyId: string): BuyerJourney {
-    const journey = this.requireJourney(journeyId);
+  async beginRequestEdit(journeyId: string): Promise<BuyerJourney> {
+    const journey = await this.requireJourney(journeyId);
     this.recordPilot(journey, "request_edited", {
       request_version: journey.confirmed_user_request_version,
     });
     if (journey.current_stage !== "request_confirmation")
-      return this.transition(journey, "request_confirmation", {
+      return await this.transition(journey, "request_confirmation", {
         recoverable_error: null,
       });
     return journey;
   }
 
-  confirmBuyerRequest(
+  async confirmBuyerRequest(
     journeyId: string,
     confirmationValue: unknown,
-  ): ConfirmedRequestRecord {
-    const journey = this.requireJourney(journeyId);
+  ): Promise<ConfirmedRequestRecord> {
+    const journey = await this.requireJourney(journeyId);
     if (journey.current_stage !== "request_confirmation")
       throw new BuyerJourneyError(
         "INVALID_TRANSITION",
@@ -444,11 +440,13 @@ export class BuyerJourneyApplication {
     const version = (journey.confirmed_user_request_version ?? 0) + 1;
     const previousBundleId = journey.shortlist_state.matching_bundle_id;
     if (previousBundleId)
-      this.repository.markMatchingBundleStale(previousBundleId);
+      await this.repository.markMatchingBundleStale(previousBundleId);
     if (journey.comparison_id) {
-      const comparison = this.repository.getComparison(journey.comparison_id);
+      const comparison = await this.repository.getComparison(
+        journey.comparison_id,
+      );
       if (comparison)
-        this.repository.saveComparison({
+        await this.repository.saveComparison({
           ...comparison,
           status: "recompute_required",
           updated_at: this.clock(),
@@ -462,8 +460,8 @@ export class BuyerJourneyApplication {
       confirmed_at: confirmation.data.confirmed_at,
       supersedes_version: journey.confirmed_user_request_version,
     };
-    this.repository.saveConfirmedRequest(record);
-    const updated = this.transition(journey, "matching", {
+    await this.repository.saveConfirmedRequest(record);
+    const updated = await this.transition(journey, "matching", {
       confirmed_user_request_id: record.user_request_id,
       confirmed_user_request_version: version,
       shortlist_state: {
@@ -473,40 +471,40 @@ export class BuyerJourneyApplication {
       },
       recoverable_error: null,
     });
-    this.record(updated, "request_confirmed", {
+    await this.record(updated, "request_confirmed", {
       user_request_id: record.user_request_id,
       user_request_version: version,
     });
     return record;
   }
 
-  runJourneyMatching(journeyId: string): {
+  async runJourneyMatching(journeyId: string): Promise<{
     readonly journey: BuyerJourney;
     readonly bundle: MatchingBundle;
     readonly shortlist: ShortlistView;
-  } {
-    const journey = this.requireJourney(journeyId);
+  }> {
+    const journey = await this.requireJourney(journeyId);
     if (journey.current_stage !== "matching")
       throw new BuyerJourneyError(
         "INVALID_TRANSITION",
         "Matching can run only after confirmation",
         true,
       );
-    const confirmed = activeRequest(this.repository, journey);
+    const confirmed = await activeRequest(this.repository, journey);
     this.recordPilot(journey, "matching_started", {
       request_version: confirmed.user_request_version,
     });
     const previousBundleId = journey.shortlist_state.matching_bundle_id;
     const previousBundle = previousBundleId
-      ? this.repository.getMatchingBundle(previousBundleId)
+      ? await this.repository.getMatchingBundle(previousBundleId)
       : null;
     const generatedAt = this.clock();
-    const imported = this.repository.listImportedCandidates(journeyId);
-    const bundle = measurePilotOperation({
+    const imported = await this.repository.listImportedCandidates(journeyId);
+    const bundle = await measurePilotOperationAsync({
       operation: "matching",
       candidateCount:
         (this.pilotRuntimeConfig.mode === "demo"
-          ? loadJourneyDataset(this.repository).properties.length
+          ? (await loadJourneyDataset(this.repository)).properties.length
           : 0) + imported.length,
       recorder: this.performanceRecorder,
       clock: this.clock,
@@ -522,8 +520,8 @@ export class BuyerJourneyApplication {
           includeSyntheticDataset: this.pilotRuntimeConfig.mode === "demo",
         }),
     });
-    this.repository.saveMatchingBundle(bundle);
-    const shortlist = measurePilotOperation({
+    await this.repository.saveMatchingBundle(bundle);
+    const shortlist = await measurePilotOperationAsync({
       operation: "shortlist",
       candidateCount: bundle.entries.length,
       recorder: this.performanceRecorder,
@@ -535,7 +533,7 @@ export class BuyerJourneyApplication {
           bundle,
         }),
     });
-    let updated = this.transition(journey, "shortlist", {
+    let updated = await this.transition(journey, "shortlist", {
       shortlist_state: {
         status: shortlist.cards.length > 0 ? "ready" : "no_eligible",
         matching_bundle_id: bundle.matching_bundle_id,
@@ -560,12 +558,12 @@ export class BuyerJourneyApplication {
         now: generatedAt,
         createId: this.createId,
       });
-      this.repository.saveDecisionUpdate(decisionUpdate);
-      updated = this.updateJourney(updated, {
+      await this.repository.saveDecisionUpdate(decisionUpdate);
+      updated = await this.updateJourney(updated, {
         latest_decision_update_id: decisionUpdate.update_id,
       });
     }
-    this.record(updated, "matching_completed", {
+    await this.record(updated, "matching_completed", {
       matching_bundle_id: bundle.matching_bundle_id,
       candidate_count: bundle.entries.length,
       request_version: bundle.user_request_version,
@@ -574,11 +572,11 @@ export class BuyerJourneyApplication {
     return { journey: updated, bundle, shortlist };
   }
 
-  getShortlist(journeyId: string): ShortlistView {
-    const journey = this.requireJourney(journeyId);
-    const confirmed = activeRequest(this.repository, journey);
-    const bundle = activeBundle(this.repository, journey, confirmed);
-    const view = measurePilotOperation({
+  async getShortlist(journeyId: string): Promise<ShortlistView> {
+    const journey = await this.requireJourney(journeyId);
+    const confirmed = await activeRequest(this.repository, journey);
+    const bundle = await activeBundle(this.repository, journey, confirmed);
+    const view = await measurePilotOperationAsync({
       operation: "shortlist",
       candidateCount: bundle.entries.length,
       recorder: this.performanceRecorder,
@@ -590,17 +588,19 @@ export class BuyerJourneyApplication {
           bundle,
         }),
     });
-    this.record(journey, "shortlist_viewed", { card_count: view.cards.length });
+    await this.record(journey, "shortlist_viewed", {
+      card_count: view.cards.length,
+    });
     return view;
   }
 
-  openJourneyProperty(
+  async openJourneyProperty(
     journeyId: string,
     propertyId: string,
-  ): PropertyDetailView {
-    const journey = this.requireJourney(journeyId);
-    const confirmed = activeRequest(this.repository, journey);
-    const bundle = activeBundle(this.repository, journey, confirmed);
+  ): Promise<PropertyDetailView> {
+    const journey = await this.requireJourney(journeyId);
+    const confirmed = await activeRequest(this.repository, journey);
+    const bundle = await activeBundle(this.repository, journey, confirmed);
     const entry = bundle.entries.find(
       (item) => item.property_id === propertyId,
     );
@@ -610,18 +610,18 @@ export class BuyerJourneyApplication {
         "Property not found",
         false,
       );
-    const view = buildPropertyViewFromMatchingBundle({
+    const view = await buildPropertyViewFromMatchingBundle({
       repository: this.repository,
       confirmed,
       bundle,
       propertyId,
     });
-    const updated = this.transition(journey, "property_detail", {
+    const updated = await this.transition(journey, "property_detail", {
       selected_property_id: propertyId,
       selected_offer_id: entry.selected_offer_id,
       selected_purchase_scenario_id: entry.selected_purchase_scenario_id,
     });
-    this.record(updated, "property_opened", {
+    await this.record(updated, "property_opened", {
       property_id: propertyId,
       offer_id: entry.selected_offer_id,
       purchase_scenario_id: entry.selected_purchase_scenario_id,
@@ -629,15 +629,18 @@ export class BuyerJourneyApplication {
     return view;
   }
 
-  createJourneyComparison(
+  async createJourneyComparison(
     journeyId: string,
     propertyIds: readonly string[],
-  ): { readonly state: ComparisonState; readonly view: ComparisonView } {
-    const journey = this.requireJourney(journeyId);
-    const confirmed = activeRequest(this.repository, journey);
-    const bundle = activeBundle(this.repository, journey, confirmed);
+  ): Promise<{
+    readonly state: ComparisonState;
+    readonly view: ComparisonView;
+  }> {
+    const journey = await this.requireJourney(journeyId);
+    const confirmed = await activeRequest(this.repository, journey);
+    const bundle = await activeBundle(this.repository, journey, confirmed);
     const previous = journey.comparison_id
-      ? this.repository.getComparison(journey.comparison_id)
+      ? await this.repository.getComparison(journey.comparison_id)
       : null;
     const state = createComparisonState({
       repository: this.repository,
@@ -649,8 +652,8 @@ export class BuyerJourneyApplication {
       now: this.clock(),
       createId: this.createId,
     });
-    this.repository.saveComparison(state);
-    const view = measurePilotOperation({
+    await this.repository.saveComparison(state);
+    const view = await measurePilotOperationAsync({
       operation: "comparison",
       candidateCount: state.items.length,
       recorder: this.performanceRecorder,
@@ -663,11 +666,11 @@ export class BuyerJourneyApplication {
           comparison: state,
         }),
     });
-    const updated = this.transition(journey, "comparison", {
+    const updated = await this.transition(journey, "comparison", {
       comparison_id: state.comparison_id,
       comparison_property_ids: state.items.map((item) => item.property_id),
     });
-    this.record(
+    await this.record(
       updated,
       previous ? "comparison_updated" : "comparison_created",
       {
@@ -692,12 +695,12 @@ export class BuyerJourneyApplication {
     return { state, view };
   }
 
-  getJourneyComparison(journeyId: string): ComparisonView {
-    const journey = this.requireJourney(journeyId);
-    const confirmed = activeRequest(this.repository, journey);
-    const bundle = activeBundle(this.repository, journey, confirmed);
+  async getJourneyComparison(journeyId: string): Promise<ComparisonView> {
+    const journey = await this.requireJourney(journeyId);
+    const confirmed = await activeRequest(this.repository, journey);
+    const bundle = await activeBundle(this.repository, journey, confirmed);
     const comparison = journey.comparison_id
-      ? this.repository.getComparison(journey.comparison_id)
+      ? await this.repository.getComparison(journey.comparison_id)
       : null;
     if (!comparison)
       throw new BuyerJourneyError(
@@ -705,7 +708,7 @@ export class BuyerJourneyApplication {
         "Comparison is missing",
         true,
       );
-    const view = measurePilotOperation({
+    const view = await measurePilotOperationAsync({
       operation: "comparison",
       candidateCount: comparison.items.length,
       recorder: this.performanceRecorder,
@@ -725,11 +728,14 @@ export class BuyerJourneyApplication {
     return view;
   }
 
-  addUserUrlCandidate(
+  async addUserUrlCandidate(
     journeyId: string,
     candidateValue: unknown,
-  ): { readonly bundle: MatchingBundle; readonly update: DecisionUpdate } {
-    const journey = this.requireJourney(journeyId);
+  ): Promise<{
+    readonly bundle: MatchingBundle;
+    readonly update: DecisionUpdate;
+  }> {
+    const journey = await this.requireJourney(journeyId);
     if (!this.pilotRuntimeConfig.features.user_url_ingestion)
       throw new BuyerJourneyError(
         "INGESTION_FAILED",
@@ -788,16 +794,21 @@ export class BuyerJourneyApplication {
         `Pilot candidate validation failed: ${candidateValidation.errors.join(",")}`,
         true,
       );
-    this.repository.saveImportedCandidate(candidate);
-    this.repository.attachImportedCandidate(journeyId, candidate.ingestionId);
-    const result = this.recomputeAffected({
-      journeyId,
-      triggerType: "user_url_ingestion",
-      triggerRef: candidate.ingestionId,
-      affectedPropertyIds: [candidate.propertyCandidate.identity.property_id],
+    const result = await this.repository.transaction(async () => {
+      await this.repository.saveImportedCandidate(candidate);
+      await this.repository.attachImportedCandidate(
+        journeyId,
+        candidate.ingestionId,
+      );
+      return this.recomputeAffected({
+        journeyId,
+        triggerType: "user_url_ingestion",
+        triggerRef: candidate.ingestionId,
+        affectedPropertyIds: [candidate.propertyCandidate.identity.property_id],
+      });
     });
     this.recordPilot(
-      this.requireJourney(journeyId),
+      await this.requireJourney(journeyId),
       "user_url_ingestion_completed",
       {
         ingestion_id: candidate.ingestionId,
@@ -807,21 +818,21 @@ export class BuyerJourneyApplication {
     return result;
   }
 
-  createJourneyExpertRequest(
+  async createJourneyExpertRequest(
     journeyId: string,
     input: CreateJourneyExpertRequestInput,
-  ): ExpertRequest {
-    const journey = this.requireJourney(journeyId);
+  ): Promise<ExpertRequest> {
+    const journey = await this.requireJourney(journeyId);
     if (!this.pilotRuntimeConfig.features.expert_requests)
       throw new BuyerJourneyError(
         "INVALID_TRANSITION",
         "Expert requests are disabled in the active application mode",
         true,
       );
-    const confirmed = activeRequest(this.repository, journey);
-    const bundle = activeBundle(this.repository, journey, confirmed);
+    const confirmed = await activeRequest(this.repository, journey);
+    const bundle = await activeBundle(this.repository, journey, confirmed);
     const comparison = journey.comparison_id
-      ? this.repository.getComparison(journey.comparison_id)
+      ? await this.repository.getComparison(journey.comparison_id)
       : null;
     const propertyIds =
       input.requestType === "choice_assistance"
@@ -847,13 +858,15 @@ export class BuyerJourneyApplication {
         "Choice assistance requires the active comparison",
         true,
       );
-    const details = propertyIds.map((propertyId) =>
-      resolveBundlePropertyDetail({
-        repository: this.repository,
-        confirmed,
-        bundle,
-        propertyId,
-      }),
+    const details = await Promise.all(
+      propertyIds.map((propertyId) =>
+        resolveBundlePropertyDetail({
+          repository: this.repository,
+          confirmed,
+          bundle,
+          propertyId,
+        }),
+      ),
     );
     const selectedOffers = details.flatMap((detail) =>
       detail.selectedOffer ? [detail.selectedOffer] : [],
@@ -866,7 +879,7 @@ export class BuyerJourneyApplication {
       ...selectedOffers.map((offer) => offer.offer_id),
       ...selectedScenarios.map((scenario) => scenario.scenario_id),
     ]);
-    const dataset = loadJourneyDataset(this.repository);
+    const dataset = await loadJourneyDataset(this.repository);
     const conflicts = dataset.sourceConflicts.filter((conflict) =>
       relevantEntityIds.has(conflict.entity_id),
     );
@@ -884,10 +897,10 @@ export class BuyerJourneyApplication {
       sourceEvidenceRefs.includes(evidence.evidence_id),
     );
     this.currentAccessJourney = journey;
-    let created: ReturnType<ExpertRequestService["createDraft"]>;
+    let created: Awaited<ReturnType<ExpertRequestService["createDraft"]>>;
     const expertContextStartedAt = performance.now();
     try {
-      created = this.expertService.createDraft({
+      created = await this.expertService.createDraft({
         owner: ownerForJourney(journey),
         requestType: input.requestType,
         triggerType: input.triggerType,
@@ -1011,19 +1024,19 @@ export class BuyerJourneyApplication {
       this.currentAccessJourney = null;
     }
     const request = created.created
-      ? this.expertService.submit(
+      ? await this.expertService.submit(
           created.request.request_id,
           ownerForJourney(journey),
         )
       : created.request;
-    const updated = this.transition(journey, "expert_request", {
+    const updated = await this.transition(journey, "expert_request", {
       expert_request_ids: unique([
         ...journey.expert_request_ids,
         request.request_id,
       ]),
       active_expert_request_id: request.request_id,
     });
-    this.record(updated, "expert_request_created", {
+    await this.record(updated, "expert_request_created", {
       expert_request_id: request.request_id,
       request_type: request.request_type,
       context_package_id: request.context_package_id,
@@ -1035,14 +1048,16 @@ export class BuyerJourneyApplication {
     readonly journeyId: string;
     readonly specialistRef: string;
   }): Promise<ExpertRequest> {
-    const journey = this.requireJourney(input.journeyId);
+    const journey = await this.requireJourney(input.journeyId);
     if (!journey.active_expert_request_id)
       throw new BuyerJourneyError(
         "MISSING_JOURNEY_CONTEXT",
         "Expert request is missing",
         true,
       );
-    const request = this.expertRepository.get(journey.active_expert_request_id);
+    const request = await this.expertRepository.get(
+      journey.active_expert_request_id,
+    );
     if (!request)
       throw new BuyerJourneyError(
         "ENTITY_NOT_FOUND",
@@ -1054,14 +1069,14 @@ export class BuyerJourneyApplication {
       specialistRef: input.specialistRef,
       specialistType: request.required_specialist,
     });
-    const inProgress = this.expertService.transition({
+    const inProgress = await this.expertService.transition({
       requestId: request.request_id,
       status: "in_progress",
       actorType: "expert",
       actorRef: input.specialistRef,
       reasonCode: "EXPERT_STARTED_WORK",
     });
-    this.transition(journey, "expert_in_progress", {});
+    await this.transition(journey, "expert_in_progress", {});
     return inProgress;
   }
 
@@ -1069,7 +1084,7 @@ export class BuyerJourneyApplication {
     journeyId: string,
     candidate: ExpertResult,
   ): Promise<CompleteExpertRequestOutcome> {
-    const journey = this.requireJourney(journeyId);
+    const journey = await this.requireJourney(journeyId);
     if (
       journey.current_stage !== "expert_in_progress" ||
       journey.active_expert_request_id !== candidate.request_id
@@ -1079,11 +1094,11 @@ export class BuyerJourneyApplication {
         "Expert result does not belong to the active in-progress request",
         true,
       );
-    const request = this.expertRepository.get(candidate.request_id);
+    const request = await this.expertRepository.get(candidate.request_id);
     const context = request
-      ? this.expertRepository.getContext(request.context_package_id)
+      ? await this.expertRepository.getContext(request.context_package_id)
       : null;
-    const confirmed = activeRequest(this.repository, journey);
+    const confirmed = await activeRequest(this.repository, journey);
     if (
       !request ||
       !context?.decision_snapshot ||
@@ -1103,18 +1118,17 @@ export class BuyerJourneyApplication {
     const completion = new ExpertCompletionService(
       this.expertRepository,
       {
-        validateExistingReferences: (refs) => {
-          const dataset = loadJourneyDataset(this.repository);
+        validateExistingReferences: async (refs) => {
+          const dataset = await loadJourneyDataset(this.repository);
+          const stored = await this.repository.listEvidence();
           const known = new Set([
             ...dataset.fieldEvidence.map((evidence) => evidence.evidence_id),
-            ...this.repository
-              .listEvidence()
-              .map((evidence) => evidence.evidence_id),
+            ...stored.map((evidence) => evidence.evidence_id),
           ]);
           return refs.every((ref) => known.has(ref));
         },
-        integrate: ({ candidates }) => {
-          const dataset = loadJourneyDataset(this.repository);
+        integrate: async ({ candidates }) => {
+          const dataset = await loadJourneyDataset(this.repository);
           const createdEvidenceIds: string[] = [];
           const affectedPropertyIds: string[] = [];
           const affectedOfferIds: string[] = [];
@@ -1144,7 +1158,7 @@ export class BuyerJourneyApplication {
               evidence_text: evidenceCandidate.note,
               evidence_reference: evidenceCandidate.supporting_reference,
             });
-            this.repository.appendEvidence(evidence);
+            await this.repository.appendEvidence(evidence);
             createdEvidenceIds.push(evidenceId);
             if (evidenceCandidate.entity_type === "property")
               affectedPropertyIds.push(evidenceCandidate.entity_id);
@@ -1181,7 +1195,7 @@ export class BuyerJourneyApplication {
         },
       },
       {
-        requestCanonicalUpdate: ({ result, conflictResolutions }) => {
+        requestCanonicalUpdate: async ({ result, conflictResolutions }) => {
           const updateRequestIds: string[] = [];
           for (const fact of result.confirmed) {
             const evidenceId =
@@ -1209,7 +1223,7 @@ export class BuyerJourneyApplication {
             )
               continue;
             const overlayId = this.createId("canonical_overlay");
-            this.repository.saveCanonicalOverlay({
+            await this.repository.saveCanonicalOverlay({
               overlay_id: overlayId,
               entity_type:
                 entityType as CanonicalDecisionOverlay["entity_type"],
@@ -1231,7 +1245,7 @@ export class BuyerJourneyApplication {
                 ["applicability_evidence_refs", [evidenceId]],
               ] as const) {
                 const derivedOverlayId = this.createId("canonical_overlay");
-                this.repository.saveCanonicalOverlay({
+                await this.repository.saveCanonicalOverlay({
                   overlay_id: derivedOverlayId,
                   entity_type: "property_financing_eligibility",
                   entity_id: fact.entity_id,
@@ -1254,8 +1268,8 @@ export class BuyerJourneyApplication {
         },
       },
       {
-        requestRecompute: ({ propertyIds }) => {
-          const recomputed = this.recomputeAffected({
+        requestRecompute: async ({ propertyIds }) => {
+          const recomputed = await this.recomputeAffected({
             journeyId,
             triggerType: "expert_result",
             triggerRef: candidate.expert_result_id,
@@ -1275,55 +1289,60 @@ export class BuyerJourneyApplication {
       this.expertCreateId,
       this.clock,
     );
-    const outcome = await completion.complete(candidate);
-    let updated = this.transition(
-      this.requireJourney(journeyId),
-      "expert_result",
-      {
-        recoverable_error:
-          outcome.recomputeStatus === "failed"
-            ? "MATCH_RECOMPUTE_FAILED"
-            : null,
-      },
-    );
-    this.record(updated, "expert_result_completed", {
-      expert_result_id: outcome.result.expert_result_id,
-      recompute_status: outcome.recomputeStatus,
+    // One unit of work: the expert result, its evidence, the canonical
+    // overlays, the recompute and the journey transition either all land or
+    // none of them do.
+    return this.repository.transaction(async () => {
+      const outcome = await completion.complete(candidate);
+      let updated = await this.transition(
+        await this.requireJourney(journeyId),
+        "expert_result",
+        {
+          recoverable_error:
+            outcome.recomputeStatus === "failed"
+              ? "MATCH_RECOMPUTE_FAILED"
+              : null,
+        },
+      );
+      await this.record(updated, "expert_result_completed", {
+        expert_result_id: outcome.result.expert_result_id,
+        recompute_status: outcome.recomputeStatus,
+      });
+      if (outcome.recomputeStatus === "not_required") {
+        const bundle = await activeBundle(this.repository, updated, confirmed);
+        const noChange = buildDecisionUpdate({
+          journeyId,
+          triggerType: "expert_result",
+          triggerRef: outcome.result.expert_result_id,
+          previousBundle: bundle,
+          nextBundle: null,
+          affectedPropertyIds: request.property_ids,
+          status: "completed",
+          now: this.clock(),
+          createId: this.createId,
+        });
+        await this.repository.saveDecisionUpdate(noChange);
+        lastDecisionUpdate = noChange;
+        updated = await this.updateJourney(updated, {
+          latest_decision_update_id: noChange.update_id,
+        });
+      }
+      if (outcome.recomputeStatus !== "failed" && lastDecisionUpdate) {
+        updated = await this.transition(updated, "updated_decision", {
+          latest_decision_update_id: lastDecisionUpdate.update_id,
+          recoverable_error: null,
+        });
+      }
+      return outcome;
     });
-    if (outcome.recomputeStatus === "not_required") {
-      const bundle = activeBundle(this.repository, updated, confirmed);
-      const noChange = buildDecisionUpdate({
-        journeyId,
-        triggerType: "expert_result",
-        triggerRef: outcome.result.expert_result_id,
-        previousBundle: bundle,
-        nextBundle: null,
-        affectedPropertyIds: request.property_ids,
-        status: "completed",
-        now: this.clock(),
-        createId: this.createId,
-      });
-      this.repository.saveDecisionUpdate(noChange);
-      lastDecisionUpdate = noChange;
-      updated = this.updateJourney(updated, {
-        latest_decision_update_id: noChange.update_id,
-      });
-    }
-    if (outcome.recomputeStatus !== "failed" && lastDecisionUpdate) {
-      updated = this.transition(updated, "updated_decision", {
-        latest_decision_update_id: lastDecisionUpdate.update_id,
-        recoverable_error: null,
-      });
-    }
-    return outcome;
   }
 
-  viewJourneyExpertResult(
+  async viewJourneyExpertResult(
     journeyId: string,
     expertResultId: string,
-  ): ExpertResult {
-    const journey = this.requireJourney(journeyId);
-    const snapshot = this.getJourneySnapshot(journeyId);
+  ): Promise<ExpertResult> {
+    const journey = await this.requireJourney(journeyId);
+    const snapshot = await this.getJourneySnapshot(journeyId);
     const result = snapshot.expert?.result ?? null;
     if (!result || result.expert_result_id !== expertResultId)
       throw new BuyerJourneyError(
@@ -1338,14 +1357,14 @@ export class BuyerJourneyApplication {
     return result;
   }
 
-  submitJourneyFeedback(input: {
+  async submitJourneyFeedback(input: {
     readonly journeyId: string;
     readonly stage: PilotFeedbackStage;
     readonly questionCode: string;
     readonly answer: JourneyFeedback["answer"];
     readonly optionalComment?: string | null;
-  }): JourneyFeedback {
-    const journey = this.requireJourney(input.journeyId);
+  }): Promise<JourneyFeedback> {
+    const journey = await this.requireJourney(input.journeyId);
     return this.feedbackService.submit({
       journeyId: journey.journey_id,
       sessionId: journey.session_id,
@@ -1357,16 +1376,16 @@ export class BuyerJourneyApplication {
     });
   }
 
-  recordApplicationError(input: {
+  async recordApplicationError(input: {
     readonly errorCode: string;
     readonly layer: ApplicationErrorLayer;
     readonly journeyId?: string | null;
     readonly recoverable: boolean;
     readonly userVisible: boolean;
     readonly contextIds?: Readonly<Record<string, string>>;
-  }): ApplicationErrorRecord {
+  }): Promise<ApplicationErrorRecord> {
     const journey = input.journeyId
-      ? this.repository.getJourney(input.journeyId)
+      ? await this.repository.getJourney(input.journeyId)
       : null;
     const error = createApplicationError({
       errorCode: input.errorCode,
@@ -1379,25 +1398,25 @@ export class BuyerJourneyApplication {
       contextIds: input.contextIds,
       appVersion: this.pilotRuntimeConfig.appVersion,
     });
-    this.errorRepository.record(error.record);
+    await this.errorRepository.record(error.record);
     return error.record;
   }
 
-  getJourneyDiagnostics(
+  async getJourneyDiagnostics(
     journeyId: string,
     correlations: {
       readonly refreshTaskIds?: readonly string[];
       readonly collectionRunIds?: readonly string[];
       readonly openclawRequestIds?: readonly string[];
     } = {},
-  ): JourneyDiagnosticReport {
-    const journey = this.requireJourney(journeyId);
+  ): Promise<JourneyDiagnosticReport> {
+    const journey = await this.requireJourney(journeyId);
     return buildJourneyDiagnosticReport({
       journey,
-      snapshot: this.getJourneySnapshot(journeyId),
-      auditEvents: this.instrumentation.list(journeyId),
+      snapshot: await this.getJourneySnapshot(journeyId),
+      auditEvents: await this.instrumentation.list(journeyId),
       telemetryEvents: this.pilotTelemetry.list(journeyId),
-      errors: this.errorRepository.list(journeyId),
+      errors: await this.errorRepository.list(journeyId),
       refreshTaskIds: correlations.refreshTaskIds,
       collectionRunIds: correlations.collectionRunIds,
       openclawRequestIds: correlations.openclawRequestIds,
@@ -1405,12 +1424,12 @@ export class BuyerJourneyApplication {
     });
   }
 
-  getJourneyCoverage(journeyId: string): CoverageSummary {
-    const journey = this.requireJourney(journeyId);
-    const confirmed = activeRequest(this.repository, journey);
-    const bundle = activeBundle(this.repository, journey, confirmed);
-    const imported = this.repository.listImportedCandidates(journeyId);
-    const syntheticDataset = loadJourneyDataset(this.repository);
+  async getJourneyCoverage(journeyId: string): Promise<CoverageSummary> {
+    const journey = await this.requireJourney(journeyId);
+    const confirmed = await activeRequest(this.repository, journey);
+    const bundle = await activeBundle(this.repository, journey, confirmed);
+    const imported = await this.repository.listImportedCandidates(journeyId);
+    const syntheticDataset = await loadJourneyDataset(this.repository);
     const explicitReadiness = imported.map((candidate) => ({
       source_id: candidate.source.source_id,
       ready: true,
@@ -1464,20 +1483,20 @@ export class BuyerJourneyApplication {
     });
   }
 
-  requestJourneyRefresh(input: {
+  async requestJourneyRefresh(input: {
     readonly journeyId: string;
     readonly propertyId: string;
     readonly offerId: string;
     readonly targetUrl: string;
     readonly fieldPaths: readonly string[];
     readonly environment?: SourceEnvironment;
-  }): JourneyRefreshRequestOutcome {
-    const journey = this.requireJourney(input.journeyId);
+  }): Promise<JourneyRefreshRequestOutcome> {
+    const journey = await this.requireJourney(input.journeyId);
     const queue = new InMemoryRefreshQueueRepository();
     const policy = new RegistryRefreshPolicyGateway();
     const service = new RefreshTaskService(queue, policy);
     const requestedAt = this.clock();
-    const audit = service.enqueue(
+    const audit = await service.enqueue(
       {
         entityType: "offer",
         entityId: input.offerId,
@@ -1517,7 +1536,7 @@ export class BuyerJourneyApplication {
       : !featureAllowed
         ? ("FEATURE_DISABLED" as const)
         : null;
-    const updated = this.updateJourney(journey, {
+    const updated = await this.updateJourney(journey, {
       recoverable_error:
         errorCode === "SOURCE_POLICY_BLOCKED"
           ? "SOURCE_POLICY_BLOCKED"
@@ -1525,7 +1544,7 @@ export class BuyerJourneyApplication {
             ? "FEATURE_DISABLED"
             : "REFRESH_PENDING",
     });
-    this.record(updated, "refresh_requested", {
+    await this.record(updated, "refresh_requested", {
       refresh_task_id: audit.enqueueResult.task.refresh_task_id,
       policy_allowed: audit.policyAllowedAtEnqueue,
       feature_allowed: featureAllowed,
@@ -1538,26 +1557,28 @@ export class BuyerJourneyApplication {
     };
   }
 
-  applyRefreshResultToJourney(
+  async applyRefreshResultToJourney(
     journeyId: string,
     result: RefreshResult,
-  ): {
+  ): Promise<{
     readonly bundle: MatchingBundle;
     readonly update: DecisionUpdate;
-  } | null {
-    const journey = this.requireJourney(journeyId);
+  } | null> {
+    const journey = await this.requireJourney(journeyId);
     if (result.status === "blocked" || result.error_code === "POLICY_DENIED") {
-      this.updateJourney(journey, {
+      await this.updateJourney(journey, {
         recoverable_error: "SOURCE_POLICY_BLOCKED",
       });
       return null;
     }
     if (!["succeeded", "partial"].includes(result.status)) {
-      this.updateJourney(journey, { recoverable_error: "REFRESH_PENDING" });
+      await this.updateJourney(journey, {
+        recoverable_error: "REFRESH_PENDING",
+      });
       return null;
     }
     const affected = result.affected_entities.affected_property_ids;
-    const recomputed = this.recomputeAffected({
+    const recomputed = await this.recomputeAffected({
       journeyId,
       triggerType: "refresh_result",
       triggerRef: result.refresh_task_id,
@@ -1565,79 +1586,91 @@ export class BuyerJourneyApplication {
       newConflicts: result.new_conflict_ids,
       resolvedConflicts: result.resolved_conflict_ids,
     });
-    this.record(this.requireJourney(journeyId), "refresh_completed", {
-      refresh_task_id: result.refresh_task_id,
-      changed_field_count: result.changed_fields.length,
-    });
+    await this.record(
+      await this.requireJourney(journeyId),
+      "refresh_completed",
+      {
+        refresh_task_id: result.refresh_task_id,
+        changed_field_count: result.changed_fields.length,
+      },
+    );
     return recomputed;
   }
 
-  getJourneySnapshot(journeyId: string): JourneyDataSnapshot {
-    const journey = this.requireJourney(journeyId);
+  async getJourneySnapshot(journeyId: string): Promise<JourneyDataSnapshot> {
+    const journey = await this.requireJourney(journeyId);
     const confirmed =
       journey.confirmed_user_request_id &&
       journey.confirmed_user_request_version !== null
-        ? this.repository.getConfirmedRequest(
+        ? await this.repository.getConfirmedRequest(
             journey.confirmed_user_request_id,
             journey.confirmed_user_request_version,
           )
         : null;
     const bundle = journey.shortlist_state.matching_bundle_id
-      ? this.repository.getMatchingBundle(
+      ? await this.repository.getMatchingBundle(
           journey.shortlist_state.matching_bundle_id,
         )
       : null;
     const comparison = journey.comparison_id
-      ? this.repository.getComparison(journey.comparison_id)
+      ? await this.repository.getComparison(journey.comparison_id)
       : null;
     const update = journey.latest_decision_update_id
-      ? this.repository.getDecisionUpdate(journey.latest_decision_update_id)
+      ? await this.repository.getDecisionUpdate(
+          journey.latest_decision_update_id,
+        )
       : null;
     const request = journey.active_expert_request_id
-      ? this.expertRepository.get(journey.active_expert_request_id)
+      ? await this.expertRepository.get(journey.active_expert_request_id)
       : null;
     const context = request
-      ? this.expertRepository.getContext(request.context_package_id)
+      ? await this.expertRepository.getContext(request.context_package_id)
       : null;
     return {
       parsed_request: journey.parsed_request_ref
-        ? this.repository.getParsedRequest(journey.parsed_request_ref)
+        ? await this.repository.getParsedRequest(journey.parsed_request_ref)
         : null,
       confirmed_request: confirmed,
       matching_bundle: bundle,
       comparison,
       decision_update: update,
-      imported_candidates: this.repository.listImportedCandidates(journeyId),
+      imported_candidates:
+        await this.repository.listImportedCandidates(journeyId),
       expert:
         request && context
           ? {
               request,
               context,
-              result: this.expertRepository.getResult(request.request_id),
+              result: await this.expertRepository.getResult(request.request_id),
             }
           : null,
-      evidence: this.repository.listEvidence(),
+      evidence: await this.repository.listEvidence(),
     };
   }
 
-  getJourney(journeyId: string): BuyerJourney {
+  async getJourney(journeyId: string): Promise<BuyerJourney> {
     return this.requireJourney(journeyId);
   }
 
-  private recomputeAffected(input: {
+  private async recomputeAffected(input: {
     readonly journeyId: string;
     readonly triggerType: DecisionUpdateTrigger;
     readonly triggerRef: string;
     readonly affectedPropertyIds: readonly string[];
     readonly newConflicts?: readonly string[];
     readonly resolvedConflicts?: readonly string[];
-  }): { readonly bundle: MatchingBundle; readonly update: DecisionUpdate } {
-    const journey = this.requireJourney(input.journeyId);
-    const confirmed = activeRequest(this.repository, journey);
-    const previous = activeBundle(this.repository, journey, confirmed);
+  }): Promise<{
+    readonly bundle: MatchingBundle;
+    readonly update: DecisionUpdate;
+  }> {
+    const journey = await this.requireJourney(input.journeyId);
+    const confirmed = await activeRequest(this.repository, journey);
+    const previous = await activeBundle(this.repository, journey, confirmed);
     const generatedAt = this.clock();
-    const imported = this.repository.listImportedCandidates(input.journeyId);
-    const bundle = measurePilotOperation({
+    const imported = await this.repository.listImportedCandidates(
+      input.journeyId,
+    );
+    const bundle = await measurePilotOperationAsync({
       operation: "matching",
       candidateCount: input.affectedPropertyIds.length,
       recorder: this.performanceRecorder,
@@ -1655,8 +1688,8 @@ export class BuyerJourneyApplication {
           includeSyntheticDataset: this.pilotRuntimeConfig.mode === "demo",
         }),
     });
-    this.repository.saveMatchingBundle(bundle);
-    this.repository.markMatchingBundleStale(previous.matching_bundle_id);
+    await this.repository.saveMatchingBundle(bundle);
+    await this.repository.markMatchingBundleStale(previous.matching_bundle_id);
     const update = buildDecisionUpdate({
       journeyId: input.journeyId,
       triggerType: input.triggerType,
@@ -1669,8 +1702,8 @@ export class BuyerJourneyApplication {
       now: generatedAt,
       createId: this.createId,
     });
-    this.repository.saveDecisionUpdate(update);
-    this.updateJourney(journey, {
+    await this.repository.saveDecisionUpdate(update);
+    await this.updateJourney(journey, {
       shortlist_state: {
         ...journey.shortlist_state,
         matching_bundle_id: bundle.matching_bundle_id,
@@ -1681,16 +1714,20 @@ export class BuyerJourneyApplication {
       latest_decision_update_id: update.update_id,
       recoverable_error: null,
     });
-    this.record(this.requireJourney(input.journeyId), "decision_recomputed", {
-      decision_update_id: update.update_id,
-      trigger_type: input.triggerType,
-      affected_property_count: input.affectedPropertyIds.length,
-    });
+    await this.record(
+      await this.requireJourney(input.journeyId),
+      "decision_recomputed",
+      {
+        decision_update_id: update.update_id,
+        trigger_type: input.triggerType,
+        affected_property_count: input.affectedPropertyIds.length,
+      },
+    );
     return { bundle, update };
   }
 
-  private requireJourney(journeyId: string): BuyerJourney {
-    const journey = this.repository.getJourney(journeyId);
+  private async requireJourney(journeyId: string): Promise<BuyerJourney> {
+    const journey = await this.repository.getJourney(journeyId);
     if (!journey)
       throw new BuyerJourneyError(
         "MISSING_JOURNEY_CONTEXT",
@@ -1700,19 +1737,19 @@ export class BuyerJourneyApplication {
     return journey;
   }
 
-  private transition(
+  private async transition(
     journey: BuyerJourney,
     stage: BuyerJourney["current_stage"],
     patch: Partial<BuyerJourney>,
-  ): BuyerJourney {
+  ): Promise<BuyerJourney> {
     assertBuyerJourneyTransition(journey.current_stage, stage);
     return this.updateJourney(journey, { ...patch, current_stage: stage });
   }
 
-  private updateJourney(
+  private async updateJourney(
     journey: BuyerJourney,
     patch: Partial<BuyerJourney>,
-  ): BuyerJourney {
+  ): Promise<BuyerJourney> {
     const updated: BuyerJourney = {
       ...journey,
       ...patch,
@@ -1722,16 +1759,16 @@ export class BuyerJourneyApplication {
       created_at: journey.created_at,
       updated_at: this.clock(),
     };
-    this.repository.saveJourney(updated);
+    await this.repository.saveJourney(updated);
     return updated;
   }
 
-  private record(
+  private async record(
     journey: BuyerJourney,
     eventType: Parameters<JourneyInstrumentation["record"]>[0]["eventType"],
     metadata: Readonly<Record<string, string | number | boolean | null>>,
-  ): void {
-    this.instrumentation.record({
+  ): Promise<void> {
+    await this.instrumentation.record({
       journey,
       eventType,
       occurredAt: this.clock(),
@@ -1756,29 +1793,33 @@ export class BuyerJourneyApplication {
     });
   }
 
-  private *listJourneysForSession(sessionId: string): Iterable<BuyerJourney> {
+  private async listJourneysForSession(
+    sessionId: string,
+  ): Promise<readonly BuyerJourney[]> {
+    const journeys: BuyerJourney[] = [];
     // The repository deliberately has no cross-session listing API. IDs known
     // to the current expert service are resolved from their owning journeys.
-    for (const request of this.expertRepository.listAll()) {
+    for (const request of await this.expertRepository.listAll()) {
       if (
         request.owner.owner_type === "session" &&
         request.owner.owner_id === sessionId
       ) {
-        const context = this.expertRepository.getContext(
+        const context = await this.expertRepository.getContext(
           request.context_package_id,
         );
         const journeyId = context?.decision_snapshot?.journey_id;
         const journey = journeyId
-          ? this.repository.getJourney(journeyId)
+          ? await this.repository.getJourney(journeyId)
           : null;
-        if (journey) yield journey;
+        if (journey) journeys.push(journey);
       }
     }
     // Before the first expert request, access validation is scoped by the
     // explicit owner passed from createJourneyExpertRequest; keep that journey
     // discoverable without exposing a repository-wide list operation.
     const active = this.activeJourneyForSession(sessionId);
-    if (active) yield active;
+    if (active) journeys.push(active);
+    return journeys;
   }
 
   private activeJourneyForSession(sessionId: string): BuyerJourney | null {

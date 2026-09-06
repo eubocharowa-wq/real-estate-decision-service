@@ -89,7 +89,7 @@ const repository = new InMemoryExpertRequestRepository();
 const service = new ExpertRequestService(
   repository,
   {
-    canAccess: ({ owner, entityType, entityId }) => {
+    canAccess: async ({ owner, entityType, entityId }) => {
       if (entityType === "property") return propertyIds.has(entityId);
       if (entityType === "offer") return offerIds.has(entityId);
       if (entityType === "purchase_scenario") return scenarioIds.has(entityId);
@@ -195,7 +195,7 @@ export async function POST(request: Request): Promise<Response> {
       .at(-1) ?? null;
 
   try {
-    const created = service.createDraft({
+    const created = await service.createDraft({
       owner,
       requestType: submission.requestType,
       triggerType: submission.triggerType,
@@ -291,7 +291,7 @@ export async function POST(request: Request): Promise<Response> {
       },
     });
     const queued = created.created
-      ? service.submit(created.request.request_id, owner)
+      ? await service.submit(created.request.request_id, owner)
       : created.request;
     return Response.json(
       {

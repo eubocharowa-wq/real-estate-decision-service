@@ -1,3 +1,7 @@
+import {
+  runInMemoryTransaction,
+  type TransactionalRepository,
+} from "../persistence";
 import type {
   ExpertAuditEvent,
   ExpertContextPackage,
@@ -13,35 +17,35 @@ export interface RepositoryCreateExpertRequestOutcome {
   readonly created: boolean;
 }
 
-export interface ExpertRequestRepository {
+export interface ExpertRequestRepository extends TransactionalRepository {
   create(
     request: ExpertRequest,
     contextPackage: ExpertContextPackage,
-  ): RepositoryCreateExpertRequestOutcome;
-  get(requestId: string): ExpertRequest | null;
-  getContext(contextPackageId: string): ExpertContextPackage | null;
-  findActiveByDedupKey(dedupKey: string): ExpertRequest | null;
-  listAll(): readonly ExpertRequest[];
-  listQueued(): readonly ExpertRequest[];
+  ): Promise<RepositoryCreateExpertRequestOutcome>;
+  get(requestId: string): Promise<ExpertRequest | null>;
+  getContext(contextPackageId: string): Promise<ExpertContextPackage | null>;
+  findActiveByDedupKey(dedupKey: string): Promise<ExpertRequest | null>;
+  listAll(): Promise<readonly ExpertRequest[]>;
+  listQueued(): Promise<readonly ExpertRequest[]>;
   updateStatus(
     requestId: string,
     status: ExpertWorkflowStatus,
     updatedAt: string,
-  ): ExpertRequest;
+  ): Promise<ExpertRequest>;
   assign(
     requestId: string,
     specialistRef: string,
     updatedAt: string,
-  ): ExpertRequest;
+  ): Promise<ExpertRequest>;
   replaceContext(
     requestId: string,
     contextPackage: ExpertContextPackage,
     updatedAt: string,
-  ): ExpertRequest;
-  saveResult(result: ExpertResult): void;
-  getResult(requestId: string): ExpertResult | null;
-  appendAudit(event: ExpertAuditEvent): void;
-  listAudit(requestId: string): readonly ExpertAuditEvent[];
+  ): Promise<ExpertRequest>;
+  saveResult(result: ExpertResult): Promise<void>;
+  getResult(requestId: string): Promise<ExpertResult | null>;
+  appendAudit(event: ExpertAuditEvent): Promise<void>;
+  listAudit(requestId: string): Promise<readonly ExpertAuditEvent[]>;
 }
 
 const activeStatuses: ReadonlySet<ExpertWorkflowStatus> = new Set([
@@ -69,11 +73,15 @@ export class InMemoryExpertRequestRepository implements ExpertRequestRepository 
   private readonly results = new Map<string, ExpertResult>();
   private readonly audit = new Map<string, ExpertAuditEvent[]>();
 
-  create(
+  transaction<T>(work: () => Promise<T>): Promise<T> {
+    return runInMemoryTransaction(work);
+  }
+
+  async create(
     request: ExpertRequest,
     contextPackage: ExpertContextPackage,
-  ): RepositoryCreateExpertRequestOutcome {
-    const duplicate = this.findActiveByDedupKey(request.dedup_key);
+  ): Promise<RepositoryCreateExpertRequestOutcome> {
+    const duplicate = await this.findActiveByDedupKey(request.dedup_key);
     if (duplicate) return { request: duplicate, created: false };
     if (this.requests.has(request.request_id))
       throw new Error("EXPERT_REQUEST_ALREADY_EXISTS");
@@ -84,17 +92,19 @@ export class InMemoryExpertRequestRepository implements ExpertRequestRepository 
     return { request: clone(request), created: true };
   }
 
-  get(requestId: string): ExpertRequest | null {
+  async get(requestId: string): Promise<ExpertRequest | null> {
     const request = this.requests.get(requestId);
     return request ? clone(request) : null;
   }
 
-  getContext(contextPackageId: string): ExpertContextPackage | null {
+  async getContext(
+    contextPackageId: string,
+  ): Promise<ExpertContextPackage | null> {
     const contextPackage = this.contexts.get(contextPackageId);
     return contextPackage ? clone(contextPackage) : null;
   }
 
-  findActiveByDedupKey(dedupKey: string): ExpertRequest | null {
+  async findActiveByDedupKey(dedupKey: string): Promise<ExpertRequest | null> {
     const request = [...this.requests.values()].find(
       (candidate) =>
         candidate.dedup_key === dedupKey &&
@@ -103,11 +113,11 @@ export class InMemoryExpertRequestRepository implements ExpertRequestRepository 
     return request ? clone(request) : null;
   }
 
-  listAll(): readonly ExpertRequest[] {
+  async listAll(): Promise<readonly ExpertRequest[]> {
     return [...this.requests.values()].map(clone);
   }
 
-  listQueued(): readonly ExpertRequest[] {
+  async listQueued(): Promise<readonly ExpertRequest[]> {
     return [...this.requests.values()]
       .filter((request) => request.status === "queued")
       .sort(
@@ -120,11 +130,11 @@ export class InMemoryExpertRequestRepository implements ExpertRequestRepository 
       .map(clone);
   }
 
-  updateStatus(
+  async updateStatus(
     requestId: string,
     status: ExpertWorkflowStatus,
     updatedAt: string,
-  ): ExpertRequest {
+  ): Promise<ExpertRequest> {
     const request = this.requireRequest(requestId);
     assertExpertRequestTransition(request.status, status);
     const updated = { ...request, status, updated_at: updatedAt };
@@ -132,11 +142,11 @@ export class InMemoryExpertRequestRepository implements ExpertRequestRepository 
     return clone(updated);
   }
 
-  assign(
+  async assign(
     requestId: string,
     specialistRef: string,
     updatedAt: string,
-  ): ExpertRequest {
+  ): Promise<ExpertRequest> {
     const request = this.requireRequest(requestId);
     assertExpertRequestTransition(request.status, "assigned");
     const updated: ExpertRequest = {
@@ -149,11 +159,11 @@ export class InMemoryExpertRequestRepository implements ExpertRequestRepository 
     return clone(updated);
   }
 
-  replaceContext(
+  async replaceContext(
     requestId: string,
     contextPackage: ExpertContextPackage,
     updatedAt: string,
-  ): ExpertRequest {
+  ): Promise<ExpertRequest> {
     const request = this.requireRequest(requestId);
     if (
       ["in_progress", "waiting_for_user", "waiting_for_external_info"].includes(
@@ -173,24 +183,24 @@ export class InMemoryExpertRequestRepository implements ExpertRequestRepository 
     return clone(updated);
   }
 
-  saveResult(result: ExpertResult): void {
+  async saveResult(result: ExpertResult): Promise<void> {
     if (this.results.has(result.request_id))
       throw new Error("COMPLETED_RESULT_IS_IMMUTABLE");
     this.results.set(result.request_id, clone(result));
   }
 
-  getResult(requestId: string): ExpertResult | null {
+  async getResult(requestId: string): Promise<ExpertResult | null> {
     const result = this.results.get(requestId);
     return result ? clone(result) : null;
   }
 
-  appendAudit(event: ExpertAuditEvent): void {
+  async appendAudit(event: ExpertAuditEvent): Promise<void> {
     const events = this.audit.get(event.request_id) ?? [];
     events.push(clone(event));
     this.audit.set(event.request_id, events);
   }
 
-  listAudit(requestId: string): readonly ExpertAuditEvent[] {
+  async listAudit(requestId: string): Promise<readonly ExpertAuditEvent[]> {
     return (this.audit.get(requestId) ?? []).map(clone);
   }
 

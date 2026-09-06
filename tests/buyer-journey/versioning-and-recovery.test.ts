@@ -16,10 +16,12 @@ import {
   MutableJourneyClock,
 } from "./helpers";
 
-describe("buyer journey versions and recovery", () => {
-  it("returns a controlled missing-context error for direct routes", () => {
+describe("buyer journey versions and recovery", async () => {
+  it("returns a controlled missing-context error for direct routes", async () => {
     const application = new BuyerJourneyApplication();
-    expect(() => application.getShortlist("missing_journey")).toThrowError(
+    await expect(
+      application.getShortlist("missing_journey"),
+    ).rejects.toThrowError(
       expect.objectContaining({ code: "MISSING_JOURNEY_CONTEXT" }),
     );
   });
@@ -27,13 +29,13 @@ describe("buyer journey versions and recovery", () => {
   it("does not relax a strict request when no property is eligible", async () => {
     const clock = new MutableJourneyClock();
     const application = new BuyerJourneyApplication({ clock: clock.now });
-    const journey = application.startBuyerJourney({
+    const journey = await application.startBuyerJourney({
       sessionId: "session_strict",
       rawRequestText:
         "Найди 5 квартир в Туле до 100 тысяч. Семейная ипотека обязательна. Первый этаж не рассматриваю.",
     });
     await confirmParsedJourney(application, journey);
-    const result = application.runJourneyMatching(journey.journey_id);
+    const result = await application.runJourneyMatching(journey.journey_id);
     expect(result.shortlist.cards).toHaveLength(0);
     expect(result.journey.shortlist_state.status).toBe("no_eligible");
   });
@@ -42,11 +44,13 @@ describe("buyer journey versions and recovery", () => {
     const { application, journey, confirmation, matching } =
       await createGoldenJourney();
     const oldBundleId = matching.bundle.matching_bundle_id;
-    const oldComparison = application.createJourneyComparison(
-      journey.journey_id,
-      ["prop_nb_002", "prop_nb_003"],
+    const oldComparison = (
+      await application.createJourneyComparison(journey.journey_id, [
+        "prop_nb_002",
+        "prop_nb_003",
+      ])
     ).state;
-    application.beginRequestEdit(journey.journey_id);
+    await application.beginRequestEdit(journey.journey_id);
     const edited = structuredClone(confirmation);
     edited.confirmed_at = "2026-08-15T02:00:00.000Z";
     edited.confirmed_request.budget.purchase_price.maximum = {
@@ -60,62 +64,69 @@ describe("buyer journey versions and recovery", () => {
       amount: "6000000.00",
       currency: "RUB",
     };
-    application.confirmBuyerRequest(
+    await application.confirmBuyerRequest(
       journey.journey_id,
       requestConfirmationResultSchema.parse(edited),
     );
-    expect(application.repository.getMatchingBundle(oldBundleId)?.stale).toBe(
-      true,
-    );
     expect(
-      application.repository.getComparison(oldComparison.comparison_id)?.status,
+      (await application.repository.getMatchingBundle(oldBundleId))?.stale,
+    ).toBe(true);
+    expect(
+      (await application.repository.getComparison(oldComparison.comparison_id))
+        ?.status,
     ).toBe("recompute_required");
-    expect(() => application.getJourneyComparison(journey.journey_id)).toThrow(
-      BuyerJourneyError,
-    );
+    await expect(
+      application.getJourneyComparison(journey.journey_id),
+    ).rejects.toThrow(BuyerJourneyError);
 
-    const recomputed = application.runJourneyMatching(journey.journey_id);
+    const recomputed = await application.runJourneyMatching(journey.journey_id);
     expect(recomputed.bundle.user_request_version).toBe(2);
     expect(recomputed.bundle.matching_bundle_id).not.toBe(oldBundleId);
     expect(
-      application.getJourneySnapshot(journey.journey_id).decision_update,
+      (await application.getJourneySnapshot(journey.journey_id))
+        .decision_update,
     ).toMatchObject({ trigger_type: "user_request_changed" });
-    expect(() =>
+    await expect(
       buildComparisonFromState({
         repository: application.repository,
-        confirmed: application.getJourneySnapshot(journey.journey_id)
+        confirmed: (await application.getJourneySnapshot(journey.journey_id))
           .confirmed_request!,
         bundle: recomputed.bundle,
         comparison: oldComparison,
       }),
-    ).toThrowError(expect.objectContaining({ code: "STALE_REQUEST_VERSION" }));
+    ).rejects.toThrowError(
+      expect.objectContaining({ code: "STALE_REQUEST_VERSION" }),
+    );
   });
 
   it("retains a completed expert result when affected recompute fails", async () => {
     class FailingRepository extends InMemoryBuyerJourneyRepository {
       failBundles = false;
-      override saveMatchingBundle(
+      override async saveMatchingBundle(
         bundle: Parameters<
           InMemoryBuyerJourneyRepository["saveMatchingBundle"]
         >[0],
-      ): void {
+      ): Promise<void> {
         if (this.failBundles) throw new Error("FIXTURE_RECOMPUTE_FAILURE");
-        super.saveMatchingBundle(bundle);
+        await super.saveMatchingBundle(bundle);
       }
     }
     const repository = new FailingRepository();
     const { application, clock, journey } = await createGoldenJourney({
       repository,
     });
-    application.openJourneyProperty(journey.journey_id, "prop_nb_002");
-    const request = application.createJourneyExpertRequest(journey.journey_id, {
-      requestType: "information_verification",
-      triggerType: "critical_unknown",
-      questionCategory: "financing",
-      question: "Подтвердите применимость семейной ипотеки для решения.",
-      propertyIds: ["prop_nb_002"],
-      field: "financing.program_type",
-    });
+    await application.openJourneyProperty(journey.journey_id, "prop_nb_002");
+    const request = await application.createJourneyExpertRequest(
+      journey.journey_id,
+      {
+        requestType: "information_verification",
+        triggerType: "critical_unknown",
+        questionCategory: "financing",
+        question: "Подтвердите применимость семейной ипотеки для решения.",
+        propertyIds: ["prop_nb_002"],
+        field: "financing.program_type",
+      },
+    );
     const work = await application.startJourneyExpertWork({
       journeyId: journey.journey_id,
       specialistRef: "specialist_recompute_failure",
@@ -131,27 +142,30 @@ describe("buyer journey versions and recovery", () => {
       }),
     );
     expect(outcome.recomputeStatus).toBe("failed");
-    expect(application.getJourney(journey.journey_id)).toMatchObject({
+    expect(await application.getJourney(journey.journey_id)).toMatchObject({
       current_stage: "expert_result",
       recoverable_error: "MATCH_RECOMPUTE_FAILED",
     });
     expect(
-      application.expertRepository.getResult(request.request_id)
+      (await application.expertRepository.getResult(request.request_id))
         ?.expert_result_id,
     ).toBe("expert_result_family_eligibility");
   });
 
   it("preserves an unable-to-verify result and does not invent a resolution", async () => {
     const { application, journey } = await createGoldenJourney();
-    application.openJourneyProperty(journey.journey_id, "prop_nb_002");
-    const request = application.createJourneyExpertRequest(journey.journey_id, {
-      requestType: "information_verification",
-      triggerType: "critical_unknown",
-      questionCategory: "financing",
-      question: "Проверьте применимость программы, если это возможно.",
-      propertyIds: ["prop_nb_002"],
-      field: "financing.program_type",
-    });
+    await application.openJourneyProperty(journey.journey_id, "prop_nb_002");
+    const request = await application.createJourneyExpertRequest(
+      journey.journey_id,
+      {
+        requestType: "information_verification",
+        triggerType: "critical_unknown",
+        questionCategory: "financing",
+        question: "Проверьте применимость программы, если это возможно.",
+        propertyIds: ["prop_nb_002"],
+        field: "financing.program_type",
+      },
+    );
     const work = await application.startJourneyExpertWork({
       journeyId: journey.journey_id,
       specialistRef: "specialist_unable",
@@ -201,7 +215,7 @@ describe("buyer journey versions and recovery", () => {
     );
     expect(outcome.recomputeStatus).toBe("not_required");
     expect(outcome.request.status).toBe("unable_to_complete");
-    const snapshot = application.getJourneySnapshot(journey.journey_id);
+    const snapshot = await application.getJourneySnapshot(journey.journey_id);
     expect(snapshot.decision_update?.new_results).toEqual([]);
     expect(
       snapshot.matching_bundle?.entries.find(
@@ -209,21 +223,21 @@ describe("buyer journey versions and recovery", () => {
       )?.match.match_result.unknown_critical.length,
     ).toBeGreaterThan(0);
     expect(
-      loadJourneyDataset(application.repository).sourceConflicts.find(
+      (await loadJourneyDataset(application.repository)).sourceConflicts.find(
         (conflict) => conflict.conflict_id === "conflict_prop_nb_002_price",
       )?.status,
     ).toBe("open");
   });
 
-  it("rejects invalid stage transitions", () => {
+  it("rejects invalid stage transitions", async () => {
     const application = new BuyerJourneyApplication();
-    const journey = application.startBuyerJourney({
+    const journey = await application.startBuyerJourney({
       sessionId: "session_invalid_transition",
       rawRequestText: GOLDEN_RAW_REQUEST,
     });
-    expect(() =>
+    await expect(
       application.createJourneyComparison(journey.journey_id, ["a", "b"]),
-    ).toThrowError(
+    ).rejects.toThrowError(
       expect.objectContaining({ code: "MISSING_JOURNEY_CONTEXT" }),
     );
   });

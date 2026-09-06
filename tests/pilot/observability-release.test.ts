@@ -25,7 +25,7 @@ import { createGoldenJourney } from "../buyer-journey/helpers";
 
 const now = "2026-08-24T12:00:00.000Z";
 
-describe("pilot telemetry and feedback", () => {
+describe("pilot telemetry and feedback", async () => {
   it("defines every required vendor-neutral event and strips sensitive metadata", () => {
     expect(PILOT_TELEMETRY_EVENTS).toEqual(
       expect.arrayContaining([
@@ -69,7 +69,7 @@ describe("pilot telemetry and feedback", () => {
     expect(event.metadata).toEqual({ request_version: 2 });
   });
 
-  it("stores optional feedback comments separately from generic telemetry", () => {
+  it("stores optional feedback comments separately from generic telemetry", async () => {
     const telemetry = new InMemoryPilotTelemetry(
       createPilotRuntimeConfig({ mode: "demo" }),
     );
@@ -79,7 +79,7 @@ describe("pilot telemetry and feedback", () => {
       telemetry,
       () => now,
     );
-    const feedback = service.submit({
+    const feedback = await service.submit({
       journeyId: "journey_feedback",
       sessionId: "session_feedback",
       journeyStage: "shortlist",
@@ -88,9 +88,9 @@ describe("pilot telemetry and feedback", () => {
       answer: "partly",
       optionalComment: "Potentially sensitive free text",
     });
-    expect(repository.list("journey_feedback")[0]?.optional_comment).toBe(
-      "Potentially sensitive free text",
-    );
+    expect(
+      (await repository.list("journey_feedback"))[0]?.optional_comment,
+    ).toBe("Potentially sensitive free text");
     const metadata = telemetry.list("journey_feedback")[0]?.metadata;
     expect(metadata).toMatchObject({ answer: "partly", has_comment: true });
     expect(JSON.stringify(metadata)).not.toContain("Potentially sensitive");
@@ -98,7 +98,7 @@ describe("pilot telemetry and feedback", () => {
 
     const report = buildPilotFeedbackReviewReport({
       events: telemetry.list("journey_feedback"),
-      feedback: repository.list("journey_feedback"),
+      feedback: await repository.list("journey_feedback"),
       errors: [],
       unknownFields: ["availability", "availability", "listing_price"],
       sourceGaps: ["pilot_source", "pilot_source"],
@@ -114,7 +114,7 @@ describe("pilot telemetry and feedback", () => {
 
   it("records core Buyer Journey telemetry without raw request text", async () => {
     const { application, journey } = await createGoldenJourney();
-    application.getShortlist(journey.journey_id);
+    await application.getShortlist(journey.journey_id);
     const events = application.pilotTelemetry.list(journey.journey_id);
     expect(events.map((event) => event.event_name)).toEqual(
       expect.arrayContaining([
@@ -139,7 +139,7 @@ describe("pilot telemetry and feedback", () => {
   });
 });
 
-describe("diagnostics, coverage and release gate", () => {
+describe("diagnostics, coverage and release gate", async () => {
   it("gives every recoverable journey error a user action", () => {
     for (const code of JOURNEY_ERROR_CODES) {
       const presentation = JOURNEY_ERROR_PRESENTATION[code];
@@ -149,7 +149,7 @@ describe("diagnostics, coverage and release gate", () => {
     }
   });
 
-  it("aggregates structured errors without exposing a raw stack", () => {
+  it("aggregates structured errors without exposing a raw stack", async () => {
     const repository = new InMemoryApplicationErrorRepository();
     const first = createApplicationError({
       errorCode: "SOURCE_POLICY_BLOCKED",
@@ -162,9 +162,9 @@ describe("diagnostics, coverage and release gate", () => {
       contextIds: { source_id: "src_dev_02" },
       appVersion: "test",
     });
-    repository.record(first.record);
-    repository.markRecovered(first.record.error_id, now);
-    const diagnostics = aggregateApplicationErrors(repository.list());
+    await repository.record(first.record);
+    await repository.markRecovered(first.record.error_id, now);
+    const diagnostics = aggregateApplicationErrors(await repository.list());
     expect(diagnostics.source_policy_blocks).toBe(1);
     expect(diagnostics.recovery_success_count).toBe(1);
     expect(first.record).not.toHaveProperty("stack");
@@ -203,16 +203,16 @@ describe("diagnostics, coverage and release gate", () => {
     expect(available.user_message).toContain("По подключённым источникам");
   });
 
-  it("builds a safe per-journey diagnostic report", () => {
+  it("builds a safe per-journey diagnostic report", async () => {
     const application = new BuyerJourneyApplication({ clock: () => now });
-    const journey = application.startBuyerJourney({
+    const journey = await application.startBuyerJourney({
       sessionId: "session_diagnostic",
       rawRequestText: "sensitive request that must not enter diagnostics",
     });
     const report = buildJourneyDiagnosticReport({
       journey,
-      snapshot: application.getJourneySnapshot(journey.journey_id),
-      auditEvents: application.instrumentation.list(journey.journey_id),
+      snapshot: await application.getJourneySnapshot(journey.journey_id),
+      auditEvents: await application.instrumentation.list(journey.journey_id),
       telemetryEvents: application.pilotTelemetry.list(journey.journey_id),
       refreshTaskIds: ["refresh_task_1"],
       collectionRunIds: ["collection_run_1"],

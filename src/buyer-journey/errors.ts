@@ -88,6 +88,14 @@ export const JOURNEY_ERROR_PRESENTATION: Readonly<
     action_label: "Вернуться к подбору",
     action_href: "/shortlist",
   },
+  // Raised when the storage layer itself is unreachable, so the journey state
+  // could neither be read nor written. The wording is the owner's to write.
+  STORAGE_UNAVAILABLE: {
+    title: "Данные временно недоступны",
+    message: "{{ТРЕБУЕТСЯ ТЕКСТ: сообщение при недоступном хранилище}}",
+    action_label: "Повторить",
+    action_href: "/shortlist",
+  },
 });
 
 export const presentJourneyError = (

@@ -1,4 +1,8 @@
 import {
+  runInMemoryTransaction,
+  type TransactionalRepository,
+} from "../persistence";
+import {
   EXPERT_RESULT_VERSION,
   expertResultSchema,
   type ExpertContextPackage,
@@ -13,9 +17,9 @@ import {
   type ExpertResultDraft,
 } from "./contracts";
 
-export interface ExpertResultDraftRepository {
-  get(requestId: string): ExpertResultDraft | null;
-  save(draft: ExpertResultDraft): ExpertResultDraft;
+export interface ExpertResultDraftRepository extends TransactionalRepository {
+  get(requestId: string): Promise<ExpertResultDraft | null>;
+  save(draft: ExpertResultDraft): Promise<ExpertResultDraft>;
 }
 
 const clone = <T>(value: T): T => structuredClone(value);
@@ -23,12 +27,16 @@ const clone = <T>(value: T): T => structuredClone(value);
 export class InMemoryExpertResultDraftRepository implements ExpertResultDraftRepository {
   private readonly drafts = new Map<string, ExpertResultDraft>();
 
-  get(requestId: string): ExpertResultDraft | null {
+  transaction<T>(work: () => Promise<T>): Promise<T> {
+    return runInMemoryTransaction(work);
+  }
+
+  async get(requestId: string): Promise<ExpertResultDraft | null> {
     const draft = this.drafts.get(requestId);
     return draft ? clone(draft) : null;
   }
 
-  save(draft: ExpertResultDraft): ExpertResultDraft {
+  async save(draft: ExpertResultDraft): Promise<ExpertResultDraft> {
     const parsed = expertResultDraftSchema.parse(draft);
     this.drafts.set(parsed.request_id, clone(parsed));
     return clone(parsed);

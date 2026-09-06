@@ -45,7 +45,7 @@ export interface ExpertContextAccessPolicy {
       | "comparison"
       | "document";
     readonly entityId: string;
-  }): boolean;
+  }): Promise<boolean>;
 }
 
 export interface ExpertAssignmentHook {
@@ -106,7 +106,9 @@ export class ExpertRequestService {
     private readonly clock: ExpertClock,
   ) {}
 
-  createDraft(input: CreateExpertRequestInput): CreateExpertRequestOutcome {
+  async createDraft(
+    input: CreateExpertRequestInput,
+  ): Promise<CreateExpertRequestOutcome> {
     assertMeaningfulQuestion(input.question);
     const createdAt = this.clock();
     const requestId = this.createId("request");
@@ -120,7 +122,7 @@ export class ExpertRequestService {
     const scenarioIds = input.context.selectedPurchaseScenarios.map(
       (scenario) => scenario.scenario_id,
     );
-    this.validateReferences(input, propertyIds, offerIds, scenarioIds);
+    await this.validateReferences(input, propertyIds, offerIds, scenarioIds);
     const routing = routeExpertRequest({
       requestType: input.requestType,
       triggerType: input.triggerType,
@@ -177,9 +179,9 @@ export class ExpertRequestService {
       structuredQuestions: input.structuredQuestions,
       createdAt,
     });
-    const outcome = this.repository.create(request, contextPackage);
+    const outcome = await this.repository.create(request, contextPackage);
     if (outcome.created)
-      this.appendAudit(outcome.request.request_id, {
+      await this.appendAudit(outcome.request.request_id, {
         event_type: "request_created",
         actor_type: "user",
         actor_ref: input.owner.owner_id,
@@ -193,25 +195,29 @@ export class ExpertRequestService {
     return outcome;
   }
 
-  submit(requestId: string, owner: RequestOwner): ExpertRequest {
-    const current = this.requireOwnedRequest(requestId, owner);
-    if (!this.repository.getContext(current.context_package_id))
+  async submit(requestId: string, owner: RequestOwner): Promise<ExpertRequest> {
+    const current = await this.requireOwnedRequest(requestId, owner);
+    if (!(await this.repository.getContext(current.context_package_id)))
       throw new Error("EXPERT_CONTEXT_NOT_FOUND");
     const submittedAt = this.clock();
-    const submitted = this.repository.updateStatus(
+    const submitted = await this.repository.updateStatus(
       requestId,
       "submitted",
       submittedAt,
     );
-    this.appendAudit(requestId, {
+    await this.appendAudit(requestId, {
       event_type: "request_submitted",
       actor_type: "user",
       actor_ref: owner.owner_id,
       metadata: auditMetadata({ status: submitted.status }),
     });
     const queuedAt = this.clock();
-    const queued = this.repository.updateStatus(requestId, "queued", queuedAt);
-    this.appendAudit(requestId, {
+    const queued = await this.repository.updateStatus(
+      requestId,
+      "queued",
+      queuedAt,
+    );
+    await this.appendAudit(requestId, {
       event_type: "request_queued",
       actor_type: "system",
       actor_ref: null,
@@ -225,12 +231,12 @@ export class ExpertRequestService {
     readonly specialistRef: string;
     readonly specialistType: SpecialistType;
   }): Promise<ExpertRequest> {
-    const request = this.requireRequest(input.requestId);
+    const request = await this.requireRequest(input.requestId);
     validateSpecialistRoute(request.request_type, input.specialistType);
     if (request.required_specialist !== input.specialistType)
       throw new Error("ASSIGNED_SPECIALIST_DOES_NOT_MATCH_ROUTE");
     const assignedAt = this.clock();
-    const assigned = this.repository.assign(
+    const assigned = await this.repository.assign(
       input.requestId,
       input.specialistRef,
       assignedAt,
@@ -241,7 +247,7 @@ export class ExpertRequestService {
       specialistType: input.specialistType,
       assignedAt,
     });
-    this.appendAudit(input.requestId, {
+    await this.appendAudit(input.requestId, {
       event_type: "request_assigned",
       actor_type: "system",
       actor_ref: null,
@@ -253,19 +259,19 @@ export class ExpertRequestService {
     return assigned;
   }
 
-  transition(input: {
+  async transition(input: {
     readonly requestId: string;
     readonly status: ExpertWorkflowStatus;
     readonly actorType: "user" | "system" | "expert" | "admin";
     readonly actorRef: string | null;
     readonly reasonCode: string;
-  }): ExpertRequest {
-    const updated = this.repository.updateStatus(
+  }): Promise<ExpertRequest> {
+    const updated = await this.repository.updateStatus(
       input.requestId,
       input.status,
       this.clock(),
     );
-    this.appendAudit(input.requestId, {
+    await this.appendAudit(input.requestId, {
       event_type: "status_changed",
       actor_type: input.actorType,
       actor_ref: input.actorRef,
@@ -277,8 +283,8 @@ export class ExpertRequestService {
     return updated;
   }
 
-  cancel(requestId: string, owner: RequestOwner): ExpertRequest {
-    this.requireOwnedRequest(requestId, owner);
+  async cancel(requestId: string, owner: RequestOwner): Promise<ExpertRequest> {
+    await this.requireOwnedRequest(requestId, owner);
     return this.transition({
       requestId,
       status: "cancelled",
@@ -288,12 +294,12 @@ export class ExpertRequestService {
     });
   }
 
-  private validateReferences(
+  private async validateReferences(
     input: CreateExpertRequestInput,
     propertyIds: readonly string[],
     offerIds: readonly string[],
     scenarioIds: readonly string[],
-  ): void {
+  ): Promise<void> {
     if (new Set(propertyIds).size !== propertyIds.length)
       throw new Error("DUPLICATE_PROPERTY_REFERENCE");
     if (input.requestType === "choice_assistance" && !input.comparisonId)
@@ -376,21 +382,21 @@ export class ExpertRequestService {
     if (input.comparisonId)
       refs.push({ entityType: "comparison", entityId: input.comparisonId });
     for (const ref of refs)
-      if (!this.accessPolicy.canAccess({ owner: input.owner, ...ref }))
+      if (!(await this.accessPolicy.canAccess({ owner: input.owner, ...ref })))
         throw new Error(`CONTEXT_ACCESS_DENIED:${ref.entityType}`);
   }
 
-  private requireRequest(requestId: string): ExpertRequest {
-    const request = this.repository.get(requestId);
+  private async requireRequest(requestId: string): Promise<ExpertRequest> {
+    const request = await this.repository.get(requestId);
     if (!request) throw new Error("EXPERT_REQUEST_NOT_FOUND");
     return request;
   }
 
-  private requireOwnedRequest(
+  private async requireOwnedRequest(
     requestId: string,
     owner: RequestOwner,
-  ): ExpertRequest {
-    const request = this.requireRequest(requestId);
+  ): Promise<ExpertRequest> {
+    const request = await this.requireRequest(requestId);
     if (
       request.owner.owner_type !== owner.owner_type ||
       request.owner.owner_id !== owner.owner_id
@@ -399,11 +405,11 @@ export class ExpertRequestService {
     return request;
   }
 
-  private appendAudit(
+  private async appendAudit(
     requestId: string,
     input: Omit<ExpertAuditEvent, "event_id" | "request_id" | "created_at">,
-  ): void {
-    this.repository.appendAudit(
+  ): Promise<void> {
+    await this.repository.appendAudit(
       expertAuditEventSchema.parse({
         event_id: this.createId("audit"),
         request_id: requestId,
