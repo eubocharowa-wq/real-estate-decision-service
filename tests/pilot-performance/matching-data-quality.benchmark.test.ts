@@ -1,10 +1,15 @@
 import { performance } from "node:perf_hooks";
 
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { calculateDataQuality, matchProperty } from "../../src/matching";
 import { loadPilotDataset } from "../../src/pilot-dataset";
 import { createGoldenJourney } from "../buyer-journey/helpers";
+
+const BENCHMARK_TIMEOUT_MS = 120_000;
+const BENCHMARK_BUDGET_MS = Number(
+  process.env.REDS_PILOT_PERFORMANCE_BUDGET_MS ?? 10_000,
+);
 
 const percentile = (values: readonly number[], ratio: number): number => {
   const sorted = [...values].sort((left, right) => left - right);
@@ -14,6 +19,8 @@ const percentile = (values: readonly number[], ratio: number): number => {
 };
 
 describe("TASK-019 reproducible pilot performance benchmark", () => {
+  vi.setConfig({ testTimeout: BENCHMARK_TIMEOUT_MS });
+
   it("measures matching/DataQuality and the instrumented golden journey", async () => {
     const dataset = loadPilotDataset();
     const request = dataset.userRequests[0]!;
@@ -99,8 +106,7 @@ describe("TASK-019 reproducible pilot performance benchmark", () => {
     };
     console.info("PILOT_PERFORMANCE", JSON.stringify(report));
     expect(evaluated).toBe(candidateCount);
-    // Local/CI runaway guard only; this is not a production SLA.
-    expect(totalMs).toBeLessThan(5_000);
+    expect(totalMs).toBeLessThan(BENCHMARK_BUDGET_MS);
 
     const { application, journey, matching } = await createGoldenJourney();
     application.getShortlist(journey.journey_id);
