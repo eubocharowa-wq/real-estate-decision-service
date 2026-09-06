@@ -8,15 +8,23 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn() }) }));
 
+import robots from "../app/robots";
+import sitemap from "../app/sitemap";
 import AboutPage from "../app/(public)/about/page";
 import ExpertReviewPage from "../app/(public)/expert-review/page";
 import HowItWorksPage from "../app/(public)/how-it-works/page";
 import MaterialsPage from "../app/(public)/materials/page";
 import MethodologyPage from "../app/(public)/methodology/page";
+import PrivacyPage from "../app/(public)/privacy/page";
 import SelectionPage from "../app/(public)/selection/page";
 import { SiteFooter, SiteHeader } from "../app/(public)/site-chrome";
+import TermsPage from "../app/(public)/terms/page";
+import { INTERNAL_ROUTE_PREFIXES } from "../src/public-site";
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  vi.unstubAllEnvs();
+});
 
 const navigationLabels = [
   "Подбор",
@@ -91,7 +99,17 @@ describe("public site chrome", () => {
         .getAttribute("href"),
     ).toBe("/methodology");
 
-    expect(screen.getByRole("region", { name: "Правовое" })).toBeDefined();
+    const legal = screen.getByRole("region", { name: "Правовое" });
+    expect(
+      within(legal)
+        .getByRole("link", { name: "Обработка персональных данных" })
+        .getAttribute("href"),
+    ).toBe("/privacy");
+    expect(
+      within(legal)
+        .getByRole("link", { name: "Пользовательское соглашение" })
+        .getAttribute("href"),
+    ).toBe("/terms");
   });
 
   it("points every navigation link at a route that exists", () => {
@@ -205,5 +223,124 @@ describe("public content pages", () => {
       screen.getByRole("heading", { name: "Материалов пока нет" }),
     ).toBeDefined();
     expect(screen.queryAllByRole("article")).toHaveLength(0);
+  });
+
+  it("renders the privacy policy as an unwritten structure", () => {
+    render(<PrivacyPage />);
+
+    expect(
+      screen.getByRole("heading", {
+        name: "Политика обработки персональных данных",
+      }),
+    ).toBeDefined();
+    for (const heading of [
+      "Цели обработки",
+      "Состав обрабатываемых данных",
+      "Срок хранения",
+      "Права субъекта персональных данных",
+      "Порядок удаления данных",
+      "Контакты оператора",
+    ]) {
+      expect(screen.getByRole("heading", { name: heading })).toBeDefined();
+    }
+    expect(
+      screen.getByText("{{ТРЕБУЕТСЯ ТЕКСТ: цели обработки}}"),
+    ).toBeDefined();
+    expect(
+      screen.getByText("{{ТРЕБУЕТСЯ ТЕКСТ: контакты оператора}}"),
+    ).toBeDefined();
+  });
+
+  it("renders the terms as an unwritten structure", () => {
+    render(<TermsPage />);
+
+    expect(
+      screen.getByRole("heading", { name: "Пользовательское соглашение" }),
+    ).toBeDefined();
+    for (const heading of [
+      "Предмет соглашения",
+      "Что сервис делает и чего не делает",
+      "Отказ от гарантий по решениям пользователя",
+      "Порядок оказания платной экспертной проверки",
+    ]) {
+      expect(screen.getByRole("heading", { name: heading })).toBeDefined();
+    }
+    expect(
+      screen.getByText("{{ТРЕБУЕТСЯ ТЕКСТ: отказ от гарантий}}"),
+    ).toBeDefined();
+  });
+});
+
+describe("sitemap", () => {
+  it("lists every public page against the configured origin", () => {
+    vi.stubEnv("NEXT_PUBLIC_SITE_URL", "https://example.com");
+
+    const urls = sitemap().map((entry) => entry.url);
+
+    expect(urls).toContain("https://example.com");
+    expect(urls).toContain("https://example.com/privacy");
+    expect(urls).toContain("https://example.com/terms");
+    expect(urls).toHaveLength(9);
+  });
+
+  it("keeps internal screens out of the sitemap", () => {
+    vi.stubEnv("NEXT_PUBLIC_SITE_URL", "https://example.com");
+
+    const paths = sitemap().map((entry) => new URL(entry.url).pathname);
+
+    // Prefix comparison, not substring: /expert-review is public and must not
+    // be caught by the /expert/ rule that hides the expert workbench.
+    for (const internal of INTERNAL_ROUTE_PREFIXES) {
+      expect(paths.some((path) => path.startsWith(internal))).toBe(false);
+    }
+    expect(paths).toContain("/expert-review");
+  });
+
+  it("publishes nothing when no origin is configured", () => {
+    vi.stubEnv("NEXT_PUBLIC_SITE_URL", "");
+
+    expect(sitemap()).toEqual([]);
+  });
+
+  it("publishes nothing when the origin is malformed", () => {
+    vi.stubEnv("NEXT_PUBLIC_SITE_URL", "example.com");
+
+    expect(sitemap()).toEqual([]);
+  });
+});
+
+describe("robots", () => {
+  it("disallows the internal screens and points at the sitemap", () => {
+    vi.stubEnv("NEXT_PUBLIC_SITE_URL", "https://example.com");
+
+    const result = robots();
+
+    expect(result.sitemap).toBe("https://example.com/sitemap.xml");
+    expect(result.rules).toMatchObject({
+      userAgent: "*",
+      allow: "/",
+      disallow: [
+        "/api/",
+        "/expert/",
+        "/journey/",
+        "/shortlist/",
+        "/property/",
+        "/request/",
+        "/add-url",
+        "/comparison",
+      ],
+    });
+  });
+
+  it("keeps the disallow rules but omits the sitemap without an origin", () => {
+    vi.stubEnv("NEXT_PUBLIC_SITE_URL", "");
+
+    const result = robots();
+
+    expect(result.sitemap).toBeUndefined();
+    expect(robots().rules).toEqual(result.rules);
+    expect(
+      Array.isArray(result.rules) ? [] : (result.rules.disallow ?? []),
+    ).toContain("/expert/");
   });
 });

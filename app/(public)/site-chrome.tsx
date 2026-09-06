@@ -83,9 +83,16 @@ export function SiteFooter() {
           </ul>
         </section>
 
-        {/* Правовые ссылки появятся вместе с контентными страницами (блок C). */}
         <section className="site-footer-column" aria-label="Правовое">
           <h2>Правовое</h2>
+          <ul>
+            <li>
+              <Link href="/privacy">Обработка персональных данных</Link>
+            </li>
+            <li>
+              <Link href="/terms">Пользовательское соглашение</Link>
+            </li>
+          </ul>
         </section>
       </div>
     </footer>
