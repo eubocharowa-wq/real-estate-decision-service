@@ -30,3 +30,23 @@ export interface TransactionalRepository {
 export const runInMemoryTransaction = async <T>(
   work: () => Promise<T>,
 ): Promise<T> => work();
+
+export {
+  readDatabaseConfig,
+  requireDatabaseConfig,
+  type DatabaseConfig,
+  type DatabaseConfigResult,
+} from "./config";
+export { closeDatabasePool, getDatabasePool } from "./pool";
+export {
+  defaultMigrationsDirectory,
+  listApplied,
+  migrateDown,
+  migrateUp,
+  migrationStatus,
+  readMigrations,
+  MIGRATIONS_TABLE,
+  type AppliedMigration,
+  type Migration,
+  type MigrationStatus,
+} from "./migrator";

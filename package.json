@@ -19,13 +19,19 @@
     "fixtures:validate": "node --import tsx scripts/validate-pilot-fixtures.ts",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "demo:seed": "node --import tsx scripts/seed-buyer-journey-demo.ts"
+    "demo:seed": "node --import tsx scripts/seed-buyer-journey-demo.ts",
+    "db:migrate": "node --import tsx scripts/migrate.ts up",
+    "db:rollback": "node --import tsx scripts/migrate.ts down",
+    "db:status": "node --import tsx scripts/migrate.ts status",
+    "test:db": "vitest run tests/persistence"
   },
   "engines": {
     "node": ">=22.22.3 <23 || >=24.15.0"
   },
   "dependencies": {
+    "kysely": "^0.29.5",
     "next": "16.3.1",
+    "pg": "^8.23.0",
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "zod": "^4.4.3"
@@ -34,6 +40,7 @@
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.4",
     "@types/node": "^24.10.0",
+    "@types/pg": "^8.23.1",
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
     "eslint": "^9.39.0",

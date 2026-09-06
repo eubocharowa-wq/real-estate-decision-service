@@ -37,3 +37,54 @@ jobs:
 
       - name: Build
         run: npm run build
+
+  # The schema is only meaningful against a real PostgreSQL: partial unique
+  # indexes, CHECK constraints and the append-only triggers are what hold the
+  # invariants, and none of them can be exercised by an in-memory stand-in.
+  # This is a service container on the runner, not outbound network access, so
+  # the "no live network in CI" rule still holds.
+  database:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: reds
+          POSTGRES_PASSWORD: reds
+          POSTGRES_DB: reds_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U reds"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: postgres://reds:reds@localhost:5432/reds_ci
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Apply migrations to a clean database
+        run: npm run db:migrate
+
+      - name: Show migration status
+        run: npm run db:status
+
+      - name: Roll back the last migration
+        run: npm run db:rollback
+
+      - name: Re-apply after rollback
+        run: npm run db:migrate
+
+      - name: Schema and invariant tests
+        run: npm run test:db
