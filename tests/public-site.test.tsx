@@ -3,7 +3,7 @@
 import { cleanup, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 
-import { SiteFooter, SiteHeader } from "../app/site-chrome";
+import { SiteFooter, SiteHeader } from "../app/(public)/site-chrome";
 
 afterEach(cleanup);
 

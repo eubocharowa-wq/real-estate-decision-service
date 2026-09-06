@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn() }) }));
 
-import HomePage from "../app/page";
+import HomePage from "../app/(public)/page";
 
 describe("HomePage", () => {
   it("renders the natural-language request entry", () => {

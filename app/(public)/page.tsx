@@ -1,4 +1,4 @@
-import { RequestEntry } from "./request-entry";
+import { RequestEntry } from "../request-entry";
 
 export default function HomePage() {
   return <RequestEntry />;
