@@ -20,6 +20,7 @@ afterEach(cleanup);
 
 const navigationLabels = [
   "Подбор",
+  "Как это работает",
   "Сравнение",
   "Экспертная проверка",
   "Как проверяем",
@@ -49,6 +50,12 @@ describe("public site chrome", () => {
         within(primaryNavigation).getByRole("link", { name: label }),
       ).toBeDefined();
     }
+
+    expect(
+      within(primaryNavigation)
+        .getByRole("link", { name: "Как это работает" })
+        .getAttribute("href"),
+    ).toBe("/how-it-works");
   });
 
   it("repeats the navigation in the mobile menu and adds the about link", () => {

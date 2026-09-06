@@ -7,6 +7,7 @@ type NavigationItem = Readonly<{
 
 const navigation: readonly NavigationItem[] = [
   { href: "/selection", label: "Подбор" },
+  { href: "/how-it-works", label: "Как это работает" },
   { href: "/comparison", label: "Сравнение" },
   { href: "/expert-review", label: "Экспертная проверка" },
   { href: "/methodology", label: "Как проверяем" },
