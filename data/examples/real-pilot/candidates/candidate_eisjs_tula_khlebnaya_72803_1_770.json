@@ -1,0 +1,479 @@
+{
+  "schema_version": "real-pilot-dataset-candidate-v1",
+  "candidate_id": "candidate_eisjs_tula_khlebnaya_72803_1_770",
+  "origin": "manual_curated",
+  "source_url": "https://наш.дом.рф/сервисы/каталог-квартир/квартира/7bb5976cfe85dc138cd9e784ab502ad8",
+  "observed_facts": [
+    {
+      "field": "location.address.country_code",
+      "value": "RU",
+      "verification_status": "confirmed",
+      "evidence_refs": [
+        "evidence_eisjs_tula_khlebnaya_72803_1_770_location_address_country_code"
+      ]
+    },
+    {
+      "field": "location.address.region",
+      "value": "Тульская область",
+      "verification_status": "confirmed",
+      "evidence_refs": [
+        "evidence_eisjs_tula_khlebnaya_72803_1_770_location_address_region"
+      ]
+    },
+    {
+      "field": "location.address.city",
+      "value": "Тула",
+      "verification_status": "confirmed",
+      "evidence_refs": [
+        "evidence_eisjs_tula_khlebnaya_72803_1_770_location_address_city"
+      ]
+    },
+    {
+      "field": "location.address.street",
+      "value": "пл. Хлебная",
+      "verification_status": "confirmed",
+      "evidence_refs": [
+        "evidence_eisjs_tula_khlebnaya_72803_1_770_location_address_street"
+      ]
+    },
+    {
+      "field": "physical.total_area_m2",
+      "value": 46.77,
+      "verification_status": "confirmed",
+      "evidence_refs": [
+        "evidence_eisjs_tula_khlebnaya_72803_1_770_physical_total_area_m2"
+      ]
+    },
+    {
+      "field": "building.floors_total",
+      "value": 12,
+      "verification_status": "confirmed",
+      "evidence_refs": [
+        "evidence_eisjs_tula_khlebnaya_72803_1_770_building_floors_total"
+      ]
+    },
+    {
+      "field": "physical.rooms",
+      "value": 1,
+      "verification_status": "claimed",
+      "evidence_refs": [
+        "evidence_eisjs_tula_khlebnaya_72803_1_770_physical_rooms"
+      ]
+    },
+    {
+      "field": "physical.floor",
+      "value": 10,
+      "verification_status": "claimed",
+      "evidence_refs": [
+        "evidence_eisjs_tula_khlebnaya_72803_1_770_physical_floor"
+      ]
+    },
+    {
+      "field": "timeline.handover_quarter",
+      "value": "2029-Q2",
+      "verification_status": "claimed",
+      "evidence_refs": [
+        "evidence_eisjs_tula_khlebnaya_72803_1_770_timeline_handover_quarter"
+      ]
+    }
+  ],
+  "explicit_unknown_fields": [
+    "offer.listing_price",
+    "offer.price_from",
+    "offer.availability",
+    "offer.published_at",
+    "offer.updated_at",
+    "offer.expires_at",
+    "offer.mandatory_extras",
+    "offer.commercial_terms",
+    "offer.financing_offer_ids",
+    "offer.promotion_ids",
+    "property.timeline.handover_date",
+    "property.timeline.move_in_possible_date",
+    "property.condition.finishing_type",
+    "property.physical.balcony",
+    "property.physical.living_area_m2",
+    "property.physical.kitchen_area_m2",
+    "property.physical.bathrooms",
+    "property.physical.layout_type",
+    "property.building.elevator",
+    "property.building.freight_elevator",
+    "property.location.geo_point",
+    "property.utilities",
+    "financing.eligibility_status",
+    "financing.initial_payment",
+    "financing.monthly_payment",
+    "mobility.user_destination",
+    "infrastructure.school",
+    "infrastructure.kindergarten",
+    "infrastructure.transport",
+    "offer.seller.name"
+  ],
+  "evidence_refs": [
+    "evidence_eisjs_tula_khlebnaya_72803_1_770_location_address_country_code",
+    "evidence_eisjs_tula_khlebnaya_72803_1_770_location_address_region",
+    "evidence_eisjs_tula_khlebnaya_72803_1_770_location_address_city",
+    "evidence_eisjs_tula_khlebnaya_72803_1_770_location_address_street",
+    "evidence_eisjs_tula_khlebnaya_72803_1_770_physical_total_area_m2",
+    "evidence_eisjs_tula_khlebnaya_72803_1_770_building_floors_total",
+    "evidence_eisjs_tula_khlebnaya_72803_1_770_physical_rooms",
+    "evidence_eisjs_tula_khlebnaya_72803_1_770_physical_floor",
+    "evidence_eisjs_tula_khlebnaya_72803_1_770_timeline_handover_quarter"
+  ],
+  "observed_at": "2026-09-08T00:00:00.000Z",
+  "freshness_status": "fresh",
+  "collection_mode": "manual_curated",
+  "automated_fetch_performed": false,
+  "candidate": {
+    "schema_version": "pilot-candidate-v1",
+    "origin": "manual_curated",
+    "property": {
+      "schema_version": "1.0",
+      "identity": {
+        "property_id": "property_eisjs_tula_khlebnaya_72803_1_770",
+        "canonical_key": "eisjs:72803/1/770",
+        "cadastral_number": null,
+        "source_unit_ids": ["src_gov_01:72803/1/770"]
+      },
+      "property_type": "apartment",
+      "market_type": "new_build",
+      "location": {
+        "address": {
+          "country_code": "RU",
+          "region": "Тульская область",
+          "city": "Тула",
+          "locality": null,
+          "district": null,
+          "street": "пл. Хлебная",
+          "house_number": null,
+          "postal_code": null
+        },
+        "geo_point": null
+      },
+      "physical": {
+        "total_area_m2": 46.77,
+        "living_area_m2": null,
+        "kitchen_area_m2": null,
+        "rooms": 1,
+        "bedrooms": null,
+        "floor": 10,
+        "balcony": null,
+        "bathrooms": null,
+        "layout_type": null
+      },
+      "building": {
+        "name": null,
+        "building_type": null,
+        "floors_total": 12,
+        "built_year": null,
+        "elevator": null,
+        "freight_elevator": null
+      },
+      "condition": {
+        "finishing_type": "unknown",
+        "condition_description": null,
+        "ready_for_living": null
+      },
+      "land": {
+        "area_sotka": null,
+        "category": null,
+        "permitted_use": null
+      },
+      "utilities": {
+        "electricity": "unknown",
+        "water": "unknown",
+        "gas": "unknown",
+        "sewerage": "unknown",
+        "heating": "unknown",
+        "internet": "unknown"
+      },
+      "timeline": {
+        "planned_commissioning_date": null,
+        "handover_date": null,
+        "move_in_possible_date": null
+      },
+      "ownership": {
+        "ownership_type": "developer",
+        "encumbrance_status": "unknown",
+        "ownership_notes": null
+      },
+      "metadata": {
+        "created_at": "2026-09-08T00:00:00.000Z",
+        "updated_at": "2026-09-08T00:00:00.000Z",
+        "evidence_refs": [
+          "evidence_eisjs_tula_khlebnaya_72803_1_770_location_address_country_code",
+          "evidence_eisjs_tula_khlebnaya_72803_1_770_location_address_region",
+          "evidence_eisjs_tula_khlebnaya_72803_1_770_location_address_city",
+          "evidence_eisjs_tula_khlebnaya_72803_1_770_location_address_street",
+          "evidence_eisjs_tula_khlebnaya_72803_1_770_physical_total_area_m2",
+          "evidence_eisjs_tula_khlebnaya_72803_1_770_building_floors_total",
+          "evidence_eisjs_tula_khlebnaya_72803_1_770_physical_rooms",
+          "evidence_eisjs_tula_khlebnaya_72803_1_770_physical_floor",
+          "evidence_eisjs_tula_khlebnaya_72803_1_770_timeline_handover_quarter"
+        ],
+        "tags": ["manual_curated", "eisjs", "declaration_214fz"]
+      }
+    },
+    "offer": {
+      "schema_version": "1.0",
+      "offer_id": "offer_eisjs_tula_khlebnaya_72803_1_770",
+      "property_id": "property_eisjs_tula_khlebnaya_72803_1_770",
+      "seller": {
+        "seller_type": "developer",
+        "seller_id": null,
+        "name": null
+      },
+      "source_reference": {
+        "source_id": "src_gov_01",
+        "snapshot_id": null,
+        "source_url": "https://наш.дом.рф/сервисы/каталог-квартир/квартира/7bb5976cfe85dc138cd9e784ab502ad8",
+        "evidence_ids": []
+      },
+      "listing_price": null,
+      "price_from": null,
+      "availability": "unknown",
+      "published_at": null,
+      "updated_at": null,
+      "expires_at": null,
+      "mandatory_extras": [],
+      "commercial_terms": {
+        "reservation_terms": null,
+        "payment_terms": null,
+        "notes": []
+      },
+      "financing_offer_ids": [],
+      "promotion_ids": [],
+      "verification_status": "unknown",
+      "freshness_status": "fresh",
+      "evidence_refs": []
+    },
+    "source": {
+      "schema_version": "1.0",
+      "source_id": "src_gov_01",
+      "source_type": "government",
+      "name": "ЕИСЖС (наш.дом.рф)",
+      "domain": "наш.дом.рф",
+      "base_url": "https://наш.дом.рф",
+      "coverage": {
+        "country_codes": ["RU"],
+        "regions": [],
+        "property_types": ["apartment", "apartments"]
+      },
+      "collection_method": "manual",
+      "trust_level": "authoritative",
+      "status": "active",
+      "policy_metadata": {
+        "access_status": "approved",
+        "storage_rights": true,
+        "display_rights": true,
+        "refresh_rights": false,
+        "reviewed_at": "2026-09-08T00:00:00.000Z",
+        "notes": "214-ФЗ project declaration data, entered by hand from a published object card."
+      },
+      "upstream_source_id": null
+    },
+    "sources": [
+      {
+        "schema_version": "1.0",
+        "source_id": "src_gov_01",
+        "source_type": "government",
+        "name": "ЕИСЖС (наш.дом.рф)",
+        "domain": "наш.дом.рф",
+        "base_url": "https://наш.дом.рф",
+        "coverage": {
+          "country_codes": ["RU"],
+          "regions": [],
+          "property_types": ["apartment", "apartments"]
+        },
+        "collection_method": "manual",
+        "trust_level": "authoritative",
+        "status": "active",
+        "policy_metadata": {
+          "access_status": "approved",
+          "storage_rights": true,
+          "display_rights": true,
+          "refresh_rights": false,
+          "reviewed_at": "2026-09-08T00:00:00.000Z",
+          "notes": "214-ФЗ project declaration data, entered by hand from a published object card."
+        },
+        "upstream_source_id": null
+      }
+    ],
+    "evidence": [
+      {
+        "schema_version": "1.0",
+        "evidence_id": "evidence_eisjs_tula_khlebnaya_72803_1_770_location_address_country_code",
+        "entity_type": "property",
+        "entity_id": "property_eisjs_tula_khlebnaya_72803_1_770",
+        "field": "location.address.country_code",
+        "value": "RU",
+        "raw_value": "RU",
+        "source_id": "src_gov_01",
+        "snapshot_id": null,
+        "source_url": "https://наш.дом.рф/сервисы/каталог-квартир/квартира/7bb5976cfe85dc138cd9e784ab502ad8",
+        "collected_at": "2026-09-08T00:00:00.000Z",
+        "verification_status": "confirmed",
+        "freshness_status": "fresh",
+        "extraction_confidence": null,
+        "evidence_type": "document",
+        "evidence_text": null,
+        "evidence_reference": "ЕИСЖС project declaration, card 72803/1/770, checked 2026-09-08"
+      },
+      {
+        "schema_version": "1.0",
+        "evidence_id": "evidence_eisjs_tula_khlebnaya_72803_1_770_location_address_region",
+        "entity_type": "property",
+        "entity_id": "property_eisjs_tula_khlebnaya_72803_1_770",
+        "field": "location.address.region",
+        "value": "Тульская область",
+        "raw_value": "Тульская область",
+        "source_id": "src_gov_01",
+        "snapshot_id": null,
+        "source_url": "https://наш.дом.рф/сервисы/каталог-квартир/квартира/7bb5976cfe85dc138cd9e784ab502ad8",
+        "collected_at": "2026-09-08T00:00:00.000Z",
+        "verification_status": "confirmed",
+        "freshness_status": "fresh",
+        "extraction_confidence": null,
+        "evidence_type": "document",
+        "evidence_text": null,
+        "evidence_reference": "ЕИСЖС project declaration, card 72803/1/770, checked 2026-09-08"
+      },
+      {
+        "schema_version": "1.0",
+        "evidence_id": "evidence_eisjs_tula_khlebnaya_72803_1_770_location_address_city",
+        "entity_type": "property",
+        "entity_id": "property_eisjs_tula_khlebnaya_72803_1_770",
+        "field": "location.address.city",
+        "value": "Тула",
+        "raw_value": "Тула",
+        "source_id": "src_gov_01",
+        "snapshot_id": null,
+        "source_url": "https://наш.дом.рф/сервисы/каталог-квартир/квартира/7bb5976cfe85dc138cd9e784ab502ad8",
+        "collected_at": "2026-09-08T00:00:00.000Z",
+        "verification_status": "confirmed",
+        "freshness_status": "fresh",
+        "extraction_confidence": null,
+        "evidence_type": "document",
+        "evidence_text": null,
+        "evidence_reference": "ЕИСЖС project declaration, card 72803/1/770, checked 2026-09-08"
+      },
+      {
+        "schema_version": "1.0",
+        "evidence_id": "evidence_eisjs_tula_khlebnaya_72803_1_770_location_address_street",
+        "entity_type": "property",
+        "entity_id": "property_eisjs_tula_khlebnaya_72803_1_770",
+        "field": "location.address.street",
+        "value": "пл. Хлебная",
+        "raw_value": "пл. Хлебная",
+        "source_id": "src_gov_01",
+        "snapshot_id": null,
+        "source_url": "https://наш.дом.рф/сервисы/каталог-квартир/квартира/7bb5976cfe85dc138cd9e784ab502ad8",
+        "collected_at": "2026-09-08T00:00:00.000Z",
+        "verification_status": "confirmed",
+        "freshness_status": "fresh",
+        "extraction_confidence": null,
+        "evidence_type": "document",
+        "evidence_text": null,
+        "evidence_reference": "ЕИСЖС project declaration, card 72803/1/770, checked 2026-09-08"
+      },
+      {
+        "schema_version": "1.0",
+        "evidence_id": "evidence_eisjs_tula_khlebnaya_72803_1_770_physical_total_area_m2",
+        "entity_type": "property",
+        "entity_id": "property_eisjs_tula_khlebnaya_72803_1_770",
+        "field": "physical.total_area_m2",
+        "value": 46.77,
+        "raw_value": 46.77,
+        "source_id": "src_gov_01",
+        "snapshot_id": null,
+        "source_url": "https://наш.дом.рф/сервисы/каталог-квартир/квартира/7bb5976cfe85dc138cd9e784ab502ad8",
+        "collected_at": "2026-09-08T00:00:00.000Z",
+        "verification_status": "confirmed",
+        "freshness_status": "fresh",
+        "extraction_confidence": null,
+        "evidence_type": "document",
+        "evidence_text": null,
+        "evidence_reference": "ЕИСЖС project declaration, card 72803/1/770, checked 2026-09-08"
+      },
+      {
+        "schema_version": "1.0",
+        "evidence_id": "evidence_eisjs_tula_khlebnaya_72803_1_770_building_floors_total",
+        "entity_type": "property",
+        "entity_id": "property_eisjs_tula_khlebnaya_72803_1_770",
+        "field": "building.floors_total",
+        "value": 12,
+        "raw_value": 12,
+        "source_id": "src_gov_01",
+        "snapshot_id": null,
+        "source_url": "https://наш.дом.рф/сервисы/каталог-квартир/квартира/7bb5976cfe85dc138cd9e784ab502ad8",
+        "collected_at": "2026-09-08T00:00:00.000Z",
+        "verification_status": "confirmed",
+        "freshness_status": "fresh",
+        "extraction_confidence": null,
+        "evidence_type": "document",
+        "evidence_text": null,
+        "evidence_reference": "ЕИСЖС project declaration, card 72803/1/770, checked 2026-09-08"
+      },
+      {
+        "schema_version": "1.0",
+        "evidence_id": "evidence_eisjs_tula_khlebnaya_72803_1_770_physical_rooms",
+        "entity_type": "property",
+        "entity_id": "property_eisjs_tula_khlebnaya_72803_1_770",
+        "field": "physical.rooms",
+        "value": 1,
+        "raw_value": 1,
+        "source_id": "src_gov_01",
+        "snapshot_id": null,
+        "source_url": "https://наш.дом.рф/сервисы/каталог-квартир/квартира/7bb5976cfe85dc138cd9e784ab502ad8",
+        "collected_at": "2026-09-08T00:00:00.000Z",
+        "verification_status": "claimed",
+        "freshness_status": "fresh",
+        "extraction_confidence": null,
+        "evidence_type": "document",
+        "evidence_text": null,
+        "evidence_reference": "ЕИСЖС project declaration, card 72803/1/770, checked 2026-09-08"
+      },
+      {
+        "schema_version": "1.0",
+        "evidence_id": "evidence_eisjs_tula_khlebnaya_72803_1_770_physical_floor",
+        "entity_type": "property",
+        "entity_id": "property_eisjs_tula_khlebnaya_72803_1_770",
+        "field": "physical.floor",
+        "value": 10,
+        "raw_value": 10,
+        "source_id": "src_gov_01",
+        "snapshot_id": null,
+        "source_url": "https://наш.дом.рф/сервисы/каталог-квартир/квартира/7bb5976cfe85dc138cd9e784ab502ad8",
+        "collected_at": "2026-09-08T00:00:00.000Z",
+        "verification_status": "claimed",
+        "freshness_status": "fresh",
+        "extraction_confidence": null,
+        "evidence_type": "document",
+        "evidence_text": null,
+        "evidence_reference": "ЕИСЖС project declaration, card 72803/1/770, checked 2026-09-08"
+      },
+      {
+        "schema_version": "1.0",
+        "evidence_id": "evidence_eisjs_tula_khlebnaya_72803_1_770_timeline_handover_quarter",
+        "entity_type": "property",
+        "entity_id": "property_eisjs_tula_khlebnaya_72803_1_770",
+        "field": "timeline.handover_quarter",
+        "value": "2029-Q2",
+        "raw_value": "II кв. 2029",
+        "source_id": "src_gov_01",
+        "snapshot_id": null,
+        "source_url": "https://наш.дом.рф/сервисы/каталог-квартир/квартира/7bb5976cfe85dc138cd9e784ab502ad8",
+        "collected_at": "2026-09-08T00:00:00.000Z",
+        "verification_status": "claimed",
+        "freshness_status": "fresh",
+        "extraction_confidence": null,
+        "evidence_type": "document",
+        "evidence_text": null,
+        "evidence_reference": "ЕИСЖС project declaration, card 72803/1/770, checked 2026-09-08"
+      }
+    ],
+    "financing_claims": [],
+    "observed_at": "2026-09-08T00:00:00.000Z",
+    "environment": "pilot"
+  }
+}

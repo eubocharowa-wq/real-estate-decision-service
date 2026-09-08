@@ -37,12 +37,26 @@ export const eisjsCandidateInputSchema = z.strictObject({
   collected_at: isoDateTimeSchema,
   /** How the object is identified on the card. */
   external_object_id: nonEmptyStringSchema,
-  developer_name: nonEmptyStringSchema,
+  /**
+   * Nullable like the address components: a declaration usually names the
+   * developer, but not every published card states it. When the card does
+   * not, this stays null and `EISJS_DEVELOPER_NAME_FIELD` is added to the
+   * candidate's explicit unknowns rather than blocking entry on it.
+   */
+  developer_name: nonEmptyStringSchema.nullable(),
   property_type: z.enum(["apartment", "apartments"]),
   address: addressSchema,
   cadastral_number: nonEmptyStringSchema.nullable(),
   total_area_m2: z.number().positive(),
-  floors_total: z.number().int().positive(),
+  /**
+   * Nullable for the same reason as `developer_name`: a card belonging to a
+   * building already recorded elsewhere must not borrow that building's
+   * floor count. Each candidate's evidence traces only to the card the
+   * operator actually read, so an unstated value here stays null and adds
+   * `EISJS_FLOORS_TOTAL_FIELD` to this candidate's explicit unknowns, even
+   * when a sibling unit's card already states it.
+   */
+  floors_total: z.number().int().positive().nullable(),
   rooms: z.number().int().nonnegative().nullable(),
   floor: z.number().int().nullable(),
   building_name: nonEmptyStringSchema.nullable(),
@@ -64,6 +78,12 @@ export const eisjsCandidateInputSchema = z.strictObject({
 export type EisjsCandidateInput = z.infer<typeof eisjsCandidateInputSchema>;
 
 export const EISJS_HANDOVER_QUARTER_FIELD = "timeline.handover_quarter";
+
+/** Added to a candidate's explicit unknowns when the card names no developer. */
+export const EISJS_DEVELOPER_NAME_FIELD = "offer.seller.name";
+
+/** Added to a candidate's explicit unknowns when its own card states no floor count. */
+export const EISJS_FLOORS_TOTAL_FIELD = "property.building.floors_total";
 
 /**
  * What a project declaration does not contain.
@@ -194,12 +214,13 @@ const enteredFacts = (input: EisjsCandidateInput): readonly EnteredFact[] => {
     rawValue: input.total_area_m2,
     entity: "property",
   });
-  facts.push({
-    field: "building.floors_total",
-    value: input.floors_total,
-    rawValue: input.floors_total,
-    entity: "property",
-  });
+  if (input.floors_total !== null)
+    facts.push({
+      field: "building.floors_total",
+      value: input.floors_total,
+      rawValue: input.floors_total,
+      entity: "property",
+    });
   if (input.rooms !== null)
     facts.push({
       field: "physical.rooms",
@@ -244,6 +265,15 @@ export const buildEisjsCandidate = (rawInput: unknown): BuiltEisjsCandidate => {
   const offerId = `offer_eisjs_${input.candidate_id}`;
   const source = eisjsSource({ reviewedAt: input.collected_at });
   const facts = enteredFacts(input);
+  // The frozen list is what this source never states for any card. A missing
+  // developer name or floor count is card-specific, not source-wide, so each
+  // is only added when this particular card did not state it — never
+  // inferred from a sibling card for the same building.
+  const explicitUnknownFields: readonly string[] = [
+    ...EISJS_EXPLICIT_UNKNOWN_FIELDS,
+    ...(input.developer_name === null ? [EISJS_DEVELOPER_NAME_FIELD] : []),
+    ...(input.floors_total === null ? [EISJS_FLOORS_TOTAL_FIELD] : []),
+  ];
 
   const evidence: FieldEvidence[] = facts.map((fact) => ({
     schema_version: "1.0",
@@ -400,7 +430,7 @@ export const buildEisjsCandidate = (rawInput: unknown): BuiltEisjsCandidate => {
       origin: "manual_curated",
       source_url: input.source_url,
       observed_facts: observedFacts,
-      explicit_unknown_fields: [...EISJS_EXPLICIT_UNKNOWN_FIELDS],
+      explicit_unknown_fields: explicitUnknownFields,
       evidence_refs: evidence.map((item) => item.evidence_id),
       observed_at: input.collected_at,
       freshness_status: "fresh",

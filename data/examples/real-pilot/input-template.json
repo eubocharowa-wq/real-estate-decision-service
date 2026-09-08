@@ -4,7 +4,7 @@
   "source_url": "ТРЕБУЕТСЯ: полный https-адрес карточки объекта на наш.дом.рф",
   "collected_at": "ТРЕБУЕТСЯ: дата и время фактической сверки карточки, ISO 8601",
   "external_object_id": "ТРЕБУЕТСЯ: идентификатор объекта на карточке",
-  "developer_name": "ТРЕБУЕТСЯ: наименование застройщика, как указано в декларации",
+  "developer_name": null,
   "property_type": "apartment",
   "address": {
     "country_code": "RU",

@@ -333,11 +333,18 @@ export const runMatchingForConfirmedRequest = async (input: {
   readonly performanceRecorder?: PilotPerformanceRecorder;
   readonly includeSyntheticDataset?: boolean;
   readonly includeCuratedDataset?: boolean;
+  /**
+   * Overrides where curated pilot objects are read from. Left undefined in
+   * production so `loadCuratedPilotDataset` falls back to the real
+   * `CURATED_PILOT_DIRECTORY`; tests pass an isolated temporary directory so
+   * they never observe (or race on) the live curated dataset on disk.
+   */
+  readonly curatedPilotDirectory?: string;
 }): Promise<MatchingBundle> => {
   const dataset = await loadJourneyDataset(input.repository);
   const includeSyntheticDataset = input.includeSyntheticDataset ?? true;
   const curated = input.includeCuratedDataset
-    ? loadCuratedPilotDataset().candidates
+    ? loadCuratedPilotDataset(input.curatedPilotDirectory).candidates
     : [];
   const affected = input.affectedPropertyIds
     ? new Set(input.affectedPropertyIds)
@@ -469,6 +476,8 @@ export const resolveBundlePropertyDetail = async (input: {
   readonly confirmed: ConfirmedRequestRecord;
   readonly bundle: MatchingBundle;
   readonly propertyId: string;
+  /** See `runMatchingForConfirmedRequest`'s field of the same name. */
+  readonly curatedPilotDirectory?: string;
 }): Promise<PropertyDetailInput> => {
   const entry = input.bundle.entries.find(
     (candidate) => candidate.property_id === input.propertyId,
@@ -514,7 +523,9 @@ export const resolveBundlePropertyDetail = async (input: {
   const dataset = await loadJourneyDataset(input.repository);
 
   if (entry.origin === "manual_curated") {
-    const curated = loadCuratedPilotDataset().candidates.find(
+    const curated = loadCuratedPilotDataset(
+      input.curatedPilotDirectory,
+    ).candidates.find(
       (item) =>
         item.candidate.property.identity.property_id === input.propertyId,
     );
@@ -606,6 +617,8 @@ export const buildShortlistFromMatchingBundle = async (input: {
   readonly repository: BuyerJourneyRepository;
   readonly confirmed: ConfirmedRequestRecord;
   readonly bundle: MatchingBundle;
+  /** See `runMatchingForConfirmedRequest`'s field of the same name. */
+  readonly curatedPilotDirectory?: string;
 }): Promise<ShortlistView> => {
   const origins = [
     ...new Set(input.bundle.entries.map((entry) => entry.origin)),
@@ -619,6 +632,7 @@ export const buildShortlistFromMatchingBundle = async (input: {
         confirmed: input.confirmed,
         bundle: input.bundle,
         propertyId: entry.property_id,
+        curatedPilotDirectory: input.curatedPilotDirectory,
       });
       return {
         property: detail.property,
@@ -668,6 +682,8 @@ export const buildPropertyViewFromMatchingBundle = async (input: {
   readonly confirmed: ConfirmedRequestRecord;
   readonly bundle: MatchingBundle;
   readonly propertyId: string;
+  /** See `runMatchingForConfirmedRequest`'s field of the same name. */
+  readonly curatedPilotDirectory?: string;
 }) => {
   const outcome = buildPropertyDetailView(
     await resolveBundlePropertyDetail(input),

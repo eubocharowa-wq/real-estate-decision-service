@@ -32,6 +32,24 @@ Price, availability, financing, travel times, finishing and balcony are not
 published there at all. They are listed in `explicit_unknown_fields` so they
 stay unknown rather than silently absent.
 
+The developer's name is nullable like the address components: fill it in when
+the card states it, leave `developer_name` as `null` when it does not. A card
+missing it is still worth entering — the tool adds `offer.seller.name` to that
+object's `explicit_unknown_fields` on its own rather than refusing the entry.
+
+`floors_total` is nullable for the same reason, with one hard rule: it may
+only be filled from the card being entered, never carried over from another
+unit's card in the same building. A shared building ID is not the same as
+this card stating its own floor count — when this specific card does not,
+leave `floors_total` as `null` and the tool adds
+`property.building.floors_total` to that object's `explicit_unknown_fields`.
+
+Living area and kitchen area are not accepted input at all, for the same
+reason as price and availability: the apartment-catalog card can show them,
+but the 214-ФЗ declaration this source models does not, so they stay in
+`EISJS_EXPLICIT_UNKNOWN_FIELDS` unconditionally rather than becoming a field
+on the form.
+
 ## Empty is a valid state
 
 With no files here the pilot dataset is simply not configured, and matching

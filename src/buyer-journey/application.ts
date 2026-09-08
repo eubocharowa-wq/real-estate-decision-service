@@ -112,6 +112,13 @@ export interface BuyerJourneyApplicationDependencies {
   readonly performanceRecorder?: PilotPerformanceRecorder;
   readonly feedbackRepository?: FeedbackRepository;
   readonly errorRepository?: ApplicationErrorRepository;
+  /**
+   * Overrides where curated pilot objects are read from. Left undefined in
+   * production so `loadCuratedPilotDataset` falls back to the real
+   * `CURATED_PILOT_DIRECTORY`; tests pass an isolated temporary directory so
+   * they never observe (or race on) the live curated dataset on disk.
+   */
+  readonly curatedPilotDirectory?: string;
 }
 
 export interface CreateJourneyExpertRequestInput {
@@ -223,6 +230,7 @@ export class BuyerJourneyApplication {
   private readonly expertService: ExpertRequestService;
   private readonly pilotRuntimeConfig: PilotRuntimeConfig;
   private readonly feedbackService: JourneyFeedbackService;
+  private readonly curatedPilotDirectory: string | undefined;
   private readonly expertCreateId =
     createSequentialExpertIdFactory("journey_expert");
 
@@ -235,6 +243,7 @@ export class BuyerJourneyApplication {
       dependencies.instrumentation ?? new InMemoryJourneyInstrumentation();
     this.pilotRuntimeConfig =
       dependencies.pilotRuntimeConfig ?? createPilotRuntimeConfig();
+    this.curatedPilotDirectory = dependencies.curatedPilotDirectory;
     this.pilotTelemetry =
       dependencies.pilotTelemetry ??
       new InMemoryPilotTelemetry(this.pilotRuntimeConfig);
@@ -528,6 +537,7 @@ export class BuyerJourneyApplication {
           // Real curated objects are the pilot's dataset; demo runs on
           // fixtures and must not mix them in.
           includeCuratedDataset: this.pilotRuntimeConfig.mode !== "demo",
+          curatedPilotDirectory: this.curatedPilotDirectory,
         }),
     });
     await this.repository.saveMatchingBundle(bundle);
@@ -541,6 +551,7 @@ export class BuyerJourneyApplication {
           repository: this.repository,
           confirmed,
           bundle,
+          curatedPilotDirectory: this.curatedPilotDirectory,
         }),
     });
     let updated = await this.transition(journey, "shortlist", {
@@ -596,6 +607,7 @@ export class BuyerJourneyApplication {
           repository: this.repository,
           confirmed,
           bundle,
+          curatedPilotDirectory: this.curatedPilotDirectory,
         }),
     });
     await this.record(journey, "shortlist_viewed", {
@@ -625,6 +637,7 @@ export class BuyerJourneyApplication {
       confirmed,
       bundle,
       propertyId,
+      curatedPilotDirectory: this.curatedPilotDirectory,
     });
     const updated = await this.transition(journey, "property_detail", {
       selected_property_id: propertyId,
@@ -674,6 +687,7 @@ export class BuyerJourneyApplication {
           confirmed,
           bundle,
           comparison: state,
+          curatedPilotDirectory: this.curatedPilotDirectory,
         }),
     });
     const updated = await this.transition(journey, "comparison", {
@@ -729,6 +743,7 @@ export class BuyerJourneyApplication {
           confirmed,
           bundle,
           comparison,
+          curatedPilotDirectory: this.curatedPilotDirectory,
         }),
     });
     this.recordPilot(journey, "comparison_viewed", {
@@ -875,6 +890,7 @@ export class BuyerJourneyApplication {
           confirmed,
           bundle,
           propertyId,
+          curatedPilotDirectory: this.curatedPilotDirectory,
         }),
       ),
     );
@@ -1764,6 +1780,7 @@ export class BuyerJourneyApplication {
           // Real curated objects are the pilot's dataset; demo runs on
           // fixtures and must not mix them in.
           includeCuratedDataset: this.pilotRuntimeConfig.mode !== "demo",
+          curatedPilotDirectory: this.curatedPilotDirectory,
         }),
     });
     await this.repository.saveMatchingBundle(bundle);

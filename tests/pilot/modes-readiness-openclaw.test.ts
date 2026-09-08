@@ -1,4 +1,8 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { mkdtempSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import path from "node:path";
+
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { sourcePolicyEngine } from "../../src/data-collection/source-registry";
 import { BuyerJourneyApplication } from "../../src/buyer-journey";
@@ -95,6 +99,22 @@ const mockCanonicalPolicyAndReadinessAllowed = (
 afterEach(() => vi.restoreAllMocks());
 
 describe("pilot modes and source readiness", async () => {
+  // Isolated from the real curated dataset on disk (data/examples/real-pilot),
+  // which holds real objects entered through `pilot:candidate` and is not
+  // empty. Reading it here would make this suite's outcome depend on how
+  // many real objects happen to be entered at test time.
+  let emptyCuratedPilotDirectory: string;
+
+  beforeEach(() => {
+    emptyCuratedPilotDirectory = mkdtempSync(
+      path.join(tmpdir(), "curated-pilot-empty-"),
+    );
+  });
+
+  afterEach(() => {
+    rmSync(emptyCuratedPilotDirectory, { recursive: true, force: true });
+  });
+
   it("centralizes mode datasets, operations and risky defaults", () => {
     expect(PILOT_MODE_POLICIES.demo.allowedOrigins).toContain("synthetic");
     expect(PILOT_MODE_POLICIES.pilot.allowedOrigins).not.toContain("synthetic");
@@ -132,6 +152,7 @@ describe("pilot modes and source readiness", async () => {
     const application = new BuyerJourneyApplication({
       clock: () => "2026-08-24T00:00:00.000Z",
       pilotRuntimeConfig: createPilotRuntimeConfig({ mode: "pilot" }),
+      curatedPilotDirectory: emptyCuratedPilotDirectory,
     });
     const journey = await application.startBuyerJourney({
       sessionId: "session_pilot_no_fixture",

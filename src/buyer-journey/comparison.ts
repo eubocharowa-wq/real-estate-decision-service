@@ -81,6 +81,8 @@ export const buildComparisonFromState = async (input: {
   readonly confirmed: ConfirmedRequestRecord;
   readonly bundle: MatchingBundle;
   readonly comparison: ComparisonState;
+  /** See `runMatchingForConfirmedRequest`'s field of the same name. */
+  readonly curatedPilotDirectory?: string;
 }): Promise<ComparisonView> => {
   if (
     input.comparison.status !== "active" ||
@@ -123,6 +125,7 @@ export const buildComparisonFromState = async (input: {
           confirmed: input.confirmed,
           bundle: input.bundle,
           propertyId: item.property_id,
+          curatedPilotDirectory: input.curatedPilotDirectory,
         }),
       })),
     ),

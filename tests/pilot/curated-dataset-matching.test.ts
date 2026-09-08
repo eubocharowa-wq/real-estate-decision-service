@@ -1,8 +1,8 @@
-import { mkdtempSync, writeFileSync } from "node:fs";
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { BuyerJourneyApplication } from "../../src/buyer-journey";
 import { createPilotRuntimeConfig } from "../../src/pilot-hardening/config";
@@ -19,8 +19,11 @@ import {
  * demonstration data.
  *
  * The object below is a deliberately synthetic stand-in used to exercise the
- * labelling; the real dataset directory stays empty until someone enters real
- * cards through the tool.
+ * labelling. It is written into an isolated temporary directory injected via
+ * `curatedPilotDirectory`, never into the real dataset at
+ * `data/examples/real-pilot/candidates` — that directory holds real objects
+ * entered through `pilot:candidate`, and this suite's outcome must not depend
+ * on how many of them happen to exist when it runs.
  */
 const curatedObject = buildEisjsCandidate({
   schema_version: "eisjs-candidate-input-v1",
@@ -53,25 +56,32 @@ const curatedObject = buildEisjsCandidate({
   },
 }).candidate;
 
-const withCuratedDirectory = (): string => {
-  const directory = mkdtempSync(path.join(tmpdir(), "curated-matching-"));
+let curatedPilotDirectory: string;
+
+beforeEach(() => {
+  curatedPilotDirectory = mkdtempSync(path.join(tmpdir(), "curated-matching-"));
+});
+
+afterEach(() => {
+  rmSync(curatedPilotDirectory, { recursive: true, force: true });
+});
+
+const writeCuratedObject = (): void => {
   writeFileSync(
-    path.join(directory, `${curatedObject.candidate_id}.json`),
+    path.join(curatedPilotDirectory, `${curatedObject.candidate_id}.json`),
     JSON.stringify(curatedObject),
     "utf8",
   );
-  return directory;
 };
 
 const pilotApplication = () =>
   new BuyerJourneyApplication({
     clock: () => "2026-08-15T00:00:00.000Z",
     pilotRuntimeConfig: createPilotRuntimeConfig({ mode: "pilot" }),
+    // Isolated per test by beforeEach/afterEach above — never the real
+    // CURATED_PILOT_DIRECTORY on disk.
+    curatedPilotDirectory,
   });
-
-afterEach(() => {
-  vi.restoreAllMocks();
-});
 
 describe("dataset type for a curated pilot set", () => {
   it("labels an empty pilot as empty, not as demonstration data", async () => {
@@ -87,16 +97,7 @@ describe("dataset type for a curated pilot set", () => {
   });
 
   it("names a curated set for what it is and says what the source omits", async () => {
-    const directory = withCuratedDirectory();
-    // The store reads the configured directory; point it at this one.
-    vi.spyOn(process, "cwd").mockReturnValue(path.dirname(directory));
-    const curatedModule =
-      await import("../../src/pilot-hardening/curated-dataset");
-    vi.spyOn(curatedModule, "loadCuratedPilotDataset").mockReturnValue({
-      configured: true,
-      candidates: [curatedObject],
-      errors: [],
-    });
+    writeCuratedObject();
 
     const application = pilotApplication();
     const journey = await application.startBuyerJourney({
@@ -119,6 +120,8 @@ describe("dataset type for a curated pilot set", () => {
     expect(notice).not.toContain("Демонстрационные данные");
     // The buyer is told which decisions this set cannot support.
     expect(notice).toContain("цена");
+    // The production default is still the real, checked-in dataset — only
+    // this suite's own runs are redirected away from it.
     expect(CURATED_PILOT_DIRECTORY).toContain("real-pilot");
   });
 });
