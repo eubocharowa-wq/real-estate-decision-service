@@ -3,7 +3,7 @@ name: GitHub Pages static preview
 on:
   push:
     branches:
-      - codex/github-pages-static-preview
+      - main
   workflow_dispatch:
 
 permissions:
@@ -13,13 +13,13 @@ permissions:
 
 concurrency:
   group: github-pages-static-preview
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Check out preview branch
+      - name: Check out repository
         uses: actions/checkout@v4
 
       - name: Set up repository Node.js
@@ -59,4 +59,4 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
