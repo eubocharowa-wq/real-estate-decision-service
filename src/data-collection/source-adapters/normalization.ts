@@ -1,17 +1,17 @@
-import type { FieldEvidence, Offer, Property } from "../../domain";
+import type { Address, FieldEvidence, Offer, Property } from "../../domain";
 import { fieldEvidenceSchema, offerSchema, propertySchema } from "../../domain";
 import type { CollectionPlan } from "../source-registry";
-import { VNESHSTROI_ADAPTER_VERSION, VNESHSTROI_SOURCE_ID } from "./config";
 import type {
   MatchingReadiness,
   RawCollectionField,
   RawCollectionResult,
   TransientNormalizedCandidate,
 } from "./contracts";
+import type { SourceNormalizationProfile } from "./source-profile";
 import {
-  parseArea,
+  parseAreaBreakdown,
   parseAvailability,
-  parseFloor,
+  parseFloorPosition,
   parseIsoDate,
   parsePrice,
   parseRooms,
@@ -28,6 +28,25 @@ const stableToken = (value: string): string => {
   return (hash >>> 0).toString(16).padStart(8, "0");
 };
 
+const ADDRESS_FIELD_PREFIX = "location.address.";
+
+const EMPTY_ADDRESS: Address = {
+  country_code: null,
+  region: null,
+  city: null,
+  locality: null,
+  district: null,
+  street: null,
+  house_number: null,
+  postal_code: null,
+};
+
+const isAddressField = (
+  field: string,
+): field is `${typeof ADDRESS_FIELD_PREFIX}${keyof Address}` =>
+  field.startsWith(ADDRESS_FIELD_PREFIX) &&
+  Object.hasOwn(EMPTY_ADDRESS, field.slice(ADDRESS_FIELD_PREFIX.length));
+
 const rawField = (
   raw: RawCollectionResult,
   field: string,
@@ -39,6 +58,23 @@ const rawText = (raw: RawCollectionResult, field: string): string | null => {
   return typeof value === "string" ? value : null;
 };
 
+/**
+ * The address the source actually published, and nothing else.
+ *
+ * Components with no extracted field stay null: a default country or city
+ * would be a fact without evidence, which the provenance rule forbids.
+ */
+const addressFrom = (raw: RawCollectionResult): Address => {
+  const address: Record<string, string | null> = { ...EMPTY_ADDRESS };
+  for (const extracted of raw.extracted_fields) {
+    if (!isAddressField(extracted.field)) continue;
+    const component = extracted.field.slice(ADDRESS_FIELD_PREFIX.length);
+    if (typeof extracted.raw_value === "string" && extracted.raw_value.trim())
+      address[component] = extracted.raw_value.trim();
+  }
+  return address as unknown as Address;
+};
+
 const normalizedEvidenceValue = (
   field: string,
   raw: RawCollectionField,
@@ -47,9 +83,9 @@ const normalizedEvidenceValue = (
     case "physical.rooms":
       return parseRooms(raw.raw_value);
     case "physical.floor":
-      return parseFloor(raw.raw_value);
+      return parseFloorPosition(raw.raw_value).floor;
     case "physical.total_area_m2":
-      return parseArea(raw.raw_value);
+      return parseAreaBreakdown(raw.raw_value).total;
     case "listing_price": {
       const price = parsePrice(raw.raw_value, raw.semantics);
       return { amount: price.amount, currency: "RUB" };
@@ -57,7 +93,7 @@ const normalizedEvidenceValue = (
     case "timeline.handover_date":
       return parseIsoDate(field, raw.raw_value);
     case "availability":
-      return parseAvailability(raw.raw_value);
+      return parseAvailability(raw.raw_value).value;
     default:
       return raw.raw_value;
   }
@@ -69,6 +105,7 @@ const offerField = (field: string): boolean =>
 const makeEvidence = ({
   raw,
   plan,
+  profile,
   field,
   propertyId,
   offerId,
@@ -76,6 +113,7 @@ const makeEvidence = ({
 }: {
   readonly raw: RawCollectionResult;
   readonly plan: CollectionPlan;
+  readonly profile: SourceNormalizationProfile;
   readonly field: string;
   readonly propertyId: string;
   readonly offerId: string;
@@ -95,7 +133,7 @@ const makeEvidence = ({
     field,
     value: extracted ? normalizedEvidenceValue(field, extracted) : null,
     raw_value: extracted?.raw_value ?? null,
-    source_id: VNESHSTROI_SOURCE_ID,
+    source_id: profile.sourceId,
     snapshot_id: null,
     source_url: raw.canonical_url,
     collected_at: raw.collected_at,
@@ -104,7 +142,7 @@ const makeEvidence = ({
     extraction_confidence: extracted?.extraction_confidence ?? null,
     evidence_type: "extraction",
     evidence_text: null,
-    evidence_reference: `${VNESHSTROI_ADAPTER_VERSION}:${evidenceReference};policy=${plan.policyVersion}`,
+    evidence_reference: `${profile.adapterVersion}:${evidenceReference};policy=${plan.policyVersion}`,
   });
 };
 
@@ -112,10 +150,12 @@ const matchingReadiness = ({
   raw,
   priceFrom,
   availability,
+  unrecognizedAvailability,
 }: {
   readonly raw: RawCollectionResult;
   readonly priceFrom: boolean | null;
   readonly availability: Offer["availability"];
+  readonly unrecognizedAvailability: string | null;
 }): MatchingReadiness => {
   const missing = new Set(raw.missing_fields);
   if (
@@ -126,6 +166,10 @@ const matchingReadiness = ({
   const warnings = [...raw.warnings];
   if (priceFrom)
     warnings.push("Listing price is a lower bound, not an exact unit price.");
+  if (unrecognizedAvailability !== null)
+    warnings.push(
+      `Availability was published as "${unrecognizedAvailability}", which this adapter version does not recognise; it is not treated as a status.`,
+    );
   if (availability === "unknown")
     warnings.push(
       "Availability remains unknown until supported by explicit evidence.",
@@ -144,26 +188,32 @@ const matchingReadiness = ({
   };
 };
 
-export const normalizeVneshstroiResult = (
+export const normalizeCollectionResult = (
   raw: RawCollectionResult,
   plan: CollectionPlan,
+  profile: SourceNormalizationProfile,
 ): TransientNormalizedCandidate => {
   const unitId = raw.external_record_id;
   if (!unitId) throw new Error("Cannot normalize without an external unit ID.");
-  const propertyId = `candidate_property_${VNESHSTROI_SOURCE_ID}_${unitId}`;
-  const offerId = `candidate_offer_${VNESHSTROI_SOURCE_ID}_${unitId}`;
-  const sourceUnitId = `${VNESHSTROI_SOURCE_ID}:${unitId}`;
+  const propertyId = `candidate_property_${profile.sourceId}_${unitId}`;
+  const offerId = `candidate_offer_${profile.sourceId}_${unitId}`;
+  const sourceUnitId = `${profile.sourceId}:${unitId}`;
   const priceField = rawField(raw, "listing_price");
   const parsedPrice = priceField
     ? parsePrice(priceField.raw_value, priceField.semantics)
     : null;
   const availabilityField = rawField(raw, "availability");
-  const availability = availabilityField
+  const parsedAvailability = availabilityField
     ? parseAvailability(availabilityField.raw_value)
-    : "unknown";
+    : null;
+  const availability = parsedAvailability?.value ?? "unknown";
   const handoverField = rawField(raw, "timeline.handover_date");
+  const areaField = rawField(raw, "physical.total_area_m2");
+  const area = areaField ? parseAreaBreakdown(areaField.raw_value) : null;
+  const floorField = rawField(raw, "physical.floor");
+  const floor = floorField ? parseFloorPosition(floorField.raw_value) : null;
   const evidence = plan.validatedRequestedFields.map((field, index) =>
-    makeEvidence({ raw, plan, field, propertyId, offerId, index }),
+    makeEvidence({ raw, plan, profile, field, propertyId, offerId, index }),
   );
   const propertyEvidence = evidence
     .filter((item) => item.entity_type === "property")
@@ -183,31 +233,18 @@ export const normalizeVneshstroiResult = (
     property_type: rawText(raw, "identity.property_type"),
     market_type: rawText(raw, "identity.market_type"),
     location: {
-      address: {
-        country_code: null,
-        region: null,
-        city: null,
-        locality: null,
-        district: null,
-        street: null,
-        house_number: null,
-        postal_code: null,
-      },
+      address: addressFrom(raw),
       geo_point: null,
     },
     physical: {
-      total_area_m2: rawField(raw, "physical.total_area_m2")
-        ? parseArea(rawField(raw, "physical.total_area_m2")!.raw_value)
-        : null,
-      living_area_m2: null,
-      kitchen_area_m2: null,
+      total_area_m2: area?.total ?? null,
+      living_area_m2: area?.living ?? null,
+      kitchen_area_m2: area?.kitchen ?? null,
       rooms: rawField(raw, "physical.rooms")
         ? parseRooms(rawField(raw, "physical.rooms")!.raw_value)
         : null,
       bedrooms: null,
-      floor: rawField(raw, "physical.floor")
-        ? parseFloor(rawField(raw, "physical.floor")!.raw_value)
-        : null,
+      floor: floor?.floor ?? null,
       balcony: null,
       bathrooms: null,
       layout_type: null,
@@ -215,7 +252,7 @@ export const normalizeVneshstroiResult = (
     building: {
       name: rawText(raw, "identity.development_name"),
       building_type: null,
-      floors_total: null,
+      floors_total: floor?.floorsTotal ?? null,
       built_year: null,
       elevator: null,
       freight_elevator: null,
@@ -250,7 +287,7 @@ export const normalizeVneshstroiResult = (
       created_at: raw.collected_at,
       updated_at: raw.collected_at,
       evidence_refs: propertyEvidence,
-      tags: ["transient_candidate", VNESHSTROI_SOURCE_ID],
+      tags: ["transient_candidate", profile.sourceId],
     },
   });
 
@@ -258,13 +295,9 @@ export const normalizeVneshstroiResult = (
     schema_version: "1.0",
     offer_id: offerId,
     property_id: propertyId,
-    seller: {
-      seller_type: "developer",
-      seller_id: VNESHSTROI_SOURCE_ID,
-      name: "ВНЕШСТРОЙ",
-    },
+    seller: profile.seller,
     source_reference: {
-      source_id: VNESHSTROI_SOURCE_ID,
+      source_id: profile.sourceId,
       snapshot_id: null,
       source_url: raw.canonical_url,
       evidence_ids: offerEvidence,
@@ -299,6 +332,10 @@ export const normalizeVneshstroiResult = (
     raw,
     priceFrom: offer.price_from,
     availability: offer.availability,
+    unrecognizedAvailability:
+      parsedAvailability && !parsedAvailability.recognized
+        ? parsedAvailability.sourceText
+        : null,
   });
   return {
     property,

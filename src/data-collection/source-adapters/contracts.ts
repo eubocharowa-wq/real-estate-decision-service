@@ -15,6 +15,24 @@ import {
 } from "../../domain/common/schema";
 import type { CollectionPlan, SourceEnvironment } from "../source-registry";
 
+/**
+ * The methods an adapter can implement.
+ *
+ * These are exactly the automatic methods the policy engine recognises;
+ * manual, user-supplied and expert input never reach an adapter.
+ */
+export const sourceAdapterMethodSchema = z.enum([
+  "api",
+  "partner_feed",
+  "xml_feed",
+  "http",
+  "browser",
+  "openclaw",
+  "fixture_mock",
+]);
+
+export type SourceAdapterMethod = z.infer<typeof sourceAdapterMethodSchema>;
+
 export const COLLECTION_TASK_SCHEMA_VERSION = "1.0" as const;
 export const RAW_COLLECTION_RESULT_SCHEMA_VERSION = "1.0" as const;
 export const CANONICAL_CANDIDATE_SCHEMA_VERSION = "1.0" as const;
@@ -116,7 +134,7 @@ export interface SourceAdapterContext {
 
 export interface SourceAdapter {
   readonly sourceId: string;
-  readonly method: "http";
+  readonly method: SourceAdapterMethod;
   readonly version: string;
   canHandle(task: CollectionTask): boolean;
   collect(
@@ -160,7 +178,7 @@ export interface CanonicalCandidate {
   readonly evidence: readonly FieldEvidence[];
   readonly snapshot: null;
   readonly attribution: {
-    readonly label: "ВНЕШСТРОЙ";
+    readonly label: string;
     readonly sourceUrl: string;
   };
   readonly duplicateDecision: DuplicateDecision;
@@ -191,7 +209,7 @@ export interface CollectionLog {
   readonly collectionRunId: string;
   readonly sourceId: string;
   readonly taskId: string;
-  readonly method: "http";
+  readonly method: SourceAdapterMethod;
   readonly status: CollectionResultStatus;
   readonly durationMs: number;
   readonly recordsProcessed: number;
@@ -213,7 +231,7 @@ export interface PolicyAudit {
   readonly registryVersion: string;
   readonly policyVersion: string;
   readonly operation: "scheduled_collect";
-  readonly allowedMethod: "http" | null;
+  readonly allowedMethod: SourceAdapterMethod | null;
   readonly validatedTargetUrls: readonly string[];
   readonly validatedRequestedFields: readonly string[];
   readonly reasonCodes: readonly string[];

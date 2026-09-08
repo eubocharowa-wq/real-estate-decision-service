@@ -5,7 +5,6 @@ import type {
   SourceConflict,
 } from "../../domain";
 import { sourceConflictSchema } from "../../domain";
-import { VNESHSTROI_SOURCE_ID } from "./config";
 import type {
   CanonicalState,
   DuplicateDecision,
@@ -131,10 +130,13 @@ export class DeterministicSourceDuplicateHook implements DuplicateHook {
         conflicts: [],
       };
 
+    // An offer is the same offer when it is the same source telling us about
+    // the same URL; the source is the candidate's own, not a fixed one.
     const existingOffer = state.offers.find(
       (offer) =>
         offer.property_id === existingProperty.identity.property_id &&
-        offer.source_reference.source_id === VNESHSTROI_SOURCE_ID &&
+        offer.source_reference.source_id ===
+          candidate.offer.source_reference.source_id &&
         offer.source_reference.source_url ===
           candidate.offer.source_reference.source_url,
     );

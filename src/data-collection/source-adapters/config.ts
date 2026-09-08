@@ -15,6 +15,26 @@ export const SOURCE_ADAPTER_HTTP_CONFIG = Object.freeze({
   retryableHttpStatuses: [429, 500, 502, 503, 504] as const,
 });
 
+/**
+ * Address components a source may publish.
+ *
+ * Normalization maps any of these into `Property.location.address`. Without
+ * them the address stays entirely null and the city, district and excluded
+ * location criteria can never match a collected object.
+ */
+export const ADDRESS_COLLECTION_FIELDS = [
+  "location.address.country_code",
+  "location.address.region",
+  "location.address.city",
+  "location.address.locality",
+  "location.address.district",
+  "location.address.street",
+  "location.address.house_number",
+  "location.address.postal_code",
+] as const;
+
+export type AddressCollectionField = (typeof ADDRESS_COLLECTION_FIELDS)[number];
+
 export const VNESHSTROI_SUPPORTED_FIELDS = [
   "identity.unit_id",
   "identity.property_type",

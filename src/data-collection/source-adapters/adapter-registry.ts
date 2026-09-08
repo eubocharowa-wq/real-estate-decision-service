@@ -1,4 +1,8 @@
-import type { CollectionTask, SourceAdapter } from "./contracts";
+import type {
+  CollectionTask,
+  SourceAdapter,
+  SourceAdapterMethod,
+} from "./contracts";
 
 export class SourceAdapterRegistry {
   private readonly adapters: readonly SourceAdapter[];
@@ -12,7 +16,10 @@ export class SourceAdapterRegistry {
     this.adapters = [...adapters];
   }
 
-  find(task: CollectionTask, method: "http"): SourceAdapter | null {
+  find(
+    task: CollectionTask,
+    method: SourceAdapterMethod,
+  ): SourceAdapter | null {
     return (
       this.adapters.find(
         (adapter) => adapter.method === method && adapter.canHandle(task),

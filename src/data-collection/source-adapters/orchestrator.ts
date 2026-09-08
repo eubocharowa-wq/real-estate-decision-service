@@ -3,11 +3,7 @@ import type { SourcePolicyEngine } from "../source-registry";
 import { sourcePolicyEngine } from "../source-registry";
 import { SourceAdapterRegistry } from "./adapter-registry";
 import { VneshstroiHttpAdapter } from "./adapters/vneshstroi/adapter";
-import {
-  VNESHSTROI_APPROVAL_CONDITION,
-  VNESHSTROI_NORMALIZATION_VERSION,
-  VNESHSTROI_SOURCE_ID,
-} from "./config";
+import { VNESHSTROI_PROFILE } from "./adapters/vneshstroi/profile";
 import type {
   CanonicalCandidate,
   CollectionErrorCode,
@@ -21,12 +17,15 @@ import type {
   DuplicateHook,
   PolicyAudit,
   RawCollectionResult,
+  SourceAdapter,
   TransientNormalizedCandidate,
 } from "./contracts";
 import { collectionTaskSchema, rawCollectionResultSchema } from "./contracts";
 import { DeterministicSourceDuplicateHook } from "./duplicate-hook";
 import { SecureHttpCollector } from "./http";
-import { normalizeVneshstroiResult } from "./normalization";
+import { normalizeCollectionResult } from "./normalization";
+import type { SourceNormalizationProfile } from "./source-profile";
+import { SourceProfileRegistry } from "./source-profile";
 import { validateRawCollectionResult } from "./validation";
 
 const emptyState = { properties: [], offers: [], evidence: [] } as const;
@@ -42,11 +41,15 @@ const stableToken = (value: string): string => {
 
 const policyAudit = (
   plan: ReturnType<SourcePolicyEngine["resolveCollectionPlan"]>,
+  profile: SourceNormalizationProfile | null,
 ): PolicyAudit => ({
   registryVersion: plan.registryVersion,
   policyVersion: plan.policyVersion,
   operation: "scheduled_collect",
-  allowedMethod: plan.preferredMethod === "http" ? "http" : null,
+  allowedMethod:
+    profile && plan.preferredMethod === profile.collectionContract.method
+      ? profile.collectionContract.method
+      : null,
   validatedTargetUrls: plan.validatedTargetUrls,
   validatedRequestedFields: plan.validatedRequestedFields,
   reasonCodes: plan.reasonCodes,
@@ -103,16 +106,18 @@ const executionLog = ({
   raw,
   durationMs,
   recordsProcessed,
+  method,
 }: {
   readonly task: CollectionTask;
   readonly raw: RawCollectionResult;
   readonly durationMs: number;
   readonly recordsProcessed: number;
+  readonly method: SourceAdapter["method"];
 }): CollectionLog => ({
   collectionRunId: raw.collection_run_id,
   sourceId: task.source_id,
   taskId: task.task_id,
-  method: "http",
+  method,
   status: raw.status,
   durationMs,
   recordsProcessed,
@@ -190,6 +195,7 @@ const canonicalCandidate = (
   normalized: TransientNormalizedCandidate,
   duplicateHook: DuplicateHook,
   state: CollectionExecutionInput["canonicalState"],
+  profile: SourceNormalizationProfile,
 ): CanonicalCandidate => {
   const duplicate = duplicateHook.evaluate(normalized, state ?? emptyState);
   const evidence = rebindEvidence(
@@ -225,7 +231,7 @@ const canonicalCandidate = (
   };
   return {
     schemaVersion: "1.0",
-    normalizationVersion: VNESHSTROI_NORMALIZATION_VERSION,
+    normalizationVersion: profile.normalizationVersion,
     persistence: "transient_only",
     propertyCandidate: rebindProperty(
       normalized.property,
@@ -236,7 +242,7 @@ const canonicalCandidate = (
     evidence,
     snapshot: null,
     attribution: {
-      label: "ВНЕШСТРОЙ",
+      label: profile.attributionLabel,
       sourceUrl: normalized.offer.source_reference.source_url!,
     },
     duplicateDecision: duplicate.decision,
@@ -247,40 +253,60 @@ const canonicalCandidate = (
   };
 };
 
-const scopedPlanContractSatisfied = (
+/**
+ * The plan a source declares it may be collected under.
+ *
+ * Everything specific to a source — environments, method, approval condition,
+ * target budget, attribution label, retention — comes from its profile. The
+ * invariants that hold for every collected source stay here: raw content is
+ * never stored or displayed, normalized facts and their evidence are, and the
+ * plan must be one the policy engine actually allowed.
+ */
+const planContractSatisfied = (
   plan: ReturnType<SourcePolicyEngine["resolveCollectionPlan"]>,
   environment: CollectionExecutionInput["environment"],
-): boolean =>
-  plan.allowed &&
-  (environment === "development" || environment === "test") &&
-  plan.sourceId === VNESHSTROI_SOURCE_ID &&
-  plan.operation === "scheduled_collect" &&
-  plan.preferredMethod === "http" &&
-  plan.fallbackMethods.length === 0 &&
-  plan.validatedTargetUrls.length === 1 &&
-  plan.requiredConditions.includes(VNESHSTROI_APPROVAL_CONDITION) &&
-  plan.storagePolicy.rawContent.allowed === false &&
-  plan.storagePolicy.normalizedData.allowed &&
-  plan.storagePolicy.evidenceMetadata.allowed &&
-  plan.storagePolicy.snapshots.allowed === false &&
-  plan.displayPolicy.normalizedFacts.allowed &&
-  plan.displayPolicy.sourceLink.allowed &&
-  plan.displayPolicy.rawContent.allowed === false &&
-  plan.displayPolicy.evidenceSnippet.allowed === false &&
-  plan.displayPolicy.imageMedia.allowed === false &&
-  plan.retentionPolicy.normalized_facts === "transient_only" &&
-  plan.retentionPolicy.evidence_metadata === "transient_only" &&
-  plan.retentionPolicy.raw_content === "prohibited" &&
-  plan.retentionPolicy.raw_snapshots === "prohibited" &&
-  plan.attributionPolicy.attribution_required &&
-  plan.attributionPolicy.attribution_label === "ВНЕШСТРОЙ" &&
-  plan.attributionPolicy.link_required;
+  profile: SourceNormalizationProfile,
+): boolean => {
+  const contract = profile.collectionContract;
+  return (
+    plan.allowed &&
+    contract.environments.includes(environment) &&
+    plan.sourceId === profile.sourceId &&
+    plan.operation === "scheduled_collect" &&
+    plan.preferredMethod === contract.method &&
+    plan.fallbackMethods.length === 0 &&
+    plan.validatedTargetUrls.length > 0 &&
+    plan.validatedTargetUrls.length <= contract.maximumTargetUrls &&
+    contract.requiredConditions.every((condition) =>
+      plan.requiredConditions.includes(condition),
+    ) &&
+    plan.storagePolicy.rawContent.allowed === false &&
+    plan.storagePolicy.normalizedData.allowed &&
+    plan.storagePolicy.evidenceMetadata.allowed &&
+    plan.storagePolicy.snapshots.allowed === false &&
+    plan.displayPolicy.normalizedFacts.allowed &&
+    plan.displayPolicy.sourceLink.allowed &&
+    plan.displayPolicy.rawContent.allowed === false &&
+    plan.displayPolicy.evidenceSnippet.allowed === false &&
+    plan.displayPolicy.imageMedia.allowed === false &&
+    plan.retentionPolicy.normalized_facts ===
+      contract.retention.normalized_facts &&
+    plan.retentionPolicy.evidence_metadata ===
+      contract.retention.evidence_metadata &&
+    plan.retentionPolicy.raw_content === contract.retention.raw_content &&
+    plan.retentionPolicy.raw_snapshots === contract.retention.raw_snapshots &&
+    plan.attributionPolicy.attribution_required &&
+    plan.attributionPolicy.attribution_label === profile.attributionLabel &&
+    plan.attributionPolicy.link_required
+  );
+};
 
 export class SourceCollectionPipeline {
   constructor(
     private readonly policyEngine: SourcePolicyEngine,
     private readonly adapters: SourceAdapterRegistry,
     private readonly duplicateHook: DuplicateHook,
+    private readonly profiles: SourceProfileRegistry,
   ) {}
 
   async execute(
@@ -291,12 +317,15 @@ export class SourceCollectionPipeline {
       `${task.task_id}:${input.observedAt}`,
     )}`;
     const startedAt = Date.now();
+    // A source with no profile is a source this pipeline was never configured
+    // to collect; it is denied before any policy call is made on its behalf.
+    const profile = this.profiles.get(task.source_id);
     const plan = this.policyEngine.resolveCollectionPlan({
       sourceId: task.source_id,
       operation: "scheduled_collect",
       environment: input.environment,
       entityType: task.entity_type,
-      requestedMethod: "http",
+      requestedMethod: profile?.collectionContract.method ?? null,
       targetUrls: task.target_urls,
       requestedFields: task.requested_fields,
       discovery: false,
@@ -308,18 +337,22 @@ export class SourceCollectionPipeline {
       satisfiedConditions: input.satisfiedConditions,
       decidedAt: input.observedAt,
     });
-    const audit = policyAudit(plan);
-    const adapter = scopedPlanContractSatisfied(plan, input.environment)
-      ? this.adapters.find(task, "http")
-      : null;
-    if (!adapter) {
+    const audit = policyAudit(plan, profile);
+    const method = profile?.collectionContract.method ?? "http";
+    const adapter =
+      profile && planContractSatisfied(plan, input.environment, profile)
+        ? this.adapters.find(task, method)
+        : null;
+    if (!adapter || !profile) {
       const raw = blockedRawResult({
         task,
         collectionRunId,
         observedAt: input.observedAt,
         warnings: [
           ...plan.reasonCodes,
-          "No adapter was invoked because the scoped policy contract denied execution.",
+          profile
+            ? "No adapter was invoked because the scoped policy contract denied execution."
+            : "No adapter was invoked because the source has no collection profile.",
         ],
       });
       const durationMs = Date.now() - startedAt;
@@ -331,7 +364,13 @@ export class SourceCollectionPipeline {
         policyAudit: audit,
         rawResult: raw,
         candidate: null,
-        log: executionLog({ task, raw, durationMs, recordsProcessed: 0 }),
+        log: executionLog({
+          task,
+          raw,
+          durationMs,
+          recordsProcessed: 0,
+          method,
+        }),
         metrics: executionMetrics({
           status: raw.status,
           durationMs,
@@ -357,11 +396,16 @@ export class SourceCollectionPipeline {
         );
       else {
         try {
-          const normalized = normalizeVneshstroiResult(validation.value, plan);
+          const normalized = normalizeCollectionResult(
+            validation.value,
+            plan,
+            profile,
+          );
           candidate = canonicalCandidate(
             normalized,
             this.duplicateHook,
             input.canonicalState,
+            profile,
           );
         } catch (error) {
           raw = failedValidationResult(
@@ -382,7 +426,13 @@ export class SourceCollectionPipeline {
       policyAudit: audit,
       rawResult: raw,
       candidate,
-      log: executionLog({ task, raw, durationMs, recordsProcessed }),
+      log: executionLog({
+        task,
+        raw,
+        durationMs,
+        recordsProcessed,
+        method: adapter.method,
+      }),
       metrics: executionMetrics({
         status: raw.status,
         durationMs,
@@ -391,6 +441,28 @@ export class SourceCollectionPipeline {
     };
   }
 }
+
+/**
+ * Builds a pipeline over any set of adapters. Each adapter needs a matching
+ * profile; the pipeline denies a task whose source has neither.
+ */
+export const createSourceCollectionPipeline = ({
+  adapters,
+  profiles,
+  policyEngine = sourcePolicyEngine,
+  duplicateHook = new DeterministicSourceDuplicateHook(),
+}: {
+  readonly adapters: readonly SourceAdapter[];
+  readonly profiles: readonly SourceNormalizationProfile[];
+  readonly policyEngine?: SourcePolicyEngine;
+  readonly duplicateHook?: DuplicateHook;
+}): SourceCollectionPipeline =>
+  new SourceCollectionPipeline(
+    policyEngine,
+    new SourceAdapterRegistry(adapters),
+    duplicateHook,
+    new SourceProfileRegistry(profiles),
+  );
 
 export const createVneshstroiCollectionPipeline = ({
   collector = new SecureHttpCollector(),
@@ -401,8 +473,9 @@ export const createVneshstroiCollectionPipeline = ({
   readonly policyEngine?: SourcePolicyEngine;
   readonly duplicateHook?: DuplicateHook;
 } = {}): SourceCollectionPipeline =>
-  new SourceCollectionPipeline(
+  createSourceCollectionPipeline({
+    adapters: [new VneshstroiHttpAdapter(collector)],
+    profiles: [VNESHSTROI_PROFILE],
     policyEngine,
-    new SourceAdapterRegistry([new VneshstroiHttpAdapter(collector)]),
     duplicateHook,
-  );
+  });
