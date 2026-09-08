@@ -1,0 +1,30 @@
+{
+  "schema_version": "eisjs-candidate-input-v1",
+  "candidate_id": "ТРЕБУЕТСЯ: короткий латинский идентификатор объекта, например tula_zhk_name_k1",
+  "source_url": "ТРЕБУЕТСЯ: полный https-адрес карточки объекта на наш.дом.рф",
+  "collected_at": "ТРЕБУЕТСЯ: дата и время фактической сверки карточки, ISO 8601",
+  "external_object_id": "ТРЕБУЕТСЯ: идентификатор объекта на карточке",
+  "developer_name": "ТРЕБУЕТСЯ: наименование застройщика, как указано в декларации",
+  "property_type": "apartment",
+  "address": {
+    "country_code": "RU",
+    "region": "ТРЕБУЕТСЯ: регион по декларации",
+    "city": "ТРЕБУЕТСЯ: город по декларации",
+    "locality": null,
+    "district": null,
+    "street": null,
+    "house_number": null,
+    "postal_code": null
+  },
+  "cadastral_number": null,
+  "total_area_m2": "ТРЕБУЕТСЯ: число, общая площадь по декларации",
+  "floors_total": "ТРЕБУЕТСЯ: целое число, этажность по декларации",
+  "rooms": null,
+  "floor": null,
+  "building_name": null,
+  "handover_quarter": {
+    "year": "ТРЕБУЕТСЯ: год ввода по декларации",
+    "quarter": "ТРЕБУЕТСЯ: квартал ввода, 1-4",
+    "as_published": "ТРЕБУЕТСЯ: формулировка срока, как она напечатана на карточке"
+  }
+}

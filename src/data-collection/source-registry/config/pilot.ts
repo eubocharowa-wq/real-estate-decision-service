@@ -164,11 +164,40 @@ const defaultRetentionPolicy: SourceRegistryEntry["policy"]["retention_policy"] 
     raw_snapshots: "prohibited",
   };
 
+/** A hostname, or a hostname explicitly shared with another source. */
+export type DomainInput =
+  | string
+  | {
+      readonly hostname: string;
+      readonly sharedOwnershipRule: string;
+    };
+
+const domainRule = (input: DomainInput) =>
+  typeof input === "string"
+    ? {
+        hostname: input,
+        include_subdomains: true,
+        shared_ownership_rule: null,
+      }
+    : {
+        hostname: input.hostname,
+        include_subdomains: true,
+        shared_ownership_rule: input.sharedOwnershipRule,
+      };
+
+const domainHostname = (input: DomainInput): string =>
+  typeof input === "string" ? input : input.hostname;
+
+export const EISJS_SHARED_DOMAIN_RULE =
+  "наш.дом.рф serves both ДОМ.РФ programme rules (src_fin_01) and ЕИСЖС project declarations (src_gov_01)";
+
+export const EISJS_SOURCE_ID = "src_gov_01" as const;
+
 interface ExternalEntryInput {
   readonly sourceId: string;
   readonly name: string;
   readonly sourceType: SourceRegistryEntry["source_type"];
-  readonly domains: readonly string[];
+  readonly domains: readonly DomainInput[];
   readonly baseUrl: string;
   readonly status?: SourceRegistryEntry["status"];
   readonly lifecycle?: SourceRegistryEntry["approval_lifecycle"];
@@ -205,11 +234,7 @@ const externalEntry = (input: ExternalEntryInput): SourceRegistryEntry => ({
   source_id: input.sourceId,
   name: input.name,
   source_type: input.sourceType,
-  domains: input.domains.map((hostname) => ({
-    hostname,
-    include_subdomains: true,
-    shared_ownership_rule: null,
-  })),
+  domains: input.domains.map(domainRule),
   base_url: input.baseUrl,
   geography: { country_codes: ["RU"], regions: [], cities: [] },
   coverage: {
@@ -240,7 +265,7 @@ const externalEntry = (input: ExternalEntryInput): SourceRegistryEntry => ({
     cache: input.cache ?? "unknown",
     collection_scope: input.collectionScope ?? {
       explicit_targets_only: false,
-      allowed_hosts: [...input.domains],
+      allowed_hosts: input.domains.map(domainHostname),
       allowed_path_patterns: ["^/.*$"],
       maximum_target_urls: 100,
       discovery_allowed: false,
@@ -729,7 +754,15 @@ const financeEntries: SourceRegistryEntry[] = [
     sourceId: "src_fin_01",
     name: "ДОМ.РФ",
     sourceType: "government",
-    domains: ["дом.рф", "спроси.дом.рф", "наш.дом.рф"],
+    domains: [
+      "дом.рф",
+      "спроси.дом.рф",
+      // наш.дом.рф carries two different things: the mortgage programme rules
+      // this entry is authoritative for, and the ЕИСЖС developer declarations
+      // that src_gov_01 covers. The shared rule makes that split explicit
+      // instead of letting one entry silently own both.
+      { hostname: "наш.дом.рф", sharedOwnershipRule: EISJS_SHARED_DOMAIN_RULE },
+    ],
     baseUrl: "https://дом.рф",
     trust: "authoritative",
     entityTypes: ["financing_program", "document"],
@@ -819,6 +852,148 @@ const financeEntries: SourceRegistryEntry[] = [
       "FIN-02: bank implementation reference pending review for systematic storage and refresh.",
   }),
 ];
+
+/**
+ * ЕИСЖС (наш.дом.рф) — the unified housing-construction information system.
+ *
+ * Developers publish project declarations there because 214-ФЗ requires it, so
+ * the origin of the data is clean. That is not the same as a right to collect
+ * it automatically: object cards are addressed by query parameters, which the
+ * collection scope refuses, and no adapter exists. The pilot therefore enters
+ * these objects by hand under `manual_import`, and the entry says so.
+ */
+const eisjsFields: SourceRegistryEntry["coverage"]["fields"] = [
+  { field_pattern: "identity.*", support: "full", notes: null },
+  { field_pattern: "location.*", support: "full", notes: null },
+  {
+    field_pattern: "physical.*",
+    support: "partial",
+    notes: "Area and floor are declared; layout details are not.",
+  },
+  {
+    field_pattern: "building.*",
+    support: "partial",
+    notes: "Building height and commissioning are declared.",
+  },
+  {
+    field_pattern: "timeline.*",
+    support: "partial",
+    notes:
+      "Declared with quarter granularity as a developer commitment, never as a confirmed calendar date.",
+  },
+  {
+    field_pattern: "listing_price",
+    support: "none",
+    notes: "Unit prices are not published in project declarations.",
+  },
+  {
+    field_pattern: "availability",
+    support: "none",
+    notes: "Unit availability is not published in project declarations.",
+  },
+  {
+    field_pattern: "financing.*",
+    support: "none",
+    notes: "Declarations describe the object, not a transaction.",
+  },
+];
+
+const eisjsEntry = externalEntry({
+  sourceId: EISJS_SOURCE_ID,
+  name: "ЕИСЖС (наш.дом.рф)",
+  sourceType: "government",
+  domains: [
+    { hostname: "наш.дом.рф", sharedOwnershipRule: EISJS_SHARED_DOMAIN_RULE },
+  ],
+  baseUrl: "https://наш.дом.рф",
+  trust: "authoritative",
+  status: "manual_only",
+  entityTypes: ["property", "document"],
+  propertyTypes: ["apartment", "apartments"],
+  marketTypes: ["new_build"],
+  fieldCoverage: eisjsFields,
+  fieldAuthority: [
+    {
+      field_pattern: "location.*",
+      priority: 95,
+      authority_type: "authoritative",
+      notes: "Address as filed in the project declaration.",
+    },
+    {
+      field_pattern: "physical.*",
+      priority: 95,
+      authority_type: "authoritative",
+      notes: "Area and floor as filed in the project declaration.",
+    },
+    {
+      field_pattern: "timeline.*",
+      priority: 60,
+      authority_type: "authoritative",
+      notes:
+        "A declared commissioning commitment about the future, not a verified fact.",
+    },
+  ],
+  capabilities: {
+    discover: "none",
+    collect: "none",
+    refresh: "none",
+    verify: "full",
+    user_url_ingest: "none",
+    display: "partial",
+  },
+  policyReasons: ["MANUAL_ONLY"],
+  access: "approved",
+  automation: "denied",
+  storage: {
+    raw_content: "denied",
+    normalized_data: "approved",
+    evidence_metadata: "approved",
+    snapshots: "denied",
+    derived_data: "approved",
+  },
+  display: {
+    normalized_facts: "approved",
+    source_link: "approved",
+    evidence_snippet: "denied",
+    raw_content: "denied",
+    image_media: "denied",
+  },
+  refresh: { permission: "denied", modes: ["manual_only"] },
+  derivation: "approved",
+  cache: "denied",
+  methods: manualMethods,
+  environmentApproval: {
+    development: {
+      status: "approved",
+      allowed_methods: ["manual"],
+      required_conditions: [],
+    },
+    test: {
+      status: "approved",
+      allowed_methods: ["manual"],
+      required_conditions: [],
+    },
+    pilot: {
+      status: "approved",
+      allowed_methods: ["manual"],
+      required_conditions: [],
+    },
+    production: {
+      status: "denied",
+      allowed_methods: ["manual"],
+      required_conditions: [],
+    },
+  },
+  retentionPolicy: {
+    normalized_facts: "persistent",
+    evidence_metadata: "persistent",
+    raw_content: "prohibited",
+    raw_snapshots: "prohibited",
+  },
+  reviewedAt: "2026-09-08T00:00:00.000Z",
+  notes:
+    "GOV-01: 214-ФЗ project declarations, entered by hand. Automatic collection is denied: object cards are query-addressed and no adapter is approved.",
+});
 
 const geoEntry = externalEntry({
   sourceId: "src_geo_01",
@@ -1085,6 +1260,7 @@ export const PILOT_SOURCE_REGISTRY_CONFIG: SourceRegistryConfig = {
     ...developerEntries,
     ...marketplaceEntries,
     ...financeEntries,
+    eisjsEntry,
     geoEntry,
     ...fixtureEntries,
   ],

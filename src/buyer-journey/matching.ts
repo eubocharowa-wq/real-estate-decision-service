@@ -27,6 +27,11 @@ import {
 } from "../shortlist";
 import { buildUserUrlPropertyDetailInput } from "../user-url-ingestion";
 import {
+  CURATED_PILOT_DATASET_VERSION,
+  loadCuratedPilotDataset,
+} from "../pilot-hardening/curated-dataset";
+import type { RealPilotDatasetCandidate } from "../pilot-hardening/contracts";
+import {
   measurePilotOperation,
   type PilotPerformanceRecorder,
 } from "../pilot-hardening/performance";
@@ -158,6 +163,7 @@ const evaluateCandidate = (
   dataset: EvaluatedDataset,
   currentTime: string,
   performanceRecorder?: PilotPerformanceRecorder,
+  origin: MatchingBundleEntry["origin"] = "synthetic",
 ): MatchingBundleEntry | null => {
   const propertyId = parts.property.identity.property_id;
   const match = matchProperty({
@@ -211,11 +217,44 @@ const evaluateCandidate = (
     selected_offer_id: match.result.selected_offer_id,
     selected_purchase_scenario_id:
       match.result.match_result.purchase_scenario_id,
-    origin: "synthetic",
+    origin,
     match: match.result,
     data_quality: quality.success ? quality.result : null,
   };
 };
+
+/**
+ * Real objects entered by hand from an approved source.
+ *
+ * They carry their own source and evidence, so the dataset the matcher sees is
+ * the loaded one plus this object's provenance — nothing about the object is
+ * borrowed from the synthetic fixtures.
+ */
+const evaluateCuratedCandidate = (
+  request: UserRequest,
+  entry: RealPilotDatasetCandidate,
+  dataset: EvaluatedDataset,
+  currentTime: string,
+  performanceRecorder?: PilotPerformanceRecorder,
+): MatchingBundleEntry | null =>
+  evaluateCandidate(
+    request,
+    {
+      property: entry.candidate.property,
+      offers: [entry.candidate.offer],
+      scenarios: [],
+      eligibility: [],
+      programs: dataset.financingPrograms,
+    },
+    {
+      ...dataset,
+      sources: [...dataset.sources, ...entry.candidate.sources],
+      fieldEvidence: [...dataset.fieldEvidence, ...entry.candidate.evidence],
+    },
+    currentTime,
+    performanceRecorder,
+    "manual_curated",
+  );
 
 const evaluateImportedCandidate = async (
   request: UserRequest,
@@ -240,6 +279,49 @@ const evaluateImportedCandidate = async (
   };
 };
 
+/**
+ * What the bundle was actually built from.
+ *
+ * The type used to be derived from two flags and could only say "synthetic",
+ * "user supplied" or "empty" — so a shortlist of real objects entered by hand
+ * was labelled demonstration data. Each source of candidates is counted now,
+ * and a set that is only curated real objects says so.
+ */
+const datasetSnapshot = (input: {
+  readonly metadata: EvaluatedDataset["metadata"];
+  readonly includeSyntheticDataset: boolean;
+  readonly curatedCount: number;
+  readonly importedCount: number;
+}): MatchingBundle["dataset_snapshot"] => {
+  const kinds =
+    Number(input.includeSyntheticDataset) +
+    Number(input.curatedCount > 0) +
+    Number(input.importedCount > 0);
+  const datasetType: MatchingBundle["dataset_snapshot"]["dataset_type"] =
+    kinds > 1
+      ? "mixed_explicit"
+      : input.includeSyntheticDataset
+        ? input.metadata.dataset_type
+        : input.curatedCount > 0
+          ? "manual_curated_pilot"
+          : input.importedCount > 0
+            ? "user_supplied_only"
+            : "empty_pilot";
+  return {
+    dataset_id: input.includeSyntheticDataset
+      ? input.metadata.dataset_id
+      : datasetType === "manual_curated_pilot"
+        ? "pilot_runtime_curated"
+        : "pilot_runtime_explicit",
+    dataset_version: input.includeSyntheticDataset
+      ? input.metadata.dataset_version
+      : datasetType === "manual_curated_pilot"
+        ? CURATED_PILOT_DATASET_VERSION
+        : "pilot-runtime-v1",
+    dataset_type: datasetType,
+  };
+};
+
 export const runMatchingForConfirmedRequest = async (input: {
   readonly repository: BuyerJourneyRepository;
   readonly confirmed: ConfirmedRequestRecord;
@@ -250,9 +332,13 @@ export const runMatchingForConfirmedRequest = async (input: {
   readonly affectedPropertyIds?: readonly string[] | null;
   readonly performanceRecorder?: PilotPerformanceRecorder;
   readonly includeSyntheticDataset?: boolean;
+  readonly includeCuratedDataset?: boolean;
 }): Promise<MatchingBundle> => {
   const dataset = await loadJourneyDataset(input.repository);
   const includeSyntheticDataset = input.includeSyntheticDataset ?? true;
+  const curated = input.includeCuratedDataset
+    ? loadCuratedPilotDataset().candidates
+    : [];
   const affected = input.affectedPropertyIds
     ? new Set(input.affectedPropertyIds)
     : null;
@@ -298,6 +384,26 @@ export const runMatchingForConfirmedRequest = async (input: {
     else partial = true;
   }
 
+  for (const entry of curated.filter((item) =>
+    matchesConfirmedScope(input.confirmed.request, item.candidate.property),
+  )) {
+    const propertyId = entry.candidate.property.identity.property_id;
+    if (affected && !affected.has(propertyId)) {
+      const previous = previousByProperty.get(propertyId);
+      if (previous) entries.push(previous);
+      continue;
+    }
+    const evaluated = evaluateCuratedCandidate(
+      input.confirmed.request,
+      entry,
+      dataset,
+      input.generatedAt,
+      input.performanceRecorder,
+    );
+    if (evaluated) entries.push(evaluated);
+    else partial = true;
+  }
+
   for (const ingestionId of input.importedCandidateIds) {
     const candidate = await input.repository.getImportedCandidate(ingestionId);
     const propertyId = candidate?.propertyCandidate.identity.property_id;
@@ -328,21 +434,12 @@ export const runMatchingForConfirmedRequest = async (input: {
     matching_algorithm_version: MATCHING_ALGORITHM_VERSION,
     confidence_algorithm_version: CONFIDENCE_ALGORITHM_VERSION,
     criteria_registry_version: CRITERIA_REGISTRY_VERSION,
-    dataset_snapshot: {
-      dataset_id: includeSyntheticDataset
-        ? dataset.metadata.dataset_id
-        : "pilot_runtime_explicit",
-      dataset_version: includeSyntheticDataset
-        ? dataset.metadata.dataset_version
-        : "pilot-runtime-v1",
-      dataset_type: includeSyntheticDataset
-        ? input.importedCandidateIds.length > 0
-          ? "mixed_explicit"
-          : dataset.metadata.dataset_type
-        : input.importedCandidateIds.length > 0
-          ? "user_supplied_only"
-          : "empty_pilot",
-    },
+    dataset_snapshot: datasetSnapshot({
+      metadata: dataset.metadata,
+      includeSyntheticDataset,
+      curatedCount: curated.length,
+      importedCount: input.importedCandidateIds.length,
+    }),
     imported_candidate_ids: [...input.importedCandidateIds],
     partial,
     stale: false,
@@ -415,6 +512,40 @@ export const resolveBundlePropertyDetail = async (input: {
   }
 
   const dataset = await loadJourneyDataset(input.repository);
+
+  if (entry.origin === "manual_curated") {
+    const curated = loadCuratedPilotDataset().candidates.find(
+      (item) =>
+        item.candidate.property.identity.property_id === input.propertyId,
+    );
+    if (!curated)
+      throw new BuyerJourneyError(
+        "ENTITY_NOT_FOUND",
+        "Curated candidate is unavailable",
+        false,
+      );
+    return {
+      property: curated.candidate.property,
+      offers: [curated.candidate.offer],
+      selectedOffer: curated.candidate.offer,
+      purchaseScenarios: [],
+      selectedPurchaseScenario: null,
+      selectedFinancingProgram: null,
+      selectedFinancingOffer: null,
+      selectedPromotion: null,
+      userRequest: input.confirmed.request,
+      matching: entry.match,
+      dataQuality: entry.data_quality,
+      sources: [...dataset.sources, ...curated.candidate.sources],
+      fieldEvidence: [...dataset.fieldEvidence, ...curated.candidate.evidence],
+      sourceConflicts: dataset.sourceConflicts,
+      generatedAt: input.bundle.generated_at,
+      partial: entry.data_quality === null,
+      contextNotice:
+        "Реальный объект, внесённый вручную из проектной декларации: цена, доступность и условия финансирования в источнике не публикуются.",
+    };
+  }
+
   const property = dataset.properties.find(
     (candidate) => candidate.identity.property_id === input.propertyId,
   );
@@ -511,6 +642,8 @@ export const buildShortlistFromMatchingBundle = async (input: {
       switch (input.bundle.dataset_snapshot.dataset_type) {
         case "synthetic_pilot":
           return "Демонстрационные данные · origin=synthetic · dataset_type=synthetic_pilot. Это не полное покрытие рынка.";
+        case "manual_curated_pilot":
+          return `Реальные объекты, внесённые вручную из официального источника · dataset_type=manual_curated_pilot · origins=${origins}. Это выборка, а не полное покрытие рынка; цена, доступность и условия финансирования в источнике не публикуются.`;
         case "mixed_explicit":
           return `Смешанный явный набор · dataset_type=mixed_explicit · origins=${origins}. Synthetic и пользовательские данные не считаются live-market coverage.`;
         case "user_supplied_only":

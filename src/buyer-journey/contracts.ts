@@ -114,6 +114,8 @@ export interface MatchingBundle {
     readonly dataset_version: string;
     readonly dataset_type:
       | "synthetic_pilot"
+      /** Real objects entered by hand from an approved source. */
+      | "manual_curated_pilot"
       | "mixed_explicit"
       | "user_supplied_only"
       | "empty_pilot";

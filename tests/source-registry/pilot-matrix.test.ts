@@ -16,6 +16,7 @@ const requiredPilotIds = [
   "src_fin_01",
   "src_fin_02",
   "src_geo_01",
+  "src_gov_01",
 ] as const;
 
 describe("pilot source matrix mapping", () => {
@@ -50,6 +51,7 @@ describe("pilot source matrix mapping", () => {
     ],
     ["src_geo_01", ["PARTNER_CHANNEL", "STORAGE_NOT_APPROVED"]],
     ["src_fin_01", ["REVIEW_REQUIRED"]],
+    ["src_gov_01", ["MANUAL_ONLY"]],
   ])("preserves matrix conclusions for %s", (sourceId, reasons) => {
     expect(sourceRegistry.get(sourceId)?.policy.reason_codes).toEqual(reasons);
   });

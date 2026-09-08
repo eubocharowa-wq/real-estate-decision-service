@@ -525,6 +525,9 @@ export class BuyerJourneyApplication {
           createId: this.createId,
           performanceRecorder: this.performanceRecorder,
           includeSyntheticDataset: this.pilotRuntimeConfig.mode === "demo",
+          // Real curated objects are the pilot's dataset; demo runs on
+          // fixtures and must not mix them in.
+          includeCuratedDataset: this.pilotRuntimeConfig.mode !== "demo",
         }),
     });
     await this.repository.saveMatchingBundle(bundle);
@@ -1758,6 +1761,9 @@ export class BuyerJourneyApplication {
           affectedPropertyIds: input.affectedPropertyIds,
           performanceRecorder: this.performanceRecorder,
           includeSyntheticDataset: this.pilotRuntimeConfig.mode === "demo",
+          // Real curated objects are the pilot's dataset; demo runs on
+          // fixtures and must not mix them in.
+          includeCuratedDataset: this.pilotRuntimeConfig.mode !== "demo",
         }),
     });
     await this.repository.saveMatchingBundle(bundle);

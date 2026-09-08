@@ -154,6 +154,7 @@ export const matchingBundleDocumentSchema = z.object({
     dataset_version: z.string().min(1),
     dataset_type: z.enum([
       "synthetic_pilot",
+      "manual_curated_pilot",
       "mixed_explicit",
       "user_supplied_only",
       "empty_pilot",
