@@ -411,4 +411,32 @@ describe.skipIf(!isDatabaseAvailable)("schema invariants", () => {
       );
     });
   });
+
+  describe("imported candidates", () => {
+    const insert = (ingestionId: string, sourceMode: string) =>
+      pool.query(
+        `INSERT INTO imported_candidates (
+           ingestion_id, property_id, source_id, source_mode,
+           matching_readiness, document
+         ) VALUES ($1, 'prop_user_1', 'src_user', $2, 'ready', '{}'::jsonb)`,
+        [ingestionId, sourceMode],
+      );
+
+    it("accepts every ingestion mode the policy can resolve", async () => {
+      for (const mode of [
+        "automatic_allowed",
+        "fixture_mock",
+        "manual_confirmation",
+        "unsupported",
+        "blocked",
+      ])
+        await expect(insert(`ingest_${mode}`, mode)).resolves.toBeDefined();
+    });
+
+    it("rejects a mode outside the ingestion policy", async () => {
+      await expect(insert("ingest_bad", "manual_only")).rejects.toThrow(
+        /imported_candidates_source_mode_check/,
+      );
+    });
+  });
 });

@@ -1,33 +1,23 @@
 "use client";
 
 import Link from "next/link";
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-  useSyncExternalStore,
-} from "react";
+import { useCallback, useEffect, useState } from "react";
 
-import { requestConfirmationResultSchema } from "../../request-confirmation";
-import { CONFIRMED_REQUEST_STORAGE_KEY } from "../../request-confirmation/storage";
 import {
   addComparisonItem,
   comparisonSelectionMatchesRequest,
   createComparisonSelection,
-  getComparisonSelectionSnapshot,
-  parseComparisonSelection,
   removeComparisonItem,
-  subscribeComparisonSelection,
-  writeComparisonSelection,
 } from "../selection";
 import type { ComparisonSelectionItem } from "../selection";
 import type { ComparisonView } from "../types";
 import { ComparisonPageView } from "./comparison-page-view";
+import { getOrCreateBuyerSessionId } from "../../buyer-journey/browser-storage";
 import {
-  BUYER_JOURNEY_ID_STORAGE_KEY,
-  getOrCreateBuyerSessionId,
-} from "../../buyer-journey/browser-storage";
+  saveComparisonSelection,
+  useBuyerJourneyId,
+  useJourneyState,
+} from "../../buyer-journey/journey-client";
 import { PilotFeedbackForm } from "../../pilot-hardening/components";
 
 const comparisonWithFeedback = (
@@ -69,6 +59,17 @@ const isComparisonView = (value: unknown): value is ComparisonView =>
   Array.isArray(Reflect.get(value, "columns")) &&
   Array.isArray(Reflect.get(value, "sections")) &&
   typeof Reflect.get(value, "selectionSignature") === "string";
+
+function ComparisonLoading() {
+  return (
+    <main className="shortlist-loading" aria-busy="true" aria-live="polite">
+      <div className="loading-orbit" aria-hidden="true" />
+      <p className="eyebrow">Сравниваем финалистов</p>
+      <h1>Готовим таблицу решения…</h1>
+      <p>Сопоставляем готовые результаты по одному запросу.</p>
+    </main>
+  );
+}
 
 function ComparisonGuard({
   title,
@@ -112,36 +113,12 @@ export function ComparisonClient({
   initialView,
   requestedItem = null,
 }: ComparisonClientProps) {
-  const storedRequest = useSyncExternalStore(
-    () => () => undefined,
-    () => window.sessionStorage.getItem(CONFIRMED_REQUEST_STORAGE_KEY),
-    () => null,
-  );
-  const journeyId = useSyncExternalStore(
-    () => () => undefined,
-    () => window.sessionStorage.getItem(BUYER_JOURNEY_ID_STORAGE_KEY),
-    () => null,
-  );
-  const storedSelection = useSyncExternalStore(
-    subscribeComparisonSelection,
-    getComparisonSelectionSnapshot,
-    () => null,
-  );
-  const confirmation = useMemo(() => {
-    if (!storedRequest) return null;
-    try {
-      const parsed = requestConfirmationResultSchema.safeParse(
-        JSON.parse(storedRequest),
-      );
-      return parsed.success ? parsed.data.confirmed_request : null;
-    } catch {
-      return null;
-    }
-  }, [storedRequest]);
-  const selection = useMemo(
-    () => parseComparisonSelection(storedSelection),
-    [storedSelection],
-  );
+  const journey = useJourneyState({ enabled: initialView === undefined });
+  const journeyId = useBuyerJourneyId();
+  const confirmation =
+    journey.status === "ready" ? journey.state.confirmed_request : null;
+  const selection =
+    journey.status === "ready" ? journey.state.comparison_selection : null;
   const [remote, setRemote] = useState<RemoteState>(() =>
     initialView
       ? { status: "ready", view: initialView }
@@ -155,7 +132,7 @@ export function ComparisonClient({
         ? selection
         : createComparisonSelection(confirmation);
     const outcome = addComparisonItem(current, requestedItem);
-    if (outcome.success) writeComparisonSelection(outcome.state);
+    if (outcome.success) void saveComparisonSelection(outcome.state);
   }, [confirmation, requestedItem, selection]);
 
   useEffect(() => {
@@ -214,7 +191,7 @@ export function ComparisonClient({
     (propertyId: string) => {
       if (!selection) return;
       const outcome = removeComparisonItem(selection, propertyId);
-      if (outcome.success) writeComparisonSelection(outcome.state);
+      if (outcome.success) void saveComparisonSelection(outcome.state);
     },
     [selection],
   );
@@ -228,6 +205,17 @@ export function ComparisonClient({
     );
   if (initialView !== undefined && remote.status === "ready")
     return comparisonWithFeedback(remote.view, handleRemove, journeyId);
+  // Restoring the journey: the guards below would otherwise claim the buyer
+  // never confirmed anything.
+  if (journey.status === "loading") return <ComparisonLoading />;
+  if (journey.status === "error")
+    return (
+      <ComparisonGuard
+        stale
+        title="Не удалось восстановить сравнение"
+        message={journey.message}
+      />
+    );
   if (!confirmation)
     return (
       <ComparisonGuard
@@ -266,12 +254,5 @@ export function ComparisonClient({
     remote.view.selectionSignature === selectionSignature(selection.items)
   )
     return comparisonWithFeedback(remote.view, handleRemove, journeyId);
-  return (
-    <main className="shortlist-loading" aria-busy="true" aria-live="polite">
-      <div className="loading-orbit" aria-hidden="true" />
-      <p className="eyebrow">Сравниваем финалистов</p>
-      <h1>Готовим таблицу решения…</h1>
-      <p>Сопоставляем готовые результаты по одному запросу.</p>
-    </main>
-  );
+  return <ComparisonLoading />;
 }

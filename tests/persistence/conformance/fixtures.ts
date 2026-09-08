@@ -47,6 +47,7 @@ export const makeJourney = (
   selected_purchase_scenario_id: null,
   comparison_id: null,
   comparison_property_ids: [],
+  comparison_selection: null,
   expert_request_ids: [],
   active_expert_request_id: null,
   last_recompute_at: null,

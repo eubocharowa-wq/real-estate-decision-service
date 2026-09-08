@@ -1,18 +1,17 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
 import Link from "next/link";
 
-import {
-  userRequestParserResultSchema,
-  type UserRequestParserResult,
-} from "../../user-request-parser";
-import { PARSER_RESULT_STORAGE_KEY } from "../storage";
+import type { UserRequestParserResult } from "../../user-request-parser";
 import { RequestConfirmation } from "./request-confirmation";
 import {
   getBuyerJourneyId,
   getOrCreateBuyerSessionId,
 } from "../../buyer-journey/browser-storage";
+import {
+  refreshJourneyState,
+  useJourneyState,
+} from "../../buyer-journey/journey-client";
 
 interface RequestConfirmationClientProps {
   readonly initialResult?: UserRequestParserResult | null;
@@ -21,27 +20,29 @@ interface RequestConfirmationClientProps {
 export function RequestConfirmationClient({
   initialResult,
 }: RequestConfirmationClientProps) {
-  const stored = useSyncExternalStore(
-    () => () => undefined,
-    () => window.sessionStorage.getItem(PARSER_RESULT_STORAGE_KEY),
-    () => null,
-  );
+  const journey = useJourneyState({ enabled: initialResult === undefined });
   const state = (() => {
     if (initialResult === null) return { status: "missing" as const };
     if (initialResult)
       return { status: "ready" as const, result: initialResult };
-    if (!stored) return { status: "missing" as const };
-    try {
-      const parsed: unknown = JSON.parse(stored);
-      const validated = userRequestParserResultSchema.safeParse(parsed);
-      return validated.success
-        ? { status: "ready" as const, result: validated.data }
-        : { status: "invalid" as const };
-    } catch {
-      return { status: "invalid" as const };
-    }
+    if (journey.status === "loading") return { status: "loading" as const };
+    if (journey.status === "error") return { status: "invalid" as const };
+    if (journey.status === "missing") return { status: "missing" as const };
+    return journey.state.parsed_request
+      ? { status: "ready" as const, result: journey.state.parsed_request }
+      : { status: "missing" as const };
   })();
 
+  if (state.status === "loading") {
+    return (
+      <main className="shortlist-loading" aria-busy="true" aria-live="polite">
+        <div className="loading-orbit" aria-hidden="true" />
+        <p className="eyebrow">Ваш запрос</p>
+        <h1>Восстанавливаем разобранные условия…</h1>
+        <p>Исходная формулировка сохранена на сервере без изменений.</p>
+      </main>
+    );
+  }
   if (state.status === "missing") {
     return (
       <main className="empty-state">
@@ -51,7 +52,7 @@ export function RequestConfirmationClient({
           Мы сохраним исходный текст и покажем структурированные условия на этом
           экране.
         </p>
-        <Link href="/" className="button button-primary">
+        <Link href="/selection" className="button button-primary">
           Вернуться к запросу
         </Link>
       </main>
@@ -63,7 +64,7 @@ export function RequestConfirmationClient({
         <p className="eyebrow">Не удалось проверить данные</p>
         <h1>Модель подтверждения повреждена или устарела.</h1>
         <p>Исходный запрос не изменён. Вернитесь и отправьте его ещё раз.</p>
-        <Link href="/" className="button button-primary">
+        <Link href="/selection" className="button button-primary">
           Вернуться к запросу
         </Link>
       </main>
@@ -98,6 +99,9 @@ export function RequestConfirmationClient({
               : "Не удалось подготовить подбор.";
           throw new Error(message);
         }
+        // The confirmed request now lives on the server; re-read it so the
+        // next screen restores from the journey rather than from this render.
+        await refreshJourneyState();
       }}
     />
   );

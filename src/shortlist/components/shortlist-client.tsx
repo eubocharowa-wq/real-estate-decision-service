@@ -1,33 +1,23 @@
 "use client";
 
 import Link from "next/link";
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-  useSyncExternalStore,
-} from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
-import { requestConfirmationResultSchema } from "../../request-confirmation";
-import { CONFIRMED_REQUEST_STORAGE_KEY } from "../../request-confirmation/storage";
+import type { UserRequest } from "../../domain";
 import type { ShortlistView } from "../types";
 import type { ShortlistCardView } from "../types";
 import {
   addComparisonItem,
   comparisonSelectionMatchesRequest,
   createComparisonSelection,
-  getComparisonSelectionSnapshot,
-  parseComparisonSelection,
   removeComparisonItem,
-  subscribeComparisonSelection,
-  writeComparisonSelection,
 } from "../../comparison/selection";
 import { ShortlistPageView } from "./shortlist-page-view";
+import { getOrCreateBuyerSessionId } from "../../buyer-journey/browser-storage";
 import {
-  BUYER_JOURNEY_ID_STORAGE_KEY,
-  getOrCreateBuyerSessionId,
-} from "../../buyer-journey/browser-storage";
+  saveComparisonSelection,
+  useJourneyState,
+} from "../../buyer-journey/journey-client";
 import { PilotFeedbackForm } from "../../pilot-hardening/components";
 
 interface ShortlistClientProps {
@@ -42,12 +32,7 @@ type RemoteState =
 type StoredConfirmationState =
   | { readonly status: "missing" }
   | { readonly status: "invalid" }
-  | {
-      readonly status: "ready";
-      readonly request: ReturnType<
-        typeof requestConfirmationResultSchema.parse
-      >["confirmed_request"];
-    };
+  | { readonly status: "ready"; readonly request: UserRequest };
 
 const isShortlistView = (value: unknown): value is ShortlistView => {
   if (typeof value !== "object" || value === null) return false;
@@ -57,6 +42,17 @@ const isShortlistView = (value: unknown): value is ShortlistView => {
     Array.isArray(Reflect.get(value, "requestSummary"))
   );
 };
+
+function ShortlistLoading() {
+  return (
+    <main className="shortlist-loading" aria-busy="true" aria-live="polite">
+      <div className="loading-orbit" aria-hidden="true" />
+      <p className="eyebrow">Формируем короткий список</p>
+      <h1>Подбираем варианты под ваши условия…</h1>
+      <p>Сопоставляем готовые результаты и качество данных.</p>
+    </main>
+  );
+}
 
 function GuardState({
   state,
@@ -99,46 +95,25 @@ function GuardState({
 }
 
 export function ShortlistClient({ initialView }: ShortlistClientProps) {
-  const stored = useSyncExternalStore(
-    () => () => undefined,
-    () => window.sessionStorage.getItem(CONFIRMED_REQUEST_STORAGE_KEY),
-    () => null,
-  );
-  const journeyId = useSyncExternalStore(
-    () => () => undefined,
-    () => window.sessionStorage.getItem(BUYER_JOURNEY_ID_STORAGE_KEY),
-    () => null,
-  );
+  const journey = useJourneyState({ enabled: initialView === undefined });
+  const journeyId =
+    journey.status === "ready" ? journey.state.journey_id : null;
   const [remote, setRemote] = useState<RemoteState>(() =>
     initialView
       ? { status: "ready", view: initialView }
-      : initialView === null
-        ? { status: "loading" }
-        : { status: "loading" },
-  );
-  const storedComparison = useSyncExternalStore(
-    subscribeComparisonSelection,
-    getComparisonSelectionSnapshot,
-    () => null,
+      : { status: "loading" },
   );
   const [comparisonNotice, setComparisonNotice] = useState<string | null>(null);
   const confirmationState = useMemo<StoredConfirmationState>(() => {
-    if (!stored) return { status: "missing" };
-    let confirmation: unknown;
-    try {
-      confirmation = JSON.parse(stored);
-    } catch {
-      return { status: "invalid" };
-    }
-    const parsed = requestConfirmationResultSchema.safeParse(confirmation);
-    return parsed.success
-      ? { status: "ready", request: parsed.data.confirmed_request }
-      : { status: "invalid" };
-  }, [stored]);
-  const comparisonSelection = useMemo(
-    () => parseComparisonSelection(storedComparison),
-    [storedComparison],
-  );
+    if (journey.status === "loading") return { status: "missing" };
+    if (journey.status === "missing") return { status: "missing" };
+    if (journey.status === "error") return { status: "invalid" };
+    return journey.state.confirmed_request
+      ? { status: "ready", request: journey.state.confirmed_request }
+      : { status: "missing" };
+  }, [journey]);
+  const comparisonSelection =
+    journey.status === "ready" ? journey.state.comparison_selection : null;
   const comparisonPropertyIds = useMemo(
     () =>
       new Set(
@@ -175,7 +150,14 @@ export function ShortlistClient({ initialView }: ShortlistClientProps) {
             scenarioId: card.purchaseScenarioId,
           });
       setComparisonNotice(outcome.success ? null : outcome.message);
-      if (outcome.success) writeComparisonSelection(outcome.state);
+      if (!outcome.success) return;
+      void saveComparisonSelection(outcome.state).catch((error: unknown) => {
+        setComparisonNotice(
+          error instanceof Error
+            ? error.message
+            : "Не удалось сохранить выбор для сравнения.",
+        );
+      });
     },
     [comparisonSelection, confirmationState],
   );
@@ -235,6 +217,11 @@ export function ShortlistClient({ initialView }: ShortlistClientProps) {
   if (initialView === null) {
     return <GuardState state={{ status: "missing" }} />;
   }
+  // The journey is still being restored from its id: showing the "describe
+  // your task" guard here would tell the buyer their work is gone.
+  if (initialView === undefined && journey.status === "loading") {
+    return <ShortlistLoading />;
+  }
   if (initialView === undefined && confirmationState.status !== "ready") {
     return <GuardState state={confirmationState} />;
   }
@@ -247,25 +234,11 @@ export function ShortlistClient({ initialView }: ShortlistClientProps) {
     remote.status === "ready" &&
     remote.view.requestId !== confirmationState.request.user_request_id
   ) {
-    return (
-      <main className="shortlist-loading" aria-busy="true" aria-live="polite">
-        <div className="loading-orbit" aria-hidden="true" />
-        <p className="eyebrow">Формируем короткий список</p>
-        <h1>Подбираем варианты под ваши условия…</h1>
-        <p>Сопоставляем готовые результаты и качество данных.</p>
-      </main>
-    );
+    return <ShortlistLoading />;
   }
 
   if (remote.status === "loading") {
-    return (
-      <main className="shortlist-loading" aria-busy="true" aria-live="polite">
-        <div className="loading-orbit" aria-hidden="true" />
-        <p className="eyebrow">Формируем короткий список</p>
-        <h1>Подбираем варианты под ваши условия…</h1>
-        <p>Сопоставляем готовые результаты и качество данных.</p>
-      </main>
-    );
+    return <ShortlistLoading />;
   }
   if (remote.status !== "ready") return <GuardState state={remote} />;
   return (

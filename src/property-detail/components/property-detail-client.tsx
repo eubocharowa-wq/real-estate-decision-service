@@ -1,18 +1,14 @@
 "use client";
 
-import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import { useEffect, useState } from "react";
 
-import { requestConfirmationResultSchema } from "../../request-confirmation";
-import { CONFIRMED_REQUEST_STORAGE_KEY } from "../../request-confirmation/storage";
 import type { PropertyDetailView } from "../types";
 import {
   PropertyDetailNotFound,
   PropertyDetailPageView,
 } from "./property-detail-page-view";
-import {
-  BUYER_JOURNEY_ID_STORAGE_KEY,
-  getOrCreateBuyerSessionId,
-} from "../../buyer-journey/browser-storage";
+import { getOrCreateBuyerSessionId } from "../../buyer-journey/browser-storage";
+import { useJourneyState } from "../../buyer-journey/journey-client";
 
 interface PropertyDetailClientProps {
   readonly propertyId: string;
@@ -34,6 +30,17 @@ const isPropertyDetailView = (value: unknown): value is PropertyDetailView =>
   typeof Reflect.get(value, "identity") === "object" &&
   Array.isArray(Reflect.get(value, "facts"));
 
+function PropertyDetailLoading() {
+  return (
+    <main className="shortlist-loading" aria-busy="true" aria-live="polite">
+      <div className="loading-orbit" aria-hidden="true" />
+      <p className="eyebrow">Страница объекта</p>
+      <h1>Загружаем данные объекта…</h1>
+      <p>Подготавливаем уже собранные факты и результаты проверки.</p>
+    </main>
+  );
+}
+
 export function PropertyDetailClient({
   propertyId,
   offerId = null,
@@ -41,37 +48,9 @@ export function PropertyDetailClient({
   returnToComparison = false,
   initialView,
 }: PropertyDetailClientProps) {
-  const stored = useSyncExternalStore(
-    () => () => undefined,
-    () => window.sessionStorage.getItem(CONFIRMED_REQUEST_STORAGE_KEY),
-    () => null,
-  );
-  const journeyId = useSyncExternalStore(
-    () => () => undefined,
-    () => window.sessionStorage.getItem(BUYER_JOURNEY_ID_STORAGE_KEY),
-    () => null,
-  );
-  const confirmation = useMemo(() => {
-    if (!stored) return { request: null, notice: null } as const;
-    try {
-      const parsed = requestConfirmationResultSchema.safeParse(
-        JSON.parse(stored),
-      );
-      return parsed.success
-        ? { request: parsed.data.confirmed_request, notice: null }
-        : {
-            request: null,
-            notice:
-              "Сохранённый запрос повреждён или устарел. Показаны только факты об объекте.",
-          };
-    } catch {
-      return {
-        request: null,
-        notice:
-          "Сохранённый запрос повреждён или устарел. Показаны только факты об объекте.",
-      };
-    }
-  }, [stored]);
+  const journey = useJourneyState({ enabled: initialView === undefined });
+  const journeyId =
+    journey.status === "ready" ? journey.state.journey_id : null;
   const [remote, setRemote] = useState<RemoteState>(() =>
     initialView
       ? { status: "ready", view: initialView }
@@ -125,30 +104,19 @@ export function PropertyDetailClient({
         });
       });
     return () => controller.abort();
-  }, [
-    confirmation.notice,
-    confirmation.request,
-    initialView,
-    journeyId,
-    offerId,
-    propertyId,
-    scenarioId,
-  ]);
+  }, [initialView, journeyId, offerId, propertyId, scenarioId]);
 
+  // The journey is still being restored: keep the loading screen rather than
+  // telling the buyer their object is not part of any selection.
+  if (initialView === undefined && journey.status === "loading")
+    return <PropertyDetailLoading />;
   if (initialView === undefined && !journeyId)
     return (
       <PropertyDetailNotFound message="Сначала опишите задачу и откройте объект из текущего подбора." />
     );
 
   if (remote.status === "loading") {
-    return (
-      <main className="shortlist-loading" aria-busy="true" aria-live="polite">
-        <div className="loading-orbit" aria-hidden="true" />
-        <p className="eyebrow">Страница объекта</p>
-        <h1>Загружаем данные объекта…</h1>
-        <p>Подготавливаем уже собранные факты и результаты проверки.</p>
-      </main>
-    );
+    return <PropertyDetailLoading />;
   }
   if (remote.status === "error")
     return <PropertyDetailNotFound message={remote.message} />;

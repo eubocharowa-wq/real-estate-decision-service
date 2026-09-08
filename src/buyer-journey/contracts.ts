@@ -1,3 +1,4 @@
+import type { ComparisonSelection } from "../comparison/selection";
 import type { FieldEvidence, UserRequest } from "../domain";
 import type {
   ExpertContextPackage,
@@ -54,6 +55,14 @@ export interface BuyerJourney {
   readonly selected_purchase_scenario_id: string | null;
   readonly comparison_id: string | null;
   readonly comparison_property_ids: readonly string[];
+  /**
+   * What the buyer has ticked on the shortlist but not yet compared.
+   *
+   * This used to live in sessionStorage, which meant a closed tab lost it.
+   * It is journey state like everything else: distinct from
+   * comparison_property_ids, which describes a comparison that already exists.
+   */
+  readonly comparison_selection: ComparisonSelection | null;
   readonly expert_request_ids: readonly string[];
   readonly active_expert_request_id: string | null;
   readonly last_recompute_at: string | null;
@@ -189,6 +198,25 @@ export interface CanonicalDecisionOverlay {
   readonly verification_status: "confirmed" | "claimed" | "conflicting";
   readonly evidence_id: string;
   readonly created_at: string;
+}
+
+/**
+ * Everything a browser needs to rebuild its screens from a journey id.
+ *
+ * The client keeps only the session id and the journey id; this is what it
+ * reads back with them, so closing a tab loses nothing.
+ */
+export interface JourneyClientState {
+  readonly journey_id: string;
+  readonly session_id: string;
+  readonly owner_id: string;
+  readonly raw_request_text: string;
+  readonly current_stage: BuyerJourneyStage;
+  readonly parsed_request: UserRequestParserResult | null;
+  readonly confirmed_request: UserRequest | null;
+  readonly confirmed_request_version: number | null;
+  readonly comparison_selection: ComparisonSelection | null;
+  readonly imported_candidates: readonly NormalizedUserUrlCandidate[];
 }
 
 export interface JourneyExpertSnapshot {

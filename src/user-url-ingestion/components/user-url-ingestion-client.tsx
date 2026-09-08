@@ -3,25 +3,24 @@
 import Link from "next/link";
 import { useState } from "react";
 
-import { requestConfirmationResultSchema } from "../../request-confirmation";
-import { CONFIRMED_REQUEST_STORAGE_KEY } from "../../request-confirmation/storage";
 import {
   addComparisonItem,
   comparisonSelectionMatchesRequest,
   createComparisonSelection,
-  parseComparisonSelection,
-  writeComparisonSelection,
 } from "../../comparison/selection";
 import type {
   ManualConfirmationFields,
   NormalizedUserUrlCandidate,
   UserUrlIngestionPreview,
 } from "../types";
-import { upsertStoredUserUrlCandidate } from "../storage";
 import {
   getBuyerJourneyId,
   getOrCreateBuyerSessionId,
 } from "../../buyer-journey/browser-storage";
+import {
+  refreshJourneyState,
+  saveComparisonSelection,
+} from "../../buyer-journey/journey-client";
 
 type State =
   | { readonly status: "idle" }
@@ -137,7 +136,6 @@ export function UserUrlIngestionClient() {
           );
         }
       }
-      upsertStoredUserUrlCandidate(candidate);
       const duplicateNotice =
         candidate.duplicateDecision.status === "same_property"
           ? "Похоже, этот объект уже есть в сервисе: выбран существующий Property, а ссылка сохранена как новое Offer. "
@@ -145,36 +143,26 @@ export function UserUrlIngestionClient() {
       let notice = journeyId
         ? `${duplicateNotice}Вариант добавлен в активный подбор и пересчитан тем же Matching Engine.`
         : `${duplicateNotice}Вариант сохранён локально и готов для оценки.`;
-      const requestRaw = window.sessionStorage.getItem(
-        CONFIRMED_REQUEST_STORAGE_KEY,
-      );
-      if (requestRaw) {
-        const confirmed = requestConfirmationResultSchema.safeParse(
-          JSON.parse(requestRaw),
-        );
-        if (confirmed.success) {
-          const existing = parseComparisonSelection(
-            window.sessionStorage.getItem("reds.comparison-selection.v1"),
-          );
-          const selection =
-            existing &&
-            comparisonSelectionMatchesRequest(
-              existing,
-              confirmed.data.confirmed_request,
-            )
-              ? existing
-              : createComparisonSelection(confirmed.data.confirmed_request);
-          const added = addComparisonItem(selection, {
-            propertyId: candidate.propertyCandidate.identity.property_id,
-            offerId: candidate.offerCandidate.offer_id,
-            scenarioId: null,
-          });
-          if (added.success) {
-            writeComparisonSelection(added.state);
-            notice = `${duplicateNotice}Вариант сохранён и добавлен в сравнение.`;
-          } else
-            notice = `${duplicateNotice}Вариант сохранён. ${added.message}`;
-        }
+      // The candidate is already on the server; re-read the journey so the
+      // confirmed request and the current selection come from there.
+      const journey = await refreshJourneyState();
+      if (journey.status === "ready" && journey.state.confirmed_request) {
+        const confirmedRequest = journey.state.confirmed_request;
+        const existing = journey.state.comparison_selection;
+        const selection =
+          existing &&
+          comparisonSelectionMatchesRequest(existing, confirmedRequest)
+            ? existing
+            : createComparisonSelection(confirmedRequest);
+        const added = addComparisonItem(selection, {
+          propertyId: candidate.propertyCandidate.identity.property_id,
+          offerId: candidate.offerCandidate.offer_id,
+          scenarioId: null,
+        });
+        if (added.success) {
+          await saveComparisonSelection(added.state);
+          notice = `${duplicateNotice}Вариант сохранён и добавлен в сравнение.`;
+        } else notice = `${duplicateNotice}Вариант сохранён. ${added.message}`;
       }
       setState({ status: "saved", candidate, notice });
     } catch (error) {

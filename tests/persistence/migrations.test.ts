@@ -35,7 +35,10 @@ describe.skipIf(!isDatabaseAvailable)("schema migrations", () => {
   it("applies to a clean database", async () => {
     const executed = await migrateUp(database.pool);
 
-    expect(executed.map((migration) => migration.version)).toEqual(["0001"]);
+    expect(executed.map((migration) => migration.version)).toEqual([
+      "0001",
+      "0002",
+    ]);
     const tables = await listTables(database);
     for (const table of PHASE_ONE_TABLES) expect(tables).toContain(table);
     expect(tables).toContain("schema_migrations");
@@ -44,9 +47,10 @@ describe.skipIf(!isDatabaseAvailable)("schema migrations", () => {
   it("records what it applied and reports status", async () => {
     expect(
       (await listApplied(database.pool)).map((row) => row.version),
-    ).toEqual(["0001"]);
+    ).toEqual(["0001", "0002"]);
     expect(await migrationStatus(database.pool)).toEqual([
       { version: "0001", name: "user_state", applied: true },
+      { version: "0002", name: "ingestion_source_mode", applied: true },
     ]);
   });
 
@@ -69,8 +73,13 @@ describe.skipIf(!isDatabaseAvailable)("schema migrations", () => {
   });
 
   it("rolls back cleanly and can be re-applied", async () => {
-    const reverted = await migrateDown(database.pool);
-    expect(reverted.map((migration) => migration.version)).toEqual(["0001"]);
+    // Newest first, so the constraint fix comes off before the tables it
+    // altered.
+    const reverted = await migrateDown(database.pool, { steps: 2 });
+    expect(reverted.map((migration) => migration.version)).toEqual([
+      "0002",
+      "0001",
+    ]);
 
     const afterDown = await listTables(database);
     for (const table of PHASE_ONE_TABLES)
@@ -81,7 +90,10 @@ describe.skipIf(!isDatabaseAvailable)("schema migrations", () => {
     expect(await listApplied(database.pool)).toEqual([]);
 
     const reapplied = await migrateUp(database.pool);
-    expect(reapplied.map((migration) => migration.version)).toEqual(["0001"]);
+    expect(reapplied.map((migration) => migration.version)).toEqual([
+      "0001",
+      "0002",
+    ]);
     expect(await listTables(database)).toContain("buyer_journeys");
   });
 });

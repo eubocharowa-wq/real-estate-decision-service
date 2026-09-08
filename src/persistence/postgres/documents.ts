@@ -8,6 +8,7 @@ import {
   JOURNEY_INSTRUMENTATION_VERSION,
   MATCHING_BUNDLE_SCHEMA_VERSION,
 } from "../../buyer-journey/contracts";
+import { comparisonSelectionSchema } from "../../comparison/selection";
 import {
   dataQualitySchema,
   matchResultSchema,
@@ -65,6 +66,7 @@ export const buyerJourneyDocumentSchema = z.object({
   selected_purchase_scenario_id: entityId.nullable(),
   comparison_id: entityId.nullable(),
   comparison_property_ids: z.array(entityId),
+  comparison_selection: comparisonSelectionSchema.nullable(),
   expert_request_ids: z.array(entityId),
   active_expert_request_id: entityId.nullable(),
   last_recompute_at: isoDateTime.nullable(),

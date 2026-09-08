@@ -2,13 +2,10 @@
 
 import { useState } from "react";
 
-import { CONFIRMED_REQUEST_STORAGE_KEY } from "../../request-confirmation/storage";
 import type { RequestOwner } from "../contracts";
 import type { ExpertRequestPreview } from "../presentation";
-import {
-  getBuyerJourneyId,
-  getOrCreateBuyerSessionId,
-} from "../../buyer-journey/browser-storage";
+import { getOrCreateBuyerSessionId } from "../../buyer-journey/browser-storage";
+import { ensureJourneyState } from "../../buyer-journey/journey-client";
 
 export interface ExpertRequestUiSubmission {
   readonly requestType: ExpertRequestPreview["requestType"];
@@ -30,19 +27,6 @@ interface ExpertRequestFormProps {
     submission: ExpertRequestUiSubmission,
   ) => void | Promise<void>;
 }
-
-const UI_DRAFT_STORAGE_KEY = "reds:expert-request-draft:v1";
-const UI_OWNER_STORAGE_KEY = "reds:expert-request-owner:v1";
-
-const getAnonymousOwner = (): RequestOwner => {
-  const stored = window.sessionStorage.getItem(UI_OWNER_STORAGE_KEY);
-  if (stored && /^[a-z][a-z0-9:_-]*$/.test(stored))
-    return { owner_type: "anonymous", owner_id: stored };
-  const random = globalThis.crypto.randomUUID().replaceAll("-", "_");
-  const ownerId = `anonymous_${random}`;
-  window.sessionStorage.setItem(UI_OWNER_STORAGE_KEY, ownerId);
-  return { owner_type: "anonymous", owner_id: ownerId };
-};
 
 export function ExpertRequestForm({
   preview,
@@ -77,22 +61,27 @@ export function ExpertRequestForm({
     try {
       if (onSubmit) await onSubmit(submission);
       else {
-        const journeyId = getBuyerJourneyId();
-        const rawUserRequest = window.sessionStorage.getItem(
-          CONFIRMED_REQUEST_STORAGE_KEY,
-        );
-        if (!rawUserRequest)
+        // Owner and confirmed request come from the journey, not from the tab:
+        // an expert request outlives the browser session that created it.
+        const journey = await ensureJourneyState();
+        if (journey.status !== "ready")
           throw new Error(
             "Сначала подтвердите условия — без UserRequest экспертный контекст не создаётся.",
           );
-        const parsed: unknown = JSON.parse(rawUserRequest);
-        const userRequest =
-          typeof parsed === "object" && parsed !== null
-            ? Reflect.get(parsed, "confirmed_request")
-            : null;
-        const useJourneyBoundary =
-          journeyId !== null &&
-          !["document_review", "onsite_check"].includes(submission.requestType);
+        const userRequest = journey.state.confirmed_request;
+        if (!userRequest)
+          throw new Error(
+            "Сначала подтвердите условия — без UserRequest экспертный контекст не создаётся.",
+          );
+        const journeyId = journey.state.journey_id;
+        const owner: RequestOwner = {
+          owner_type: "session",
+          owner_id: journey.state.owner_id,
+        };
+        const useJourneyBoundary = ![
+          "document_review",
+          "onsite_check",
+        ].includes(submission.requestType);
         const response = await fetch(
           useJourneyBoundary ? "/api/buyer-journeys" : "/api/expert-requests",
           {
@@ -114,11 +103,7 @@ export function ExpertRequestForm({
                       questionCode: submission.questionCode,
                     },
                   }
-                : {
-                    owner: getAnonymousOwner(),
-                    submission,
-                    userRequest,
-                  },
+                : { owner, submission, userRequest },
             ),
           },
         );
@@ -132,10 +117,6 @@ export function ExpertRequestForm({
               : "Не удалось создать экспертный запрос.";
           throw new Error(message);
         }
-        window.sessionStorage.setItem(
-          UI_DRAFT_STORAGE_KEY,
-          JSON.stringify(payload),
-        );
       }
       setStatus("saved");
     } catch (submissionError) {
@@ -257,5 +238,3 @@ export function ExpertRequestForm({
     </main>
   );
 }
-
-export { UI_DRAFT_STORAGE_KEY, UI_OWNER_STORAGE_KEY };

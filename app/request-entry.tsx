@@ -1,17 +1,17 @@
 "use client";
 
-import { useState, useSyncExternalStore } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { userRequestParserOutcomeSchema } from "../src/user-request-parser";
 import {
-  PARSER_RESULT_STORAGE_KEY,
-  RAW_REQUEST_STORAGE_KEY,
-} from "../src/request-confirmation/storage";
-import {
   getOrCreateBuyerSessionId,
   saveBuyerJourneyId,
 } from "../src/buyer-journey/browser-storage";
+import {
+  refreshJourneyState,
+  useJourneyState,
+} from "../src/buyer-journey/journey-client";
 
 const examples = [
   "Найди 5 квартир в Туле до 5 млн, семейная ипотека обязательно, желательно без первоначального взноса.",
@@ -20,11 +20,11 @@ const examples = [
 
 export function RequestEntry() {
   const router = useRouter();
-  const preservedText = useSyncExternalStore(
-    () => () => undefined,
-    () => window.sessionStorage.getItem(RAW_REQUEST_STORAGE_KEY) ?? "",
-    () => "",
-  );
+  // Coming back to edit the request restores the original wording from the
+  // journey on the server, not from the tab that typed it.
+  const journey = useJourneyState();
+  const preservedText =
+    journey.status === "ready" ? journey.state.raw_request_text : "";
   const [editedText, setEditedText] = useState<string | null>(null);
   const rawText = editedText ?? preservedText;
   const [submitting, setSubmitting] = useState(false);
@@ -61,24 +61,22 @@ export function RequestEntry() {
         setError(outcome.data.error.message);
         return;
       }
-      const journey =
+      const startedJourney =
         typeof payload === "object" && payload !== null
           ? Reflect.get(payload, "journey")
           : null;
       const journeyId =
-        typeof journey === "object" && journey !== null
-          ? Reflect.get(journey, "journey_id")
+        typeof startedJourney === "object" && startedJourney !== null
+          ? Reflect.get(startedJourney, "journey_id")
           : null;
       if (typeof journeyId !== "string") {
         setError("Не удалось сохранить путь выбора. Попробуйте ещё раз.");
         return;
       }
       saveBuyerJourneyId(journeyId);
-      window.sessionStorage.setItem(RAW_REQUEST_STORAGE_KEY, rawText);
-      window.sessionStorage.setItem(
-        PARSER_RESULT_STORAGE_KEY,
-        JSON.stringify(outcome.data.result),
-      );
+      // The raw text and the parser result are already stored against the
+      // journey; re-read it so the next screen starts from the server.
+      await refreshJourneyState();
       router.push("/request/confirm");
     } catch {
       setError(

@@ -2,9 +2,9 @@ import { describe, expect, it } from "vitest";
 
 import {
   addComparisonItem,
+  comparisonSelectionSchema,
   comparisonSelectionMatchesRequest,
   createComparisonSelection,
-  parseComparisonSelection,
   removeComparisonItem,
 } from "../../src/comparison";
 import { comparisonRequest } from "./fixtures";
@@ -72,7 +72,9 @@ describe("TASK-011 comparison selection", () => {
   });
 
   it("rejects malformed persisted state and detects another request version", () => {
-    expect(parseComparisonSelection("{bad json")).toBeNull();
+    expect(comparisonSelectionSchema.safeParse({ items: [] }).success).toBe(
+      false,
+    );
     const state = createComparisonSelection(comparisonRequest());
     expect(
       comparisonSelectionMatchesRequest(state, {

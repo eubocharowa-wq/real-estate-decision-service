@@ -5,7 +5,6 @@ export * from "./orchestrator";
 export * from "./policy";
 export * from "./schemas";
 export * from "./source-identification";
-export * from "./storage";
 export * from "./types";
 export * from "./url-validation";
 export * from "./adapters/fixture-adapter";

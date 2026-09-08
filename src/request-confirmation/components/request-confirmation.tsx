@@ -15,10 +15,6 @@ import {
   editCriterionValue,
   removeCriterion,
 } from "../state";
-import {
-  CONFIRMED_REQUEST_STORAGE_KEY,
-  RAW_REQUEST_STORAGE_KEY,
-} from "../storage";
 import { AddCriterion } from "./add-criterion";
 import { ClarificationCard } from "./clarification-card";
 import { ConfirmationActions } from "./confirmation-actions";
@@ -64,12 +60,6 @@ export function RequestConfirmation({
     const updated = confirmRequest(session);
     setSession(updated);
     if (updated.confirmation_result) {
-      if (typeof window !== "undefined") {
-        window.sessionStorage.setItem(
-          CONFIRMED_REQUEST_STORAGE_KEY,
-          JSON.stringify(updated.confirmation_result),
-        );
-      }
       if (onConfirmed) {
         setApplicationStatus("saving");
         setApplicationError(null);
@@ -132,7 +122,7 @@ export function RequestConfirmation({
               Открыть подбор
             </Link>
           ) : null}
-          <Link href="/" className="button button-secondary">
+          <Link href="/selection" className="button button-secondary">
             Вернуться к запросу
           </Link>
         </div>
@@ -269,14 +259,6 @@ export function RequestConfirmation({
         disabled={!canConfirmRequest(session)}
         errors={session.validation_errors}
         onConfirm={handleConfirm}
-        onEditOriginal={() => {
-          if (typeof window !== "undefined") {
-            window.sessionStorage.setItem(
-              RAW_REQUEST_STORAGE_KEY,
-              session.initial_result.raw_text,
-            );
-          }
-        }}
       />
     </main>
   );

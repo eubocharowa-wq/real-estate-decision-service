@@ -198,6 +198,24 @@ export async function POST(request: Request): Promise<Response> {
       });
       return Response.json({ feedback }, { status: 201 });
     }
+    if (action === "journey_state")
+      return Response.json({
+        state: await application.getJourneyClientState(journeyId),
+      });
+    if (action === "comparison_selection") {
+      const selection = Reflect.get(body, "selection");
+      const journey = await application.saveComparisonSelection(
+        journeyId,
+        selection === null || selection === undefined
+          ? null
+          : (selection as Parameters<
+              typeof application.saveComparisonSelection
+            >[1]),
+      );
+      return Response.json({
+        selection: journey.comparison_selection,
+      });
+    }
     if (action === "snapshot")
       return Response.json({
         journey: await application.getJourney(journeyId),

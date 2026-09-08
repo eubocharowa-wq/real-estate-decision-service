@@ -6,14 +6,12 @@ interface ConfirmationActionsProps {
   readonly disabled: boolean;
   readonly errors: readonly ConfirmationValidationError[];
   readonly onConfirm: () => void;
-  readonly onEditOriginal: () => void;
 }
 
 export function ConfirmationActions({
   disabled,
   errors,
   onConfirm,
-  onEditOriginal,
 }: ConfirmationActionsProps) {
   return (
     <section
@@ -49,7 +47,7 @@ export function ConfirmationActions({
         >
           Подтвердить и подобрать варианты
         </button>
-        <Link className="button button-ghost" href="/" onClick={onEditOriginal}>
+        <Link className="button button-ghost" href="/selection">
           Изменить исходный запрос
         </Link>
       </div>

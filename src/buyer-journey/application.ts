@@ -15,6 +15,11 @@ import {
   type RequestOwner,
 } from "../expert";
 import type { ComparisonView } from "../comparison";
+import {
+  comparisonSelectionMatchesRequest,
+  comparisonSelectionSchema,
+  type ComparisonSelection,
+} from "../comparison/selection";
 import type { PropertyDetailView } from "../property-detail";
 import {
   InMemoryRefreshQueueRepository,
@@ -68,6 +73,7 @@ import {
   type ConfirmedRequestRecord,
   type DecisionUpdate,
   type DecisionUpdateTrigger,
+  type JourneyClientState,
   type JourneyDataSnapshot,
   type MatchingBundle,
 } from "./contracts";
@@ -327,6 +333,7 @@ export class BuyerJourneyApplication {
       selected_purchase_scenario_id: null,
       comparison_id: null,
       comparison_property_ids: [],
+      comparison_selection: null,
       expert_request_ids: [],
       active_expert_request_id: null,
       last_recompute_at: null,
@@ -1650,6 +1657,71 @@ export class BuyerJourneyApplication {
 
   async getJourney(journeyId: string): Promise<BuyerJourney> {
     return this.requireJourney(journeyId);
+  }
+
+  /**
+   * Everything the browser needs to rebuild its screens from a journey id.
+   *
+   * The client used to keep the confirmed request, the parser result and the
+   * comparison selection in sessionStorage; they live here instead, so a
+   * reopened tab restores the journey rather than starting over.
+   */
+  async getJourneyClientState(journeyId: string): Promise<JourneyClientState> {
+    const journey = await this.requireJourney(journeyId);
+    const confirmed =
+      journey.confirmed_user_request_id &&
+      journey.confirmed_user_request_version !== null
+        ? await this.repository.getConfirmedRequest(
+            journey.confirmed_user_request_id,
+            journey.confirmed_user_request_version,
+          )
+        : null;
+    return {
+      journey_id: journey.journey_id,
+      session_id: journey.session_id,
+      owner_id: journey.session_id,
+      raw_request_text: journey.raw_request_text,
+      current_stage: journey.current_stage,
+      parsed_request: journey.parsed_request_ref
+        ? await this.repository.getParsedRequest(journey.parsed_request_ref)
+        : null,
+      confirmed_request: confirmed?.request ?? null,
+      confirmed_request_version: confirmed?.user_request_version ?? null,
+      comparison_selection: journey.comparison_selection,
+      imported_candidates:
+        await this.repository.listImportedCandidates(journeyId),
+    };
+  }
+
+  /**
+   * Stores what the buyer has ticked on the shortlist.
+   *
+   * A selection bound to another request version is refused rather than
+   * silently re-pointed: the buyer would be comparing against conditions they
+   * no longer hold.
+   */
+  async saveComparisonSelection(
+    journeyId: string,
+    selection: ComparisonSelection | null,
+  ): Promise<BuyerJourney> {
+    const journey = await this.requireJourney(journeyId);
+    if (selection === null)
+      return this.updateJourney(journey, { comparison_selection: null });
+    const parsed = comparisonSelectionSchema.safeParse(selection);
+    if (!parsed.success)
+      throw new BuyerJourneyError(
+        "INVALID_TRANSITION",
+        "Comparison selection is invalid",
+        true,
+      );
+    const confirmed = await activeRequest(this.repository, journey);
+    if (!comparisonSelectionMatchesRequest(parsed.data, confirmed.request))
+      throw new BuyerJourneyError(
+        "STALE_REQUEST_VERSION",
+        "Comparison selection belongs to another request version",
+        true,
+      );
+    return this.updateJourney(journey, { comparison_selection: parsed.data });
   }
 
   private async recomputeAffected(input: {

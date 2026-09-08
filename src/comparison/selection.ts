@@ -3,9 +3,13 @@ import { z } from "zod";
 import type { UserRequest } from "../domain";
 import { COMPARISON_POLICY_V1 } from "./policy";
 
-export const COMPARISON_SELECTION_STORAGE_KEY = "reds.comparison-selection.v1";
-export const COMPARISON_SELECTION_EVENT = "reds:comparison-selection-change";
-
+/**
+ * The selection is journey state on the server.
+ *
+ * It used to be a sessionStorage key with a change event; a closed tab took
+ * the shortlist with it. This module now holds only the rules — what a valid
+ * selection is and how adding or removing an item changes it.
+ */
 export const comparisonSelectionItemSchema = z.strictObject({
   propertyId: z.string().min(1),
   offerId: z.string().min(1).nullable(),
@@ -101,49 +105,9 @@ export const removeComparisonItem = (
   };
 };
 
-export const parseComparisonSelection = (
-  raw: string | null,
-): ComparisonSelection | null => {
-  if (!raw) return null;
-  try {
-    const parsed = comparisonSelectionSchema.safeParse(JSON.parse(raw));
-    return parsed.success ? parsed.data : null;
-  } catch {
-    return null;
-  }
-};
-
 export const comparisonSelectionMatchesRequest = (
   state: ComparisonSelection,
   request: Pick<UserRequest, "user_request_id" | "schema_version">,
 ): boolean =>
   state.userRequestId === request.user_request_id &&
   state.userRequestSchemaVersion === request.schema_version;
-
-export const getComparisonSelectionSnapshot = (): string | null =>
-  typeof window === "undefined"
-    ? null
-    : window.sessionStorage.getItem(COMPARISON_SELECTION_STORAGE_KEY);
-
-export const subscribeComparisonSelection = (
-  listener: () => void,
-): (() => void) => {
-  if (typeof window === "undefined") return () => undefined;
-  const storageListener = (event: StorageEvent) => {
-    if (event.key === COMPARISON_SELECTION_STORAGE_KEY) listener();
-  };
-  window.addEventListener("storage", storageListener);
-  window.addEventListener(COMPARISON_SELECTION_EVENT, listener);
-  return () => {
-    window.removeEventListener("storage", storageListener);
-    window.removeEventListener(COMPARISON_SELECTION_EVENT, listener);
-  };
-};
-
-export const writeComparisonSelection = (state: ComparisonSelection): void => {
-  window.sessionStorage.setItem(
-    COMPARISON_SELECTION_STORAGE_KEY,
-    JSON.stringify(state),
-  );
-  window.dispatchEvent(new Event(COMPARISON_SELECTION_EVENT));
-};
