@@ -41,7 +41,7 @@ export function ShortlistPageView({
       <header className="shortlist-header">
         <div className="shortlist-navigation">
           <Link href="/" className="brand-mark" aria-label="На главную">
-            REDS <span> / 09</span>
+            Основание <span> / 09</span>
           </Link>
           <Link
             href="/request/confirm"

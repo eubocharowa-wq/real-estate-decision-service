@@ -21,9 +21,7 @@ export function SiteHeader() {
     <header className="site-header">
       <div className="site-header-inner">
         <Link className="site-identity" href="/" aria-label="На главную">
-          <span className="brand-mark">
-            Decision <span>Service</span>
-          </span>
+          <span className="brand-mark">Основание</span>
         </Link>
 
         <nav className="site-nav" aria-label="Основная навигация">

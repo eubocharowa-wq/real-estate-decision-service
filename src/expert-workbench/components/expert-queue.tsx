@@ -13,7 +13,7 @@ export function ExpertQueue({ view }: { readonly view: ExpertQueueViewModel }) {
     <main className="expert-queue-shell">
       <header className="expert-queue-header">
         <Link href="/" className="brand-mark" aria-label="На главную">
-          REDS <span>/ expert</span>
+          Основание <span>/ expert</span>
         </Link>
         <p className="eyebrow">Рабочая очередь</p>
         <h1>Экспертные задачи</h1>

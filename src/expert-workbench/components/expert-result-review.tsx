@@ -34,7 +34,7 @@ export function ExpertResultReview({
     <main className="expert-result-shell">
       <header className="expert-result-header">
         <Link href="/" className="brand-mark" aria-label="На главную">
-          REDS <span>/ result</span>
+          Основание <span>/ result</span>
         </Link>
         <p className="eyebrow">{view.header.status}</p>
         <h1>{view.header.title}</h1>

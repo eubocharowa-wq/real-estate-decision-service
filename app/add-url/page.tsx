@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { UserUrlIngestionClient } from "../../src/user-url-ingestion/components";
 
 export const metadata: Metadata = {
-  title: "Добавить объект по ссылке · REDS",
+  title: "Добавить объект по ссылке · Основание",
   description:
     "Безопасное добавление пользовательской ссылки с подтверждением данных.",
 };

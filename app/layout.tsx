@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import { Inter, Playfair_Display } from "next/font/google";
 import type { ReactNode } from "react";
 
+// Token layer first: globals.css reads its colours from these custom
+// properties rather than declaring its own.
+import "./design-system.css";
 import "./globals.css";
 import { resolveSiteUrl } from "../src/public-site";
 
@@ -23,7 +26,7 @@ const displayFont = Playfair_Display({
 const siteUrl = resolveSiteUrl();
 
 export const metadata: Metadata = {
-  title: "Real Estate Decision Service — выбор под ваши условия",
+  title: "Основание — выбор под ваши условия",
   description: "Помогаем выбрать недвижимость под ваши условия.",
   // Stays undefined until an operator configures the origin, so relative
   // metadata is never resolved against a domain we do not control.

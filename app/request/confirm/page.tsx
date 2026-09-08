@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { RequestConfirmationClient } from "../../../src/request-confirmation/components";
 
 export const metadata: Metadata = {
-  title: "Подтверждение запроса — Real Estate Decision Service",
+  title: "Подтверждение запроса — Основание",
   description: "Проверьте и уточните условия перед подбором недвижимости.",
 };
 

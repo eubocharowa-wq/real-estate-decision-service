@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { PublicCta, PublicPageHero } from "../public-page-components";
 
 export const metadata: Metadata = {
-  title: "Экспертная проверка — Real Estate Decision Service",
+  title: "Экспертная проверка — Основание",
   description:
     "Платная проверка там, где цифровой контур упирается в неподтверждённые данные, конфликт источников или документы.",
 };
@@ -16,9 +16,15 @@ const triggers = [
   "объект нужно посмотреть физически.",
 ];
 
+// This page is the paid ЦБИ expert/investment-analysis service — the same
+// expertise-and-trust identity as /about — so its content area opts into the
+// dark, gold-accented density (data-contour="invest") while the shared
+// header and footer stay in the light buyer density. The rest of the
+// selection product stays light — one design system, two densities, see
+// app/design-system.css.
 export default function ExpertReviewPage() {
   return (
-    <>
+    <div data-contour="invest">
       <PublicPageHero
         eyebrow="Экспертная проверка"
         title="Проверка там, где данных недостаточно"
@@ -79,6 +85,6 @@ export default function ExpertReviewPage() {
         title="Сначала бесплатный подбор"
         text="Проверку удобнее заказывать, когда уже понятно, какое именно условие вызывает сомнение. Начните с подбора — он покажет, что осталось неподтверждённым."
       />
-    </>
+    </div>
   );
 }

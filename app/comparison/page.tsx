@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { ComparisonClient } from "../../src/comparison/components";
 
 export const metadata: Metadata = {
-  title: "Сравнение финалистов · REDS",
+  title: "Сравнение финалистов · Основание",
   description:
     "Сравнение 2–4 объектов по условиям пользователя, сценариям покупки и надёжности данных.",
 };

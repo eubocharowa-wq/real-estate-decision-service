@@ -91,7 +91,7 @@ export function RequestEntry() {
     <main className="entry-shell">
       <header className="entry-header">
         <p className="brand-mark">
-          REDS <span> / MVP</span>
+          Основание <span> / MVP</span>
         </p>
         <p className="step-label">Шаг 1 · Ваша задача</p>
       </header>

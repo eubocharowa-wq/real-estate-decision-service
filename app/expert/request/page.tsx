@@ -4,7 +4,7 @@ import { ExpertRequestForm } from "../../../src/expert/components";
 import { buildExpertRequestPreview } from "../../../src/expert";
 
 export const metadata: Metadata = {
-  title: "Экспертная проверка · REDS",
+  title: "Экспертная проверка · Основание",
   description:
     "Создание контекстной экспертной задачи по конкретному неизвестному, конфликту или выбору финалистов.",
 };

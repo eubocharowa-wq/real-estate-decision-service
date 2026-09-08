@@ -9,7 +9,7 @@ import {
 import { PilotFeedbackForm } from "../../../../src/pilot-hardening/components";
 
 export const metadata: Metadata = {
-  title: "Результат экспертной проверки · REDS",
+  title: "Результат экспертной проверки · Основание",
   description: "Структурированный результат проверки и его влияние на решение.",
 };
 

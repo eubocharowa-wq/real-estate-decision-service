@@ -8,7 +8,10 @@
  * URLs" when the variable is missing or malformed.
  */
 
-/** Routes served by the (public) group and safe for search engines. */
+import { caseStudies } from "../site-content/case-studies";
+import { siteRegions } from "../site-content/regions";
+
+/** Static routes served by the (public) group and safe for search engines. */
 export const PUBLIC_ROUTES = [
   "/",
   "/how-it-works",
@@ -20,6 +23,16 @@ export const PUBLIC_ROUTES = [
   "/privacy",
   "/terms",
 ] as const;
+
+/**
+ * All public routes, including the ones generated from a registry via
+ * generateStaticParams (case studies, regions) rather than written by hand.
+ */
+export const allPublicRoutes = (): readonly string[] => [
+  ...PUBLIC_ROUTES,
+  ...caseStudies.map((study) => `/materials/${study.slug}`),
+  ...siteRegions.map((region) => `/${region.slug}`),
+];
 
 /** Internal product screens and APIs that must stay out of search results. */
 export const INTERNAL_ROUTE_PREFIXES = [

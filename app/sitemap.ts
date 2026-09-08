@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 
-import { PUBLIC_ROUTES, resolveSiteUrl } from "../src/public-site";
+import { allPublicRoutes, resolveSiteUrl } from "../src/public-site";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const siteUrl = resolveSiteUrl();
@@ -8,7 +8,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   // empty sitemap is preferable to one naming a domain we do not control.
   if (!siteUrl) return [];
 
-  return PUBLIC_ROUTES.map((route) => ({
+  return allPublicRoutes().map((route) => ({
     url: route === "/" ? siteUrl : `${siteUrl}${route}`,
   }));
 }

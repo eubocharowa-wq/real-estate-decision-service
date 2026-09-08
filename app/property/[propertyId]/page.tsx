@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { PropertyDetailClient } from "../../../src/property-detail/components";
 
 export const metadata: Metadata = {
-  title: "Разбор объекта · REDS",
+  title: "Разбор объекта · Основание",
   description:
     "Факты, персональное соответствие, сценарий покупки, неопределённость и источники.",
 };

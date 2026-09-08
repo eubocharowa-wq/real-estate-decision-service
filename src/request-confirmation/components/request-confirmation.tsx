@@ -134,7 +134,7 @@ export function RequestConfirmation({
     <main className="confirmation-shell">
       <header className="confirmation-hero">
         <Link href="/" className="brand-mark" aria-label="На главную">
-          REDS <span> / 04</span>
+          Основание <span> / 04</span>
         </Link>
         <p className="step-label">Шаг 2 · Подтверждение</p>
         <h1>Проверьте, правильно ли мы вас поняли</h1>

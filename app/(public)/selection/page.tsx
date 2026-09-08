@@ -4,7 +4,7 @@ import { RequestEntry } from "../../request-entry";
 import { PublicPageHero } from "../public-page-components";
 
 export const metadata: Metadata = {
-  title: "Бесплатный подбор — Real Estate Decision Service",
+  title: "Бесплатный подбор — Основание",
   description:
     "Опишите задачу обычными словами и получите подборку вариантов с объяснением, насколько каждый из них подходит под ваши условия.",
 };

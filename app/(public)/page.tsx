@@ -4,7 +4,7 @@ import Link from "next/link";
 import { PublicCta, PublicPageHero } from "./public-page-components";
 
 export const metadata: Metadata = {
-  title: "Real Estate Decision Service — выбор под ваши условия",
+  title: "Основание — выбор под ваши условия",
   description:
     "Сервис помогает выбрать недвижимость под вашу жизненную задачу: подбирает варианты по вашим условиям, объясняет соответствие и отдельно показывает, каким данным можно верить.",
 };

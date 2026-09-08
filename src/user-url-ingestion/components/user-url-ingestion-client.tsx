@@ -180,7 +180,7 @@ export function UserUrlIngestionClient() {
     <main className="url-ingestion-shell">
       <header>
         <Link href="/" className="brand-mark">
-          REDS <span> / 12</span>
+          Основание <span> / 12</span>
         </Link>
         <p className="step-label">Добавить вариант</p>
         <h1>Объект по ссылке</h1>

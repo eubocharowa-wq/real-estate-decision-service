@@ -7,7 +7,7 @@ import {
 } from "../../../../src/expert-workbench";
 
 export const metadata: Metadata = {
-  title: "Рабочая задача эксперта · REDS",
+  title: "Рабочая задача эксперта · Основание",
   description: "Проверка сохранённого decision context без скрытого refresh.",
 };
 

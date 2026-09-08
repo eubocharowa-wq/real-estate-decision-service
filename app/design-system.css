@@ -1,0 +1,119 @@
+/*
+ * Design tokens for the unified brand — the single source of colour,
+ * radius, container width and vertical rhythm.
+ *
+ * The primitives below are transferred verbatim from ЦБИ
+ * (SAIT-CBI, src/styles.css: --bg, --panel, --text, --muted, --gold,
+ * --accent-green, --accent-blue, --radius*, --container, --section-y).
+ *
+ * Two densities of the same palette:
+ *   [data-contour="buyer"]  (default) — a light arrangement for the free
+ *     selection contour. The dark gold-on-black look reads as premium, but
+ *     it would read as intimidating to a family choosing a mortgaged
+ *     apartment, so the free contour gets a light variation of the exact
+ *     same colours rather than a different palette.
+ *   [data-contour="invest"] — the dark, gold-accented ЦБИ contour, used for
+ *     the pages that carry the expert/investment-analysis identity
+ *     (/about and /expert-review).
+ *
+ * app/globals.css does not declare its own colours: every domain alias it
+ * uses (--ink, --muted, --paper, --surface, --line, --forest, --sage,
+ * --amber, --amber-soft, --rose, --rose-soft, --blue-soft, --shadow) is
+ * redefined here, in both densities, from these primitives.
+ */
+
+:root {
+  --brand-bg: #05070b;
+  --brand-panel: #0a0f16;
+  --brand-text: #f4efe6;
+  --brand-muted: #c9bda8;
+  --brand-gold: #d7b15f;
+  --brand-gold-bright: #ecd08d;
+  --brand-green: #20372f;
+  --brand-blue: #152235;
+
+  --radius: 22px;
+  --radius-sm: 14px;
+  --radius-xs: 10px;
+  --container: 1180px;
+  --section-y: 80px;
+}
+
+/* Buyer density (default): light variation of the ЦБИ palette. */
+:root,
+[data-contour="buyer"] {
+  color-scheme: light;
+  --ink: #17201b;
+  --muted: #65716a;
+  --paper: #f3f1e9;
+  --surface: #fffdf8;
+  --line: #d9d8cf;
+  --forest: var(--brand-green);
+  --sage: #dce8de;
+  --amber: #a86123;
+  --amber-soft: #f6e7d2;
+  --rose: #93463f;
+  --rose-soft: #f6e1dc;
+  --blue-soft: #e3ebef;
+  --shadow: 0 24px 70px rgb(31 45 37 / 10%);
+
+  /* Secondary semantic tokens used by borrowed/legacy component styles. */
+  --forest-rgb: 23 77 60;
+  --forest-strong: #0e3e30;
+  --forest-tint: #edf0ec;
+  --forest-contrast: #fffdf8;
+  --surface-tint: #f8f6ef;
+  --field-border: #aaa79d;
+  --field-surface: #fffdf8;
+  --line-strong: #5f6a64;
+  --focus-ring-color: #c27a2c;
+  --gold-soft: #f5f0df;
+  --gold-strong: #9c7b27;
+  --gold-ink: #6f4718;
+  --gold-line: #dfbd8f;
+  --info-ink: #3b535f;
+  --info-line: #91a6ae;
+  --alert: #b4463b;
+  --alert-ink: #8b332f;
+  --alert-line: #d8aaa3;
+}
+
+/* Investment density: the dark, gold-accented ЦБИ contour. */
+[data-contour="invest"] {
+  color-scheme: dark;
+  --ink: var(--brand-text);
+  --muted: var(--brand-muted);
+  --paper: var(--brand-bg);
+  --surface: var(--brand-panel);
+  --line: rgba(215, 177, 95, 0.18);
+  --forest: var(--brand-gold);
+  --sage: rgba(215, 177, 95, 0.12);
+  --amber: var(--brand-gold);
+  --amber-soft: rgba(215, 177, 95, 0.14);
+  --rose: #d98d84;
+  --rose-soft: rgba(147, 70, 63, 0.24);
+  --blue-soft: var(--brand-blue);
+  --shadow: 0 18px 60px rgba(0, 0, 0, 0.42);
+
+  --forest-rgb: 215 177 95;
+  --forest-strong: var(--brand-gold-bright);
+  --forest-tint: rgba(215, 177, 95, 0.1);
+  --forest-contrast: var(--brand-bg);
+  --surface-tint: rgba(255, 255, 255, 0.04);
+  --field-border: rgba(215, 177, 95, 0.34);
+  --field-surface: rgba(255, 255, 255, 0.04);
+  --line-strong: rgba(215, 177, 95, 0.34);
+  --focus-ring-color: var(--brand-gold);
+  --gold-soft: rgba(215, 177, 95, 0.14);
+  --gold-strong: var(--brand-gold);
+  --gold-ink: var(--brand-gold-bright);
+  --gold-line: rgba(215, 177, 95, 0.34);
+  --info-ink: #cfe0f2;
+  --info-line: rgba(125, 158, 198, 0.4);
+  --alert: #d98d84;
+  --alert-ink: #f0c3bd;
+  --alert-line: rgba(217, 141, 132, 0.4);
+
+  background: var(--paper);
+  color: var(--ink);
+}

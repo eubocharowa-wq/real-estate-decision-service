@@ -14,12 +14,21 @@ import AboutPage from "../app/(public)/about/page";
 import ExpertReviewPage from "../app/(public)/expert-review/page";
 import HowItWorksPage from "../app/(public)/how-it-works/page";
 import MaterialsPage from "../app/(public)/materials/page";
+import CaseStudyPage, {
+  generateStaticParams as generateCaseStudyParams,
+} from "../app/(public)/materials/[materialSlug]/page";
 import MethodologyPage from "../app/(public)/methodology/page";
 import PrivacyPage from "../app/(public)/privacy/page";
 import SelectionPage from "../app/(public)/selection/page";
 import { SiteFooter, SiteHeader } from "../app/(public)/site-chrome";
 import TermsPage from "../app/(public)/terms/page";
-import { INTERNAL_ROUTE_PREFIXES } from "../src/public-site";
+import RegionPage, {
+  generateStaticParams as generateRegionParams,
+} from "../app/(public)/[region]/page";
+import { INTERNAL_ROUTE_PREFIXES, allPublicRoutes } from "../src/public-site";
+import { caseStudies } from "../src/site-content/case-studies";
+import { cbiContacts } from "../src/site-content/contacts";
+import { siteRegions } from "../src/site-content/regions";
 
 afterEach(() => {
   cleanup();
@@ -44,6 +53,14 @@ describe("public site chrome", () => {
     expect(
       screen.getByRole("link", { name: "Начать подбор" }).getAttribute("href"),
     ).toBe("/selection");
+  });
+
+  it("shows the site name as «Основание», not the old working brand", () => {
+    render(<SiteHeader />);
+
+    expect(screen.getByText("Основание")).toBeDefined();
+    expect(screen.queryByText(/Decision Service/)).toBeNull();
+    expect(screen.queryByText(/\bREDS\b/)).toBeNull();
   });
 
   it("exposes every navigation item in the main navigation", () => {
@@ -172,8 +189,8 @@ describe("public content pages", () => {
     ).toBeDefined();
   });
 
-  it("renders expert review with unresolved copy marked as a placeholder", () => {
-    render(<ExpertReviewPage />);
+  it("renders expert review with unresolved copy marked as a placeholder, in the invest contour", () => {
+    const { container } = render(<ExpertReviewPage />);
 
     expect(
       screen.getByRole("heading", {
@@ -184,6 +201,7 @@ describe("public content pages", () => {
       screen.getByText("{{ТРЕБУЕТСЯ ТЕКСТ: состав услуги}}"),
     ).toBeDefined();
     expect(screen.getByText("{{ТРЕБУЕТСЯ ТЕКСТ: цена и срок}}")).toBeDefined();
+    expect(container.querySelector('[data-contour="invest"]')).not.toBeNull();
   });
 
   it("renders the methodology page with the coverage note", () => {
@@ -207,72 +225,131 @@ describe("public content pages", () => {
     ).toBeDefined();
   });
 
-  it("renders the about page as a placeholder structure", () => {
-    render(<AboutPage />);
+  it("renders the about page with ЦБИ expert material in the invest contour", () => {
+    const { container } = render(<AboutPage />);
 
     expect(screen.getByRole("heading", { name: "Об эксперте" })).toBeDefined();
-    expect(
-      screen.getAllByText("{{ТРЕБУЕТСЯ ТЕКСТ: об эксперте}}").length,
-    ).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Елена Бочарова/).length).toBeGreaterThan(0);
+    expect(screen.queryByText(/ТРЕБУЕТСЯ ТЕКСТ/)).toBeNull();
+    expect(container.querySelector('[data-contour="invest"]')).not.toBeNull();
   });
 
-  it("renders materials with an honest empty state", () => {
+  it("renders materials with case-study cards linking to their own pages", () => {
     render(<MaterialsPage />);
 
+    expect(screen.getByRole("heading", { name: "Разборы" })).toBeDefined();
+    expect(screen.getAllByRole("article")).toHaveLength(caseStudies.length);
     expect(
-      screen.getByRole("heading", { name: "Материалов пока нет" }),
+      screen.getByRole("heading", { name: caseStudies[0].title }),
     ).toBeDefined();
-    expect(screen.queryAllByRole("article")).toHaveLength(0);
+
+    const studyLinks = screen.getAllByRole("link", { name: "Подробнее" });
+    expect(studyLinks).toHaveLength(caseStudies.length);
+    expect(studyLinks[0].getAttribute("href")).toBe(
+      `/materials/${caseStudies[0].slug}`,
+    );
   });
 
-  it("renders the privacy policy as an unwritten structure", () => {
+  it("builds a case-study page for every registry entry", () => {
+    expect(generateCaseStudyParams()).toEqual(
+      caseStudies.map((study) => ({ materialSlug: study.slug })),
+    );
+  });
+
+  it("renders an individual case-study page from the registry", async () => {
+    const study = caseStudies[0];
+    const jsx = await CaseStudyPage({
+      params: Promise.resolve({ materialSlug: study.slug }),
+    });
+    render(jsx);
+
+    expect(
+      screen.getByRole("heading", { level: 1, name: study.title }),
+    ).toBeDefined();
+    expect(
+      screen.getByRole("link", { name: "Вернуться к списку разборов" }),
+    ).toBeDefined();
+  });
+
+  it("builds a region page for every registry entry", () => {
+    expect(generateRegionParams()).toEqual(
+      siteRegions.map((region) => ({ region: region.slug })),
+    );
+  });
+
+  it("renders the pilot region page", async () => {
+    const region = siteRegions[0];
+    const jsx = await RegionPage({
+      params: Promise.resolve({ region: region.slug }),
+    });
+    render(jsx);
+
+    expect(
+      screen.getByRole("heading", { level: 1, name: region.headline }),
+    ).toBeDefined();
+  });
+
+  it("renders the privacy policy structured after ЦБИ's own document, with real contacts", () => {
     render(<PrivacyPage />);
 
     expect(
       screen.getByRole("heading", {
-        name: "Политика обработки персональных данных",
+        name: "Политика в отношении обработки персональных данных",
       }),
     ).toBeDefined();
     for (const heading of [
-      "Цели обработки",
-      "Состав обрабатываемых данных",
-      "Срок хранения",
-      "Права субъекта персональных данных",
-      "Порядок удаления данных",
-      "Контакты оператора",
+      "1. Общие положения",
+      "2. Какие данные могут обрабатываться",
+      "3. Цели обработки",
+      "4. Передача третьим лицам",
+      "5. Срок хранения",
+      "6. Ваши действия",
+      "7. Контакты оператора",
+      "8. Изменения политики",
     ]) {
       expect(screen.getByRole("heading", { name: heading })).toBeDefined();
     }
+    expect(screen.getByText(cbiContacts.phone.label)).toBeDefined();
+    expect(screen.getByText(cbiContacts.email.label)).toBeDefined();
     expect(
-      screen.getByText("{{ТРЕБУЕТСЯ ТЕКСТ: цели обработки}}"),
-    ).toBeDefined();
+      screen.queryByText("{{ТРЕБУЕТСЯ ТЕКСТ: контакты оператора}}"),
+    ).toBeNull();
+    expect(screen.queryByText(/Демо-диалог/)).toBeNull();
     expect(
-      screen.getByText("{{ТРЕБУЕТСЯ ТЕКСТ: контакты оператора}}"),
+      screen.getByText("{{ТРЕБУЕТСЯ ДОПОЛНЕНИЕ: обработка данных подбора}}"),
     ).toBeDefined();
   });
 
-  it("renders the terms as an unwritten structure", () => {
+  it("renders the terms structured after ЦБИ's own offer, with real contacts", () => {
     render(<TermsPage />);
 
     expect(
-      screen.getByRole("heading", { name: "Пользовательское соглашение" }),
+      screen.getByRole("heading", {
+        name: "Публичная оферта на оказание экспертных услуг",
+      }),
     ).toBeDefined();
     for (const heading of [
-      "Предмет соглашения",
-      "Что сервис делает и чего не делает",
-      "Отказ от гарантий по решениям пользователя",
-      "Порядок оказания платной экспертной проверки",
+      "1. Термины",
+      "2. Акцепт оферты",
+      "3. Порядок оказания услуг",
+      "4. Результат и ответственность",
+      "5. Оплата и возврат",
+      "6. Конфиденциальность",
+      "7. Реквизиты и связь",
+      "8. Заключительные положения",
     ]) {
       expect(screen.getByRole("heading", { name: heading })).toBeDefined();
     }
+    expect(screen.getByText(cbiContacts.phone.label)).toBeDefined();
     expect(
-      screen.getByText("{{ТРЕБУЕТСЯ ТЕКСТ: отказ от гарантий}}"),
-    ).toBeDefined();
+      screen.getAllByText(cbiContacts.telegramChannels[0].label).length,
+    ).toBeGreaterThan(0);
+    expect(screen.queryByText(/ТРЕБУЕТСЯ ТЕКСТ/)).toBeNull();
   });
 });
 
 describe("sitemap", () => {
-  it("lists every public page against the configured origin", () => {
+  it("lists every public page, including generated case studies and regions", () => {
     vi.stubEnv("NEXT_PUBLIC_SITE_URL", "https://example.com");
 
     const urls = sitemap().map((entry) => entry.url);
@@ -280,7 +357,11 @@ describe("sitemap", () => {
     expect(urls).toContain("https://example.com");
     expect(urls).toContain("https://example.com/privacy");
     expect(urls).toContain("https://example.com/terms");
-    expect(urls).toHaveLength(9);
+    expect(urls).toContain(
+      `https://example.com/materials/${caseStudies[0].slug}`,
+    );
+    expect(urls).toContain(`https://example.com/${siteRegions[0].slug}`);
+    expect(urls).toHaveLength(allPublicRoutes().length);
   });
 
   it("keeps internal screens out of the sitemap", () => {

@@ -185,7 +185,7 @@ export function PropertyDetailPageView({
     <main className="property-detail-shell" data-testid="property-detail">
       <nav className="detail-navigation" aria-label="Навигация по объекту">
         <Link href="/" className="brand-mark" aria-label="На главную">
-          REDS <span> / 10</span>
+          Основание <span> / 10</span>
         </Link>
         <Link className="back-link" href={backHref}>
           ← {backLabel}

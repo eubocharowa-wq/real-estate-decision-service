@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { PublicCta, PublicPageHero } from "../public-page-components";
 
 export const metadata: Metadata = {
-  title: "Как работает подбор — Real Estate Decision Service",
+  title: "Как работает подбор — Основание",
   description:
     "Путь от задачи обычными словами до объяснённого сравнения вариантов: разбор условий, подбор, раздельные оценки соответствия и надёжности данных.",
 };

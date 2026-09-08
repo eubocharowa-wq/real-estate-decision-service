@@ -21,7 +21,7 @@ export function JourneyDecisionUpdateView({
   return (
     <main className="journey-decision-shell">
       <header className="journey-decision-header">
-        <p className="brand-mark">REDS / Decision update</p>
+        <p className="brand-mark">Основание / Decision update</p>
         <p className="eyebrow">Обновлённое решение</p>
         <h1>Что изменилось после проверки</h1>
         <p>
