@@ -1,3 +1,4 @@
+import { resolvePilotRuntimeConfig } from "../pilot-hardening/config";
 import { createRepositorySet } from "../persistence/repositories";
 import { BuyerJourneyApplication } from "./application";
 
@@ -26,6 +27,17 @@ const runtimeGlobal = globalThis as RuntimeGlobal;
  * The backend follows the configuration: DATABASE_URL present means the
  * PostgreSQL repositories, absent means in-memory. Nothing else in the
  * application knows which one it got.
+ *
+ * The pilot application mode follows the same rule, through the same kind of
+ * switch: REDS_APPLICATION_MODE (see pilot-hardening/config.ts, already
+ * documented in .env.example and docs/09-pilot/rollback.md, and already
+ * read by resolvePilotRuntimeConfig — it simply had no caller reaching the
+ * runtime an actual HTTP request runs on). Unset, it resolves to "demo": a
+ * production process that nobody has explicitly switched over must keep
+ * running on the labelled synthetic fixture, not silently start serving the
+ * curated real dataset because someone forgot a variable. Moving to "pilot"
+ * is something an operator turns on, the same deliberate way DATABASE_URL
+ * turns on PostgreSQL — never a side effect of deploying.
  */
 const createRuntime = (): BuyerJourneyApplication => {
   const repositories = createRepositorySet();
@@ -35,6 +47,7 @@ const createRuntime = (): BuyerJourneyApplication => {
     instrumentation: repositories.instrumentation,
     feedbackRepository: repositories.feedbackRepository,
     errorRepository: repositories.errorRepository,
+    pilotRuntimeConfig: resolvePilotRuntimeConfig(),
   });
 };
 
