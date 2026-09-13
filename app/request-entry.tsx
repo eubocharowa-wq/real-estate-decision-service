@@ -100,12 +100,6 @@ export function RequestEntry({ staticPreview = false }: RequestEntryProps) {
 
   return (
     <main className="entry-shell">
-      <header className="entry-header">
-        <p className="brand-mark">
-          Основание <span> / MVP</span>
-        </p>
-        <p className="step-label">Шаг 1 · Ваша задача</p>
-      </header>
       <section className="entry-card" aria-labelledby="entry-title">
         <p className="eyebrow">Не каталог. Инструмент выбора.</p>
         <h1 id="entry-title">Опишите, какую недвижимость вы ищете</h1>
@@ -153,13 +147,12 @@ export function RequestEntry({ staticPreview = false }: RequestEntryProps) {
         <p className="eyebrow" id="examples-title">
           Примеры формулировок
         </p>
-        {examples.map((example, index) => (
+        {examples.map((example) => (
           <button
             key={example}
             type="button"
             onClick={() => setEditedText(example)}
           >
-            <span>0{index + 1}</span>
             {example}
           </button>
         ))}

@@ -808,23 +808,9 @@ fieldset {
   min-height: 100vh;
   margin: 0 auto;
   grid-template-columns: minmax(0, 1.65fr) minmax(17rem, 0.75fr);
-  grid-template-rows: auto 1fr;
   gap: 3rem 5rem;
   align-items: center;
   padding: 2rem 0 4rem;
-}
-
-.entry-header {
-  display: flex;
-  grid-column: 1 / -1;
-  align-items: center;
-  justify-content: space-between;
-  border-bottom: 1px solid var(--line);
-  padding-bottom: 1rem;
-}
-
-.entry-header .step-label {
-  margin: 0;
 }
 
 .entry-card {
@@ -887,9 +873,6 @@ fieldset {
 }
 
 .entry-examples button {
-  display: grid;
-  grid-template-columns: 2.25rem 1fr;
-  gap: 0.7rem;
   border: 0;
   border-top: 1px solid var(--line);
   padding: 1.15rem 0;
@@ -898,13 +881,6 @@ fieldset {
   line-height: 1.45;
   text-align: left;
   cursor: pointer;
-}
-
-.entry-examples button span {
-  color: var(--amber);
-  font-size: 0.74rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
 }
 
 .confirmation-shell {
@@ -1404,10 +1380,6 @@ fieldset {
     gap: 2rem;
   }
 
-  .entry-header {
-    grid-column: 1;
-  }
-
   .request-summary,
   .criteria-section,
   .clarifications-section,
@@ -1434,10 +1406,6 @@ fieldset {
   .entry-shell,
   .confirmation-shell {
     width: min(100% - 1.25rem, 76rem);
-  }
-
-  .entry-header {
-    align-items: start;
   }
 
   .entry-card {
