@@ -510,6 +510,37 @@ const asNumber = (value: unknown): number | null => {
 const formatNumber = (value: number): string =>
   new Intl.NumberFormat("ru-RU", { maximumFractionDigits: 2 }).format(value);
 
+/**
+ * Russian noun declension after a count: 1 комната, 2 комнаты, 5 комнат,
+ * 11 комнат, 21 комната. Standard one/few/many rule — the 11-14 exception
+ * must be checked before the last-digit rule, since 11-14 all take the
+ * "many" form regardless of their last digit.
+ */
+const pluralizeRu = (
+  count: number,
+  one: string,
+  few: string,
+  many: string,
+): string => {
+  const abs = Math.round(Math.abs(count));
+  const lastTwo = abs % 100;
+  const lastOne = abs % 10;
+  if (lastTwo >= 11 && lastTwo <= 14) return many;
+  if (lastOne === 1) return one;
+  if (lastOne >= 2 && lastOne <= 4) return few;
+  return many;
+};
+
+/**
+ * "rooms" is the matching-engine's internal unit token (see allowedUnits in
+ * matching/criteria/registry.ts) — never a display string. property.rooms
+ * and property.rooms_min are the only presentations that use it, so their
+ * numeric value gets the declined Russian noun here instead of the raw unit
+ * falling through to formatCriterionValue's generic "value + unit" branch.
+ */
+const roomsCountLabel = (count: number): string =>
+  `${formatNumber(count)} ${pluralizeRu(count, "комната", "комнаты", "комнат")}`;
+
 export const formatCriterionValue = (field: string, value: unknown): string => {
   const presentation = getCriterionPresentation(field);
   if (presentation.editor === "money") {
@@ -546,6 +577,7 @@ export const formatCriterionValue = (field: string, value: unknown): string => {
   }
   if (typeof value === "boolean") return value ? "Да" : "Нет";
   if (typeof value === "number") {
+    if (presentation.unit === "rooms") return roomsCountLabel(value);
     return `${formatNumber(value)} ${presentation.unit ?? ""}`.trim();
   }
   if (typeof value === "object" && value !== null && "maximum" in value) {
