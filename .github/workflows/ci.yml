@@ -20,6 +20,13 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # Gated on production dependencies only: a high/critical finding that
+      # never ships to a user (a dev-only lint/test tool with no upstream fix
+      # yet) must not be able to block every merge with no way to clear it.
+      # Anything reachable in the deployed app has to be clean at high+.
+      - name: Dependency security audit (production dependencies)
+        run: npm audit --omit=dev --audit-level=high
+
       - name: Typecheck
         run: npm run typecheck
 

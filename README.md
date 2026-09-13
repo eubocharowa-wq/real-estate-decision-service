@@ -295,10 +295,30 @@ Commit
 
 ## Current Status
 
-Реализован controlled fixture-based buyer journey от свободного запроса до
-обновлённого решения после экспертной проверки. Демо использует только явно
-маркированный `synthetic_pilot` dataset; live source coverage и production
-persistence не заявлены.
+Реализован полный buyer journey от свободного запроса до обновлённого решения
+после экспертной проверки, работающий через настоящий HTTP-runtime приложения
+(`app/api/buyer-journeys`, `app/api/expert-requests`), а не только напрямую
+через application-слой.
+
+Persistence переключается конфигурацией, а не флагом в коде: при заданном
+`DATABASE_URL` состояние (buyer journeys, expert requests, matching bundles)
+хранится в PostgreSQL через `createRepositorySet()`; без него — в памяти.
+Оба режима реализованы полностью.
+
+Датасет тоже переключается конфигурацией через `REDS_APPLICATION_MODE`: режим
+`demo` (по умолчанию) обслуживает только явно маркированный `synthetic_pilot`
+fixture dataset; режим `pilot`/`production` обслуживает пять вручную
+курируемых реальных объектов ЕИСЖС (`manual_curated_pilot`) через тот же
+buyer-journey runtime — live source coverage за пределами этого курируемого
+набора не заявлено.
+
+Статический preview на GitHub Pages — это только визуальный обзор публичного
+сайта (см. `docs/08-roadmap/current-execution-plan.md`, TASK-024B); он не
+включает API routes, PostgreSQL-backed flows или динамические экраны
+покупателя/эксперта и не может служить доказательством того, что приложение
+где-либо развёрнуто как production service. Полноценный dynamic staging,
+browser-level E2E, operational release gate и real-buyer pilot остаются
+следующими шагами — см. `docs/08-roadmap/current-execution-plan.md`.
 
 ---
 
