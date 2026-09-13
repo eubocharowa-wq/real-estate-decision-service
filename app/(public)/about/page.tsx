@@ -7,6 +7,9 @@ export const metadata: Metadata = {
   title: "Об эксперте — Основание",
   description:
     "Елена Бочарова, Центр Бизнес-Инвестиций: экспертная оценка недвижимости и проектов развития перед вложением капитала.",
+  // Kept out of search results until every page in this legal/about group is
+  // cleared of {{ТРЕБУЕТСЯ ТЕКСТ}} placeholders; remove once that is done.
+  robots: { index: false, follow: false },
 };
 
 // This page carries the ЦБИ expert/investment-analysis identity rather than

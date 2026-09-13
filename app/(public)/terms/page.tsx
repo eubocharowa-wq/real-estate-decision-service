@@ -8,6 +8,9 @@ export const metadata: Metadata = {
   title: "Публичная оферта на оказание экспертных услуг — Основание",
   description:
     "Общие условия оказания консультационных и экспертных услуг направления «Центр Бизнес-Инвестиций».",
+  // Kept out of search results until every page in this legal/about group is
+  // cleared of {{ТРЕБУЕТСЯ ТЕКСТ}} placeholders; remove once that is done.
+  robots: { index: false, follow: false },
 };
 
 // Structured after ЦБИ's own offer.html, section for section, rather than

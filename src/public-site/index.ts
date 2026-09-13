@@ -25,11 +25,29 @@ export const PUBLIC_ROUTES = [
 ] as const;
 
 /**
+ * Public routes carrying unresolved {{ТРЕБУЕТСЯ ТЕКСТ}} placeholders (or
+ * still pending the same content review as the pages that do). They stay
+ * reachable and linked from navigation — see each page's own
+ * `metadata.robots` for the matching noindex — but must not be listed in the
+ * sitemap while their copy is not final. Remove an entry here, and its
+ * page's noindex, once that page's placeholders are closed with real text.
+ */
+export const PLACEHOLDER_BLOCKED_ROUTES = [
+  "/expert-review",
+  "/about",
+  "/privacy",
+  "/terms",
+] as const;
+
+/**
  * All public routes, including the ones generated from a registry via
  * generateStaticParams (case studies, regions) rather than written by hand.
  */
 export const allPublicRoutes = (): readonly string[] => [
-  ...PUBLIC_ROUTES,
+  ...PUBLIC_ROUTES.filter(
+    (route) =>
+      !(PLACEHOLDER_BLOCKED_ROUTES as readonly string[]).includes(route),
+  ),
   ...caseStudies.map((study) => `/materials/${study.slug}`),
   ...siteRegions.map((region) => `/${region.slug}`),
 ];

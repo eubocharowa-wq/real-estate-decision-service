@@ -16,6 +16,13 @@ describe("HomePage", () => {
     expect(html).toContain('href="/expert-review"');
   });
 
+  it("offers a way in for buyers who already have a listing, next to the main CTA", () => {
+    const html = renderToStaticMarkup(<HomePage />);
+
+    expect(html).toContain('href="/add-url"');
+    expect(html).toContain("У меня уже есть вариант");
+  });
+
   it("does not duplicate the request entry that lives on /selection", () => {
     const html = renderToStaticMarkup(<HomePage />);
 

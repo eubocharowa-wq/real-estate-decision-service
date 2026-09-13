@@ -6,6 +6,9 @@ export const metadata: Metadata = {
   title: "Экспертная проверка — Основание",
   description:
     "Платная проверка там, где цифровой контур упирается в неподтверждённые данные, конфликт источников или документы.",
+  // Kept out of search results until every page in this legal/about group is
+  // cleared of {{ТРЕБУЕТСЯ ТЕКСТ}} placeholders; remove once that is done.
+  robots: { index: false, follow: false },
 };
 
 const triggers = [

@@ -10,22 +10,34 @@ vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn() }) }));
 
 import robots from "../app/robots";
 import sitemap from "../app/sitemap";
-import AboutPage from "../app/(public)/about/page";
-import ExpertReviewPage from "../app/(public)/expert-review/page";
+import AboutPage, {
+  metadata as aboutMetadata,
+} from "../app/(public)/about/page";
+import ExpertReviewPage, {
+  metadata as expertReviewMetadata,
+} from "../app/(public)/expert-review/page";
 import HowItWorksPage from "../app/(public)/how-it-works/page";
 import MaterialsPage from "../app/(public)/materials/page";
 import CaseStudyPage, {
   generateStaticParams as generateCaseStudyParams,
 } from "../app/(public)/materials/[materialSlug]/page";
 import MethodologyPage from "../app/(public)/methodology/page";
-import PrivacyPage from "../app/(public)/privacy/page";
+import PrivacyPage, {
+  metadata as privacyMetadata,
+} from "../app/(public)/privacy/page";
 import SelectionPage from "../app/(public)/selection/page";
 import { SiteFooter, SiteHeader } from "../app/(public)/site-chrome";
-import TermsPage from "../app/(public)/terms/page";
+import TermsPage, {
+  metadata as termsMetadata,
+} from "../app/(public)/terms/page";
 import RegionPage, {
   generateStaticParams as generateRegionParams,
 } from "../app/(public)/[region]/page";
-import { INTERNAL_ROUTE_PREFIXES, allPublicRoutes } from "../src/public-site";
+import {
+  INTERNAL_ROUTE_PREFIXES,
+  PLACEHOLDER_BLOCKED_ROUTES,
+  allPublicRoutes,
+} from "../src/public-site";
 import { caseStudies } from "../src/site-content/case-studies";
 import { cbiContacts } from "../src/site-content/contacts";
 import { siteRegions } from "../src/site-content/regions";
@@ -202,6 +214,10 @@ describe("public content pages", () => {
     ).toBeDefined();
     expect(screen.getByText("{{ТРЕБУЕТСЯ ТЕКСТ: цена и срок}}")).toBeDefined();
     expect(container.querySelector('[data-contour="invest"]')).not.toBeNull();
+    expect(expertReviewMetadata.robots).toEqual({
+      index: false,
+      follow: false,
+    });
   });
 
   it("renders the methodology page with the coverage note", () => {
@@ -232,6 +248,7 @@ describe("public content pages", () => {
     expect(screen.getAllByText(/Елена Бочарова/).length).toBeGreaterThan(0);
     expect(screen.queryByText(/ТРЕБУЕТСЯ ТЕКСТ/)).toBeNull();
     expect(container.querySelector('[data-contour="invest"]')).not.toBeNull();
+    expect(aboutMetadata.robots).toEqual({ index: false, follow: false });
   });
 
   it("renders materials with case-study cards linking to their own pages", () => {
@@ -318,6 +335,7 @@ describe("public content pages", () => {
     expect(
       screen.getByText("{{ТРЕБУЕТСЯ ДОПОЛНЕНИЕ: обработка данных подбора}}"),
     ).toBeDefined();
+    expect(privacyMetadata.robots).toEqual({ index: false, follow: false });
   });
 
   it("renders the terms structured after ЦБИ's own offer, with real contacts", () => {
@@ -345,6 +363,7 @@ describe("public content pages", () => {
       screen.getAllByText(cbiContacts.telegramChannels[0].label).length,
     ).toBeGreaterThan(0);
     expect(screen.queryByText(/ТРЕБУЕТСЯ ТЕКСТ/)).toBeNull();
+    expect(termsMetadata.robots).toEqual({ index: false, follow: false });
   });
 });
 
@@ -355,8 +374,7 @@ describe("sitemap", () => {
     const urls = sitemap().map((entry) => entry.url);
 
     expect(urls).toContain("https://example.com");
-    expect(urls).toContain("https://example.com/privacy");
-    expect(urls).toContain("https://example.com/terms");
+    expect(urls).toContain("https://example.com/how-it-works");
     expect(urls).toContain(
       `https://example.com/materials/${caseStudies[0].slug}`,
     );
@@ -364,17 +382,20 @@ describe("sitemap", () => {
     expect(urls).toHaveLength(allPublicRoutes().length);
   });
 
-  it("keeps internal screens out of the sitemap", () => {
+  it("keeps internal screens, and pages still carrying placeholder copy, out of the sitemap", () => {
     vi.stubEnv("NEXT_PUBLIC_SITE_URL", "https://example.com");
 
     const paths = sitemap().map((entry) => new URL(entry.url).pathname);
 
-    // Prefix comparison, not substring: /expert-review is public and must not
-    // be caught by the /expert/ rule that hides the expert workbench.
+    // Prefix comparison, not substring: /expert-review is a public route and
+    // must not be caught by the /expert/ rule that hides the expert
+    // workbench — it is excluded below for its own, separate reason.
     for (const internal of INTERNAL_ROUTE_PREFIXES) {
       expect(paths.some((path) => path.startsWith(internal))).toBe(false);
     }
-    expect(paths).toContain("/expert-review");
+    for (const route of PLACEHOLDER_BLOCKED_ROUTES) {
+      expect(paths).not.toContain(route);
+    }
   });
 
   it("publishes nothing when no origin is configured", () => {

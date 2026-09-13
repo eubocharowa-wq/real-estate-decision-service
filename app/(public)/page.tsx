@@ -42,6 +42,9 @@ export default function HomePage() {
         <Link className="button button-primary" href="/selection">
           Начать бесплатный подбор
         </Link>
+        <Link className="button button-ghost" href="/add-url">
+          У меня уже есть вариант
+        </Link>
         <Link className="button button-secondary" href="/how-it-works">
           Как это работает
         </Link>

@@ -8,6 +8,9 @@ export const metadata: Metadata = {
   title: "Политика в отношении обработки персональных данных — Основание",
   description:
     "Порядок работы с информацией, которую вы передаёте при использовании сайта, включая раздел «Центр Бизнес-Инвестиций».",
+  // Kept out of search results until every page in this legal/about group is
+  // cleared of {{ТРЕБУЕТСЯ ТЕКСТ}} placeholders; remove once that is done.
+  robots: { index: false, follow: false },
 };
 
 // Structured after ЦБИ's own privacy.html, section for section, rather than
