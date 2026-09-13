@@ -11,10 +11,13 @@
 ```text
 PROJECT.md
 AGENTS.md
+docs/08-roadmap/current-execution-plan.md
 tasks/<CURRENT_TASK>.md
 ```
 
 и связанные документы из `docs/`.
+
+`docs/08-roadmap/current-execution-plan.md` определяет текущую последовательность реализации от фактического состояния репозитория до controlled real-buyer pilot и public beta. Исторические roadmap/implementation документы не должны использоваться для выбора следующей задачи без сверки с ним.
 
 ---
 
@@ -25,10 +28,13 @@ tasks/<CURRENT_TASK>.md
 ```text
 1. Текущая TASK-XXX.md
 2. PROJECT.md
-3. Связанные docs/
-4. AGENTS.md
-5. Существующий код
+3. docs/08-roadmap/current-execution-plan.md — для порядка дальнейшей реализации
+4. Связанные domain/product/source docs/
+5. AGENTS.md
+6. Существующий код
 ```
+
+Если текущая TASK противоречит `current-execution-plan.md`, агент не должен молча менять scope: нужно зафиксировать `SPEC CONFLICT`, выполнить безопасную часть задачи, если это возможно, и передать конфликт curator на решение.
 
 Если код противоречит актуальной спецификации, не считать код автоматически правильным.
 
