@@ -18,6 +18,11 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    # Job-level, not just on the prep step: the build step also reads this to
+    # keep navigation and interactive screens honest about what the static
+    # export actually contains (see site-chrome.tsx, request-entry.tsx).
+    env:
+      GITHUB_PAGES_STATIC_PREVIEW: "1"
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -35,8 +40,6 @@ jobs:
         run: npm ci
 
       - name: Prepare public static routes
-        env:
-          GITHUB_PAGES_STATIC_PREVIEW: "1"
         run: node scripts/prepare-github-pages-preview.mjs
 
       - name: Build static site
@@ -44,6 +47,9 @@ jobs:
 
       - name: Verify Pages artifact
         run: test -f out/index.html
+
+      - name: Check internal links in the static export
+        run: node scripts/check-pages-preview-links.mjs
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3

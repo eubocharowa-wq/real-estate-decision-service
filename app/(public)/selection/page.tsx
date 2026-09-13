@@ -10,6 +10,11 @@ export const metadata: Metadata = {
 };
 
 export default function SelectionPage() {
+  // On the GitHub Pages static export, app/api is removed entirely (see
+  // scripts/prepare-github-pages-preview.mjs), so the form below has nothing
+  // to submit to. RequestEntry disables submission and says so explicitly
+  // instead of silently failing the fetch.
+  const staticPreview = process.env.GITHUB_PAGES_STATIC_PREVIEW === "1";
   return (
     <>
       <PublicPageHero
@@ -19,7 +24,7 @@ export default function SelectionPage() {
       />
 
       <section className="public-section" aria-label="Начать подбор">
-        <RequestEntry />
+        <RequestEntry staticPreview={staticPreview} />
       </section>
     </>
   );

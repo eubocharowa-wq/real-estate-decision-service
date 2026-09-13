@@ -18,11 +18,21 @@ const examples = [
   "Рассматриваю квартиру или дом. До работы не больше 40 минут. Минимум 70 метров.",
 ];
 
-export function RequestEntry() {
+interface RequestEntryProps {
+  /**
+   * True only on the GitHub Pages static export, where app/api does not
+   * exist (see scripts/prepare-github-pages-preview.mjs). The form stays
+   * visible for design review but never attempts a fetch, and says so.
+   */
+  readonly staticPreview?: boolean;
+}
+
+export function RequestEntry({ staticPreview = false }: RequestEntryProps) {
   const router = useRouter();
   // Coming back to edit the request restores the original wording from the
-  // journey on the server, not from the tab that typed it.
-  const journey = useJourneyState();
+  // journey on the server, not from the tab that typed it. There is no
+  // server to restore from in the static preview.
+  const journey = useJourneyState({ enabled: !staticPreview });
   const preservedText =
     journey.status === "ready" ? journey.state.raw_request_text : "";
   const [editedText, setEditedText] = useState<string | null>(null);
@@ -31,6 +41,7 @@ export function RequestEntry() {
   const [error, setError] = useState<string | null>(null);
 
   const submit = async () => {
+    if (staticPreview) return;
     if (!rawText.trim()) {
       setError("Опишите задачу хотя бы одним предложением.");
       return;
@@ -119,13 +130,23 @@ export function RequestEntry() {
             {error}
           </p>
         ) : null}
+        {staticPreview ? (
+          <p className="static-preview-notice" role="note">
+            Это статический дизайн-обзор на GitHub Pages: форма не отправляет
+            запрос. Чтобы подобрать варианты, откройте рабочую версию сервиса.
+          </p>
+        ) : null}
         <button
           type="button"
           className="button button-primary entry-submit"
-          disabled={submitting}
+          disabled={submitting || staticPreview}
           onClick={submit}
         >
-          {submitting ? "Разбираем условия…" : "Проверить условия"}
+          {staticPreview
+            ? "Недоступно в статическом обзоре"
+            : submitting
+              ? "Разбираем условия…"
+              : "Проверить условия"}
         </button>
       </section>
       <aside className="entry-examples" aria-labelledby="examples-title">

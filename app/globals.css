@@ -851,6 +851,15 @@ fieldset {
   font-size: 0.82rem;
 }
 
+.static-preview-notice {
+  margin: 1rem 0 0;
+  padding: 12px 14px;
+  border-left: 3px solid var(--amber);
+  background: rgb(255 253 248 / 65%);
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
 .entry-submit {
   width: 100%;
   margin-top: 1.4rem;

@@ -32,6 +32,10 @@ const steps = [
 ];
 
 export default function HomePage() {
+  // app/add-url is one of the server-only routes scripts/prepare-github-pages-preview.mjs
+  // deletes before the static export builds; linking to it there would be a
+  // dead link (see scripts/check-pages-preview-links.mjs).
+  const isPagesPreview = process.env.GITHUB_PAGES_STATIC_PREVIEW === "1";
   return (
     <>
       <PublicPageHero
@@ -42,9 +46,11 @@ export default function HomePage() {
         <Link className="button button-primary" href="/selection">
           Начать бесплатный подбор
         </Link>
-        <Link className="button button-ghost" href="/add-url">
-          У меня уже есть вариант
-        </Link>
+        {isPagesPreview ? null : (
+          <Link className="button button-ghost" href="/add-url">
+            У меня уже есть вариант
+          </Link>
+        )}
         <Link className="button button-secondary" href="/how-it-works">
           Как это работает
         </Link>

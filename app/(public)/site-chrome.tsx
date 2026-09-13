@@ -5,6 +5,19 @@ type NavigationItem = Readonly<{
   label: string;
 }>;
 
+/**
+ * scripts/prepare-github-pages-preview.mjs deletes app/comparison (and other
+ * server-only routes) before the static export builds. Without this filter,
+ * "Сравнение" would render as a nav link to a page that does not exist in
+ * that build — scripts/check-pages-preview-links.mjs would then fail the
+ * build on that dead link, which is the backstop if this list and the
+ * script's own route list ever drift apart.
+ */
+const isPagesPreview = process.env.GITHUB_PAGES_STATIC_PREVIEW === "1";
+const PAGES_PREVIEW_EXCLUDED_HREFS: ReadonlySet<string> = new Set([
+  "/comparison",
+]);
+
 const navigation: readonly NavigationItem[] = [
   { href: "/selection", label: "Подбор" },
   { href: "/how-it-works", label: "Как это работает" },
@@ -12,7 +25,9 @@ const navigation: readonly NavigationItem[] = [
   { href: "/expert-review", label: "Экспертная проверка" },
   { href: "/methodology", label: "Как проверяем" },
   { href: "/materials", label: "Материалы" },
-];
+].filter(
+  (item) => !isPagesPreview || !PAGES_PREVIEW_EXCLUDED_HREFS.has(item.href),
+);
 
 const aboutLink: NavigationItem = { href: "/about", label: "Об эксперте" };
 
