@@ -144,6 +144,13 @@ const definitions = [
     supportedOperators: ["eq", "gte", "lte", "between"],
     actualEntity: "property",
     actualField: "physical.rooms",
+    // The confirmation layer emits these three names depending on how the
+    // buyer phrased the count: an exact number ("property.rooms", the
+    // confirmation-only name for "no min/max split"), or an explicit
+    // "property.rooms_min"/"property.rooms_max" — both real UserRequest
+    // fields (see domain/user-request/schema.ts). All three describe the
+    // same actual value; only the operator differs.
+    aliases: ["property.rooms", "property.rooms_min", "property.rooms_max"],
     valueType: "number",
     allowedUnits: ["rooms"],
     supportsTolerance: true,
@@ -303,6 +310,12 @@ const definitions = [
     supportedOperators: ["eq", "in", "one_of"],
     actualEntity: "property",
     actualField: "location.address.city",
+    // "location.cities" is the UserRequest field this criterion is
+    // confirmed from (see domain/user-request/schema.ts and
+    // request-confirmation/registry.ts) — the same naming split that
+    // "property.allowed_property_types"/"property.allowed_market_types"
+    // already bridge above for property_type/market_type.
+    aliases: ["location.cities"],
     valueType: "string",
   }),
   define({

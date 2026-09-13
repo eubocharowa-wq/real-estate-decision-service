@@ -69,6 +69,74 @@ const criteriaArrays = (request: UserRequest): Criterion[] => [
   ...request.avoid,
 ];
 
+const SET_VALUED_OPERATORS: ReadonlySet<Criterion["operator"]> = new Set([
+  "in",
+  "not_in",
+  "one_of",
+]);
+
+/**
+ * Combines every scalar-valued fact for one field into a single
+ * array-valued criterion.
+ *
+ * The rule-based parser records one ExtractedFact per matched value — "в
+ * новостройке" or "в Туле" each produce one scalar fact, the same way
+ * multiple property-type mentions used to. Any field whose presentation
+ * requires a set operator (`in`/`not_in`/`one_of`) must reach matching with
+ * an array target: `validateTarget` in matching/criteria/evaluators.ts
+ * rejects a scalar there, correctly — a `one_of` criterion without a set to
+ * choose from is not a criterion. This used to run only for
+ * "property.allowed_property_types"; every sibling field (market type,
+ * cities, districts, ...) reached matching with a bare scalar and failed.
+ */
+const combineSetValuedCriteria = (
+  criteria: readonly ConfirmationCriterion[],
+): ConfirmationCriterion[] => {
+  const byField = new Map<string, ConfirmationCriterion[]>();
+  const fieldOrder: string[] = [];
+  for (const criterion of criteria) {
+    if (
+      !SET_VALUED_OPERATORS.has(
+        getCriterionPresentation(criterion.field).operator,
+      )
+    )
+      continue;
+    const existing = byField.get(criterion.field);
+    if (existing) existing.push(criterion);
+    else {
+      byField.set(criterion.field, [criterion]);
+      fieldOrder.push(criterion.field);
+    }
+  }
+  if (byField.size === 0) return [...criteria];
+
+  const combined: ConfirmationCriterion[] = [];
+  for (const field of fieldOrder) {
+    const group = byField.get(field);
+    const first = group?.[0];
+    if (!group || !first) continue;
+    first.label = getCriterionPresentation(field).label;
+    first.value = [
+      ...new Set(
+        group.flatMap((criterion) =>
+          Array.isArray(criterion.value)
+            ? criterion.value.map(String)
+            : [String(criterion.value)],
+        ),
+      ),
+    ];
+    first.source_text = group
+      .map((criterion) => criterion.source_text)
+      .filter((value): value is string => value !== null)
+      .join(" / ");
+    combined.push(first);
+  }
+  return [
+    ...criteria.filter((criterion) => !byField.has(criterion.field)),
+    ...combined,
+  ];
+};
+
 const groupCriteria = (
   result: UserRequestParserResult,
 ): ConfirmationCriterion[] => {
@@ -78,38 +146,7 @@ const groupCriteria = (
     ...groups.preferred,
     ...groups.flexible,
   ].map((criterion) => structuredClone(criterion));
-
-  const propertyTypeCriteria = criteria.filter(
-    (criterion) =>
-      criterion.label === "Тип объекта" ||
-      criterion.field === "property.allowed_property_types",
-  );
-  if (propertyTypeCriteria.length === 0) return criteria;
-
-  const combined = propertyTypeCriteria[0];
-  if (!combined) return criteria;
-  combined.label = getCriterionPresentation(
-    "property.allowed_property_types",
-  ).label;
-  combined.value = [
-    ...new Set(
-      propertyTypeCriteria.flatMap((criterion) =>
-        Array.isArray(criterion.value)
-          ? criterion.value.map(String)
-          : [String(criterion.value)],
-      ),
-    ),
-  ];
-  combined.source_text = propertyTypeCriteria
-    .map((criterion) => criterion.source_text)
-    .filter((value): value is string => value !== null)
-    .join(" / ");
-  return [
-    ...criteria.filter(
-      (criterion) => !propertyTypeCriteria.includes(criterion),
-    ),
-    combined,
-  ];
+  return combineSetValuedCriteria(criteria);
 };
 
 const listForPriority = (
@@ -512,7 +549,25 @@ export const validateConfirmationSession = (
       }
     }
     if (presentation.editor === "text" || presentation.editor === "date") {
-      if (
+      // A "text" editor whose operator is set-valued (in/not_in/one_of) is
+      // a free-text multi-select — market type, cities, districts — so its
+      // confirmed value is the array `combineSetValuedCriteria` produces,
+      // not a single string. Only a genuinely scalar text field (a plain
+      // "eq"/"custom" criterion) is validated as one.
+      if (SET_VALUED_OPERATORS.has(presentation.operator)) {
+        if (
+          !Array.isArray(criterion.value) ||
+          criterion.value.length === 0 ||
+          !criterion.value.every(
+            (value) => typeof value === "string" && value.trim() !== "",
+          )
+        ) {
+          errors.push({
+            field: criterion.field,
+            message: `${presentation.label}: укажите хотя бы одно значение.`,
+          });
+        }
+      } else if (
         typeof criterion.value !== "string" ||
         criterion.value.trim() === ""
       ) {
