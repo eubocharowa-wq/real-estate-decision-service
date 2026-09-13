@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 
 import * as expertRequestRoute from "../../app/api/expert-requests/route";
 import {
@@ -9,6 +9,7 @@ import {
   evaluateExpertContextFreshness,
   expertResultSchema,
   expertRequestTransitions,
+  resetExpertRequestRepositoryForTests,
   routeExpertRequest,
   type ExpertRequestType,
 } from "../../src/expert";
@@ -486,6 +487,22 @@ describe("TASK-016 structured completion pipeline", async () => {
 });
 
 describe("TASK-016 document and onsite application boundaries", async () => {
+  // This suite exercises the HTTP boundary, not storage. The route's
+  // repository follows DATABASE_URL, so it is unset here to keep these
+  // tests deterministic on the in-memory repository whether or not a
+  // database is configured — the same isolation used in
+  // tests/expert/api.integration.test.ts and by buyer-journey's own HTTP
+  // boundary suite.
+  beforeAll(() => {
+    vi.stubEnv("DATABASE_URL", "");
+    resetExpertRequestRepositoryForTests();
+  });
+
+  afterAll(() => {
+    vi.unstubAllEnvs();
+    resetExpertRequestRepositoryForTests();
+  });
+
   const baseSubmission = {
     propertyIds: [boundaryProperty.identity.property_id],
     comparisonRef: null,

@@ -3,16 +3,21 @@ import { z } from "zod";
 import { entityIdSchema, userRequestSchema } from "../../../src/domain";
 import {
   ExpertRequestService,
-  InMemoryExpertRequestRepository,
   canAccessSessionDocumentReference,
-  createSequentialExpertIdFactory,
+  createRandomExpertIdFactory,
   expertQuestionCategorySchema,
   expertRequestTypeSchema,
   expertTriggerTypeSchema,
+  getExpertRequestRepository,
   requestOwnerSchema,
 } from "../../../src/expert";
 import { loadPilotDataset } from "../../../src/pilot-dataset";
-import { buildPilotPropertyDetailInput } from "../../../src/property-detail";
+import { loadCuratedPilotDataset } from "../../../src/pilot-hardening/curated-dataset";
+import { resolvePilotRuntimeConfig } from "../../../src/pilot-hardening/config";
+import {
+  buildCuratedPropertyDetailInput,
+  buildPilotPropertyDetailInput,
+} from "../../../src/property-detail";
 
 export const runtime = "nodejs";
 
@@ -76,35 +81,104 @@ const apiRequestSchema = z.strictObject({
   userRequest: userRequestSchema,
 });
 
+// The synthetic fixture dataset — demo mode only. See resolveExpertPropertyIds.
 const dataset = loadPilotDataset();
-const propertyIds = new Set(
+const syntheticPropertyIds = new Set(
   dataset.properties.map((property) => property.identity.property_id),
 );
-const offerIds = new Set(dataset.offers.map((offer) => offer.offer_id));
-const scenarioIds = new Set(
+const syntheticOfferIds = new Set(
+  dataset.offers.map((offer) => offer.offer_id),
+);
+const syntheticScenarioIds = new Set(
   dataset.purchaseScenarios.map((scenario) => scenario.scenario_id),
 );
 
-const repository = new InMemoryExpertRequestRepository();
-const service = new ExpertRequestService(
-  repository,
-  {
-    canAccess: async ({ owner, entityType, entityId }) => {
-      if (entityType === "property") return propertyIds.has(entityId);
-      if (entityType === "offer") return offerIds.has(entityId);
-      if (entityType === "purchase_scenario") return scenarioIds.has(entityId);
-      if (entityType === "document")
-        return canAccessSessionDocumentReference({
-          owner,
-          documentRef: entityId,
-        });
-      return true;
+/**
+ * Which dataset this route resolves properties from follows
+ * REDS_APPLICATION_MODE the same way runMatchingForConfirmedRequest already
+ * does for the buyer-journey runtime: demo mode stays on the synthetic
+ * fixture dataset, pilot/production resolve the manually curated real
+ * ЕИСЖС objects instead. The two are mutually exclusive, not merged — a
+ * restarted process must not suddenly show synthetic fixtures as real
+ * pilot objects, or vice versa.
+ */
+const isDemoMode = (): boolean => resolvePilotRuntimeConfig().mode === "demo";
+
+const resolveExpertPropertyIds = (): {
+  readonly properties: ReadonlySet<string>;
+  readonly offers: ReadonlySet<string>;
+  readonly scenarios: ReadonlySet<string>;
+} =>
+  isDemoMode()
+    ? {
+        properties: syntheticPropertyIds,
+        offers: syntheticOfferIds,
+        scenarios: syntheticScenarioIds,
+      }
+    : (() => {
+        const candidates = loadCuratedPilotDataset().candidates;
+        return {
+          properties: new Set(
+            candidates.map(
+              (item) => item.candidate.property.identity.property_id,
+            ),
+          ),
+          offers: new Set(
+            candidates.map((item) => item.candidate.offer.offer_id),
+          ),
+          // Curated candidates carry no purchase scenarios.
+          scenarios: new Set<string>(),
+        };
+      })();
+
+const resolveExpertPropertyDetail = (
+  propertyId: string,
+  userRequest: Parameters<
+    typeof buildPilotPropertyDetailInput
+  >[0]["userRequest"],
+) =>
+  isDemoMode()
+    ? buildPilotPropertyDetailInput({ propertyId, userRequest })
+    : buildCuratedPropertyDetailInput({ propertyId, userRequest });
+
+/**
+ * createSequentialExpertIdFactory restarts its counter at 1 in every new
+ * process — fine for the in-memory repository it was designed for, since
+ * that state never outlives the process either. Once the repository is
+ * durably backed by PostgreSQL (getExpertRequestRepository, see
+ * src/expert/web-runtime.ts), a restarted process would immediately collide
+ * with request_ids a previous process already persisted. IDs from this route
+ * must stay unique across restarts, so they use createRandomExpertIdFactory,
+ * not the sequential one.
+ */
+const createWebExpertId = createRandomExpertIdFactory("web_expert");
+
+// Built fresh per request, the same way the buyer-journey route resolves
+// getBuyerJourneyRuntime() per request: the repository behind it is pinned to
+// globalThis, but the service wrapping it must not cache a repository chosen
+// before resetExpertRequestRepositoryForTests() (or a real env change) ran.
+const buildExpertRequestService = (): ExpertRequestService =>
+  new ExpertRequestService(
+    getExpertRequestRepository(),
+    {
+      canAccess: async ({ owner, entityType, entityId }) => {
+        const ids = resolveExpertPropertyIds();
+        if (entityType === "property") return ids.properties.has(entityId);
+        if (entityType === "offer") return ids.offers.has(entityId);
+        if (entityType === "purchase_scenario")
+          return ids.scenarios.has(entityId);
+        if (entityType === "document")
+          return canAccessSessionDocumentReference({
+            owner,
+            documentRef: entityId,
+          });
+        return true;
+      },
     },
-  },
-  { onAssigned: () => undefined },
-  createSequentialExpertIdFactory("web_expert"),
-  () => new Date().toISOString(),
-);
+    { onAssigned: () => undefined },
+    createWebExpertId,
+    () => new Date().toISOString(),
+  );
 
 const priority = (
   value: "critical" | "high" | "medium" | "low",
@@ -115,6 +189,7 @@ const failure = (status: number, error: string, message: string): Response =>
   Response.json({ error, message }, { status });
 
 export async function POST(request: Request): Promise<Response> {
+  const service = buildExpertRequestService();
   let raw: unknown;
   try {
     raw = await request.json();
@@ -141,7 +216,7 @@ export async function POST(request: Request): Promise<Response> {
 
   const details = [];
   for (const propertyId of submission.propertyIds) {
-    const adapted = buildPilotPropertyDetailInput({ propertyId, userRequest });
+    const adapted = resolveExpertPropertyDetail(propertyId, userRequest);
     if (!adapted.success)
       return failure(404, adapted.error.code, adapted.error.message);
     if (!adapted.input.matching || !adapted.input.dataQuality)
@@ -164,9 +239,14 @@ export async function POST(request: Request): Promise<Response> {
     ...selectedOffers.map((offer) => offer.offer_id),
     ...selectedScenarios.map((scenario) => scenario.scenario_id),
   ]);
-  const conflicts = dataset.sourceConflicts.filter((conflict) =>
-    relevantEntityIds.has(conflict.entity_id),
-  );
+  // Curated real candidates carry no source conflicts of their own (single
+  // manually entered source per object); only the synthetic demo dataset
+  // models conflicting sources.
+  const conflicts = isDemoMode()
+    ? dataset.sourceConflicts.filter((conflict) =>
+        relevantEntityIds.has(conflict.entity_id),
+      )
+    : [];
   const sourceEvidenceRefs = [
     ...new Set(
       details.flatMap((detail) =>

@@ -1,3 +1,5 @@
+import { randomUUID } from "node:crypto";
+
 import {
   EXPERT_REQUEST_SCHEMA_VERSION,
   expertAuditEventSchema,
@@ -33,6 +35,19 @@ export const createSequentialExpertIdFactory = (
   let sequence = 0;
   return (kind) => `${namespace}_${kind}_${++sequence}`;
 };
+
+/**
+ * Sequential IDs are unique only within one process's lifetime — fine for a
+ * repository that is wiped on every restart, but not once the repository is
+ * durably backed by PostgreSQL: a freshly restarted process would restart
+ * the counter at 1 and collide with IDs an earlier process already
+ * persisted. Use this instead whenever a factory's IDs might outlive the
+ * process that created them.
+ */
+export const createRandomExpertIdFactory =
+  (namespace = "expert"): ExpertIdFactory =>
+  (kind) =>
+    `${namespace}_${kind}_${randomUUID()}`;
 
 export interface ExpertContextAccessPolicy {
   canAccess(input: {

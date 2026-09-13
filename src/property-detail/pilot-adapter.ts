@@ -1,6 +1,7 @@
 import type { UserRequest } from "../domain";
 import { calculateDataQuality, matchProperty } from "../matching";
 import { loadPilotDataset } from "../pilot-dataset";
+import { loadCuratedPilotDataset } from "../pilot-hardening/curated-dataset";
 import type {
   PilotPropertyDetailAdapterOutcome,
   PropertyDetailInput,
@@ -193,6 +194,102 @@ export const buildPilotPropertyDetailInput = (
       generatedAt: dataset.metadata.created_at,
       partial: diagnostics.length > 0,
       contextNotice: request.contextNotice ?? null,
+    },
+    diagnostics,
+  };
+};
+
+/**
+ * The curated-pilot counterpart to buildPilotPropertyDetailInput: same
+ * server-only boundary and the same matching/data-quality engines, but the
+ * candidate is one of the manually curated real ЕИСЖС objects, not a row
+ * from the synthetic fixture dataset. Every curated candidate carries
+ * exactly one Offer and no purchase scenarios or financing programs, so this
+ * resolver is simpler than the synthetic one rather than a parallel copy of
+ * it — see EISJS_EXPLICIT_UNKNOWN_FIELDS in pilot-hardening/eisjs-candidate.
+ */
+export const buildCuratedPropertyDetailInput = (
+  request: PilotPropertyDetailRequest,
+  curatedPilotDirectory?: string,
+): PilotPropertyDetailAdapterOutcome => {
+  const dataset = loadCuratedPilotDataset(curatedPilotDirectory);
+  const found = dataset.candidates.find(
+    (item) =>
+      item.candidate.property.identity.property_id === request.propertyId,
+  );
+  if (!found) return failure("PROPERTY_NOT_FOUND", "Объект не найден.");
+  const { property, offer, sources, evidence } = found.candidate;
+  if (request.offerId && request.offerId !== offer.offer_id)
+    return failure(
+      "OFFER_NOT_FOUND",
+      "Предложение не найдено для этого объекта.",
+    );
+  if (request.scenarioId)
+    return failure(
+      "SCENARIO_NOT_FOUND",
+      "Сценарий не найден для этого объекта.",
+    );
+
+  let matching: PropertyDetailInput["matching"] = null;
+  let dataQuality: PropertyDetailInput["dataQuality"] = null;
+  const diagnostics: string[] = [];
+  const now = new Date().toISOString();
+
+  if (request.userRequest) {
+    const matched = matchProperty({
+      userRequest: request.userRequest,
+      property,
+      offers: [offer],
+      purchaseScenarios: [],
+      financingEligibility: [],
+      financingPrograms: [],
+      fieldEvidence: evidence,
+      sourceConflicts: [],
+      currentTime: now,
+    });
+    if (!matched.success)
+      return failure(
+        "MATCHING_UNAVAILABLE",
+        "Соответствие этому запросу ещё не рассчитано.",
+      );
+    matching = matched.result;
+    const quality = calculateDataQuality({
+      userRequest: request.userRequest,
+      matchResult: matched.result.match_result,
+      fieldEvidence: evidence,
+      sourceConflicts: [],
+      sources,
+      selectedOffer: offer,
+      selectedPurchaseScenario: null,
+      selectedPromotion: null,
+      currentTime: now,
+    });
+    if (quality.success) dataQuality = quality.result;
+    else diagnostics.push(`${quality.error.code}: ${quality.error.message}`);
+  }
+
+  return {
+    success: true,
+    input: {
+      property,
+      offers: [offer],
+      selectedOffer: offer,
+      purchaseScenarios: [],
+      selectedPurchaseScenario: null,
+      selectedFinancingProgram: null,
+      selectedFinancingOffer: null,
+      selectedPromotion: null,
+      userRequest: request.userRequest ?? null,
+      matching,
+      dataQuality,
+      sources,
+      fieldEvidence: evidence,
+      sourceConflicts: [],
+      generatedAt: now,
+      partial: diagnostics.length > 0,
+      contextNotice:
+        request.contextNotice ??
+        "Реальный объект, внесённый вручную из проектной декларации: цена, доступность и условия финансирования в источнике не публикуются.",
     },
     diagnostics,
   };

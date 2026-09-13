@@ -1,6 +1,7 @@
-import { describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 
 import { POST } from "../../app/api/expert-requests/route";
+import { resetExpertRequestRepositoryForTests } from "../../src/expert";
 import { loadPilotDataset } from "../../src/pilot-dataset";
 
 const dataset = loadPilotDataset();
@@ -30,6 +31,24 @@ const body = {
 };
 
 describe("TASK-016 user UI to application service integration", () => {
+  // This suite exercises the HTTP boundary, not storage. The route's
+  // repository follows DATABASE_URL, so it is unset here to keep these
+  // tests on the in-memory repository whether or not a database is
+  // configured — the same isolation buyer-journey's own HTTP boundary
+  // suite uses for the same reason. Reset once, in beforeAll rather than
+  // beforeEach: the second test deliberately relies on the draft the first
+  // test left behind in that same in-memory repository to prove dedup
+  // against an existing request.
+  beforeAll(() => {
+    vi.stubEnv("DATABASE_URL", "");
+    resetExpertRequestRepositoryForTests();
+  });
+
+  afterAll(() => {
+    vi.unstubAllEnvs();
+    resetExpertRequestRepositoryForTests();
+  });
+
   it("creates, validates, routes and queues a contextual request offline", async () => {
     const response = await POST(
       new Request("http://localhost/api/expert-requests", {

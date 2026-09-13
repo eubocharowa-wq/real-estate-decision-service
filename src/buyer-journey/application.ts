@@ -4,8 +4,10 @@ import {
   ExpertCompletionService,
   ExpertRequestService,
   InMemoryExpertRequestRepository,
-  createSequentialExpertIdFactory,
+  canAccessSessionDocumentReference,
+  createRandomExpertIdFactory,
   type CompleteExpertRequestOutcome,
+  type ExpertIdFactory,
   type ExpertQuestionCategory,
   type ExpertRequest,
   type ExpertRequestRepository,
@@ -46,6 +48,7 @@ import {
   buildJourneyDiagnosticReport,
   buildCoverageSummary,
   isFeatureOperational,
+  loadCuratedPilotDataset,
   measurePilotOperationAsync,
   validatePilotCandidate,
   type PilotPerformanceRecorder,
@@ -112,6 +115,14 @@ export interface BuyerJourneyApplicationDependencies {
   readonly performanceRecorder?: PilotPerformanceRecorder;
   readonly feedbackRepository?: FeedbackRepository;
   readonly errorRepository?: ApplicationErrorRepository;
+  /**
+   * IDs for the expert requests this application creates internally (see
+   * expertCreateId below). Defaults to createRandomExpertIdFactory so IDs
+   * stay unique across process restarts once the expert repository is
+   * durably backed by PostgreSQL; tests that want deterministic IDs can
+   * inject createSequentialExpertIdFactory instead.
+   */
+  readonly expertCreateId?: ExpertIdFactory;
   /**
    * Overrides where curated pilot objects are read from. Left undefined in
    * production so `loadCuratedPilotDataset` falls back to the real
@@ -231,10 +242,12 @@ export class BuyerJourneyApplication {
   private readonly pilotRuntimeConfig: PilotRuntimeConfig;
   private readonly feedbackService: JourneyFeedbackService;
   private readonly curatedPilotDirectory: string | undefined;
-  private readonly expertCreateId =
-    createSequentialExpertIdFactory("journey_expert");
+  private readonly expertCreateId: ExpertIdFactory;
 
   constructor(dependencies: BuyerJourneyApplicationDependencies = {}) {
+    this.expertCreateId =
+      dependencies.expertCreateId ??
+      createRandomExpertIdFactory("journey_expert");
     this.repository =
       dependencies.repository ?? new InMemoryBuyerJourneyRepository();
     this.expertRepository =
@@ -267,7 +280,11 @@ export class BuyerJourneyApplication {
       this.expertRepository,
       {
         canAccess: async ({ owner, entityType, entityId }) => {
-          if (entityType === "document") return false;
+          if (entityType === "document")
+            return canAccessSessionDocumentReference({
+              owner,
+              documentRef: entityId,
+            });
           const journeys = await this.listJourneysForSession(owner.owner_id);
           if (entityType === "user_request")
             return journeys.some(
@@ -284,6 +301,16 @@ export class BuyerJourneyApplication {
             ),
           );
           const imported = importedByJourney.flat();
+          // Curated real objects are public pilot data, the same for every
+          // session — like the synthetic dataset, not like a session's own
+          // imported candidates — so no per-session scoping is needed here.
+          // Gated by mode the same way runMatchingForConfirmedRequest gates
+          // includeCuratedDataset: demo mode must never grant expert-context
+          // access to a real curated object just because it exists on disk.
+          const curated =
+            this.pilotRuntimeConfig.mode === "demo"
+              ? []
+              : loadCuratedPilotDataset(this.curatedPilotDirectory).candidates;
           if (entityType === "property")
             return (
               dataset.properties.some(
@@ -292,6 +319,10 @@ export class BuyerJourneyApplication {
               imported.some(
                 (candidate) =>
                   candidate.propertyCandidate.identity.property_id === entityId,
+              ) ||
+              curated.some(
+                (item) =>
+                  item.candidate.property.identity.property_id === entityId,
               )
             );
           if (entityType === "offer")
@@ -299,7 +330,8 @@ export class BuyerJourneyApplication {
               dataset.offers.some((offer) => offer.offer_id === entityId) ||
               imported.some(
                 (candidate) => candidate.offerCandidate.offer_id === entityId,
-              )
+              ) ||
+              curated.some((item) => item.candidate.offer.offer_id === entityId)
             );
           return dataset.purchaseScenarios.some(
             (scenario) => scenario.scenario_id === entityId,

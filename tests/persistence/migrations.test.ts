@@ -38,6 +38,7 @@ describe.skipIf(!isDatabaseAvailable)("schema migrations", () => {
     expect(executed.map((migration) => migration.version)).toEqual([
       "0001",
       "0002",
+      "0003",
     ]);
     const tables = await listTables(database);
     for (const table of PHASE_ONE_TABLES) expect(tables).toContain(table);
@@ -47,10 +48,15 @@ describe.skipIf(!isDatabaseAvailable)("schema migrations", () => {
   it("records what it applied and reports status", async () => {
     expect(
       (await listApplied(database.pool)).map((row) => row.version),
-    ).toEqual(["0001", "0002"]);
+    ).toEqual(["0001", "0002", "0003"]);
     expect(await migrationStatus(database.pool)).toEqual([
       { version: "0001", name: "user_state", applied: true },
       { version: "0002", name: "ingestion_source_mode", applied: true },
+      {
+        version: "0003",
+        name: "matching_bundle_dataset_type",
+        applied: true,
+      },
     ]);
   });
 
@@ -73,10 +79,11 @@ describe.skipIf(!isDatabaseAvailable)("schema migrations", () => {
   });
 
   it("rolls back cleanly and can be re-applied", async () => {
-    // Newest first, so the constraint fix comes off before the tables it
+    // Newest first, so each constraint fix comes off before the tables it
     // altered.
-    const reverted = await migrateDown(database.pool, { steps: 2 });
+    const reverted = await migrateDown(database.pool, { steps: 3 });
     expect(reverted.map((migration) => migration.version)).toEqual([
+      "0003",
       "0002",
       "0001",
     ]);
@@ -93,6 +100,7 @@ describe.skipIf(!isDatabaseAvailable)("schema migrations", () => {
     expect(reapplied.map((migration) => migration.version)).toEqual([
       "0001",
       "0002",
+      "0003",
     ]);
     expect(await listTables(database)).toContain("buyer_journeys");
   });
