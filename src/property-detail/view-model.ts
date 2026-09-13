@@ -18,6 +18,7 @@ import {
   formatCriterionExplanation,
   formatFieldUnknown,
 } from "../shortlist/presentation-registry";
+import { EISJS_HANDOVER_QUARTER_FIELD } from "../pilot-hardening/eisjs-candidate";
 import { PROPERTY_DETAIL_POLICY_V1 } from "./policy";
 import {
   AVAILABILITY_LABELS,
@@ -54,7 +55,10 @@ interface FactDefinition {
   readonly id: string;
   readonly label: string;
   readonly fields: readonly string[];
-  readonly value: (property: Property) => unknown;
+  readonly value: (
+    property: Property,
+    evidence: readonly FieldEvidence[],
+  ) => unknown;
   readonly format: (value: unknown, property: Property) => string;
   readonly notApplicable?: (property: Property) => boolean;
   readonly dynamic?: boolean;
@@ -251,10 +255,25 @@ const TIMELINE_FACTS: readonly FactDefinition[] = [
   {
     id: "handover",
     label: "Передача объекта",
-    fields: ["timeline.handover_date", "handover_date"],
-    value: (property) => property.timeline.handover_date,
-    format: (value) =>
-      typeof value === "string" ? formatDate(value) : "Нет данных",
+    // "timeline.handover_quarter" is not a Property field — a quarter is a
+    // developer commitment, never a calendar date, so it only ever exists as
+    // FieldEvidence (see EISJS_HANDOVER_QUARTER_FIELD in eisjs-candidate.ts).
+    // It is surfaced here, alongside handover_date, without ever being
+    // turned into one.
+    fields: [
+      "timeline.handover_date",
+      "handover_date",
+      EISJS_HANDOVER_QUARTER_FIELD,
+    ],
+    value: (property, evidence) =>
+      property.timeline.handover_date ??
+      evidence.find((item) => item.field === EISJS_HANDOVER_QUARTER_FIELD)
+        ?.raw_value ??
+      null,
+    format: (value) => {
+      if (typeof value !== "string") return "Нет данных";
+      return /^\d{4}-\d{2}-\d{2}/.test(value) ? formatDate(value) : value;
+    },
     dynamic: true,
   },
   {
@@ -291,13 +310,13 @@ const buildFacts = (
     .map((definition, order) => {
       const notApplicable = definition.notApplicable?.(input.property) ?? false;
       if (notApplicable) return null;
-      const value = definition.value(input.property);
-      const semantics = factSemantics(value, false);
       const evidence = input.fieldEvidence.filter(
         (item) =>
           item.entity_id === propertyId &&
           definition.fields.includes(item.field),
       );
+      const value = definition.value(input.property, evidence);
+      const semantics = factSemantics(value, false);
       const selectedEvidence = latestEvidence(evidence);
       const conflict = relevantConflict(
         input.sourceConflicts,

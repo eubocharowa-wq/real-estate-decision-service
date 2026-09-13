@@ -79,6 +79,21 @@ export const CRITERION_FIELD_PRESENTATION: Readonly<Record<string, string>> =
       "время до нужного места",
     "location.address.city": "город",
     city: "город",
+    "budget.purchase_price.maximum": "максимальная цена",
+    "property.allowed_property_types": "тип недвижимости",
+    allowed_property_types: "тип недвижимости",
+    "property.allowed_market_types": "рынок недвижимости",
+    allowed_market_types: "рынок недвижимости",
+    "location.cities": "город",
+    cities: "город",
+    "property.rooms": "количество комнат",
+    rooms: "количество комнат",
+    "property.rooms_min": "минимум комнат",
+    rooms_min: "минимум комнат",
+    "property.rooms_max": "максимум комнат",
+    rooms_max: "максимум комнат",
+    "offer.availability": "доступность предложения",
+    availability: "доступность предложения",
   });
 
 export const FINANCING_PROGRAM_PRESENTATION = Object.freeze({
