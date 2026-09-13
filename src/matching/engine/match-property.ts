@@ -1,5 +1,6 @@
 import {
   SCHEMA_VERSION,
+  criterionEvaluationResultSchema,
   fieldEvidenceSchema,
   financingProgramSchema,
   isoDateTimeSchema,
@@ -18,7 +19,14 @@ import {
   type PropertyFinancingEligibility,
   type PurchaseScenario,
 } from "../../domain";
-import { evaluateCriterion, resolveEvaluator } from "../criteria";
+import {
+  CRITERIA_EVALUATOR_VERSION,
+  CRITERIA_REGISTRY_VERSION,
+  CRITERIA_SOFT_CURVE_CONFIG,
+  evaluateCriterion,
+  resolveEvaluator,
+  type CriterionEvaluationError,
+} from "../criteria";
 import { MATCHING_V1_CONFIG } from "../config";
 import { aggregateCriteria } from "./aggregation";
 import {
@@ -210,6 +218,11 @@ const allCriteria = (input: ValidatedInput): readonly Criterion[] =>
     ...input.userRequest.property_features,
   ].sort((left, right) => left.criterion_id.localeCompare(right.criterion_id));
 
+interface UnsupportedCriterion {
+  readonly criterion: Criterion;
+  readonly error: CriterionEvaluationError;
+}
+
 const validateCriteria = (
   criteria: readonly Criterion[],
 ):
@@ -219,11 +232,13 @@ const validateCriteria = (
         readonly requiresOffer: boolean;
         readonly requiresScenario: boolean;
       };
+      readonly unsupported: readonly UnsupportedCriterion[];
     }
   | MatchPropertyOutcome => {
   const ids = new Set<string>();
   let requiresOffer = false;
   let requiresScenario = false;
+  const unsupported: UnsupportedCriterion[] = [];
   for (const criterion of criteria) {
     if (ids.has(criterion.criterion_id)) {
       return failure(
@@ -236,20 +251,87 @@ const validateCriteria = (
     ids.add(criterion.criterion_id);
     const resolved = resolveEvaluator(criterion);
     if (!resolved.success) {
-      return failure(
-        "UNSUPPORTED_CRITERION",
-        resolved.error.message,
-        null,
-        criterion.criterion_id,
+      // A criterion that does not even parse as a domain Criterion is a
+      // deeper data-integrity bug (something upstream built a broken
+      // object) and still fails the whole property, as before.
+      if (resolved.error.code === "MALFORMED_CRITERION") {
+        return failure(
+          "UNSUPPORTED_CRITERION",
+          resolved.error.message,
+          null,
+          criterion.criterion_id,
+        );
+      }
+      // Everything else here (UNSUPPORTED_CRITERION, UNSUPPORTED_OPERATOR,
+      // INVALID_UNIT, INVALID_TARGET) is a syntactically valid criterion
+      // this registry version cannot evaluate — exactly the class of bug a
+      // parser/criteria-registry naming drift produces (see the three
+      // fixed in the previous commit). It must not cost the whole
+      // property: it degrades to a hard unknown for this one criterion in
+      // evaluatePath, and is logged here so the drift itself is visible to
+      // us, not just absorbed silently into "eligible_with_unknowns".
+      console.warn(
+        `[matching] Criterion ${criterion.criterion_id} (field: ${criterion.field}, operator: ${criterion.operator}) is unsupported by the criteria registry — ${resolved.error.code}: ${resolved.error.message}. Treating it as a critical unknown for this property; this needs a registry alias or evaluator fix.`,
       );
+      unsupported.push({ criterion, error: resolved.error });
+      continue;
     }
     requiresOffer ||= resolved.definition.actualEntity === "offer";
     requiresScenario ||=
       resolved.definition.actualEntity === "purchase_scenario" ||
       resolved.definition.actualEntity === "financing_eligibility";
   }
-  return { success: true, requirements: { requiresOffer, requiresScenario } };
+  return {
+    success: true,
+    requirements: { requiresOffer, requiresScenario },
+    unsupported,
+  };
 };
+
+/**
+ * The result an unsupported criterion gets instead of a real evaluation.
+ *
+ * Shaped exactly like a normal "unknown" CriterionEvaluationResult so every
+ * downstream consumer — hardUnknownFor, the soft critical-unknown filter,
+ * aggregateCriteria, the shortlist explanation — treats it the same way it
+ * already treats a criterion whose data happens to be missing: a hard
+ * criterion becomes a hard unknown (eligible_with_unknowns), a critical soft
+ * criterion is listed as a critical unknown, and either way it is excluded
+ * from the score rather than silently matched or silently dropped.
+ */
+const unsupportedCriterionResult = (
+  criterion: Criterion,
+  error: CriterionEvaluationError,
+): CriterionEvaluationResult =>
+  criterionEvaluationResultSchema.parse({
+    schema_version: SCHEMA_VERSION,
+    criterion_id: criterion.criterion_id,
+    status: "unknown",
+    actual: null,
+    target: criterion.target,
+    fit: null,
+    margin: null,
+    verification_status: "unknown",
+    freshness_status: "unknown",
+    evidence_refs: [],
+    unknown_reason: error.code,
+    explanation_data: {
+      criterion_key: criterion.field,
+      priority: criterion.priority,
+      is_hard:
+        criterion.priority === "must" || criterion.priority === "exclude",
+      is_critical_unknown:
+        criterion.priority === "must" ||
+        criterion.priority === "exclude" ||
+        criterion.critical_if_unknown,
+      is_critical_conflict: false,
+      explanation_code: "CRITERION_NOT_SUPPORTED",
+      explanation_params: { reason: error.message },
+      registry_version: CRITERIA_REGISTRY_VERSION,
+      evaluator_version: CRITERIA_EVALUATOR_VERSION,
+      soft_curve_config_version: CRITERIA_SOFT_CURVE_CONFIG.version,
+    },
+  });
 
 const validateReferences = (
   input: ValidatedInput,
@@ -484,11 +566,23 @@ const evaluatePath = (
     readonly requiresOffer: boolean;
     readonly requiresScenario: boolean;
   },
+  unsupportedCriteria: ReadonlyMap<string, CriterionEvaluationError>,
 ): CandidateEvaluation | MatchPropertyOutcome => {
   const eligibility = eligibilityFor(input, path);
   const financingProgram = programFor(input, path, eligibility);
   const pairs: CriterionResultPair[] = [];
   for (const criterion of criteria) {
+    const unsupportedError = unsupportedCriteria.get(criterion.criterion_id);
+    if (unsupportedError) {
+      // Already known, from validateCriteria, not to resolve against the
+      // current registry — that is independent of this property's data, so
+      // there is nothing evaluateCriterion could add by being asked again.
+      pairs.push({
+        criterion,
+        result: unsupportedCriterionResult(criterion, unsupportedError),
+      });
+      continue;
+    }
     const outcome = evaluateCriterion(criterion, {
       property: input.property,
       offer: path.offer,
@@ -775,6 +869,12 @@ export const matchProperty = (
   const criteria = allCriteria(validated.data);
   const criteriaValidation = validateCriteria(criteria);
   if (!("requirements" in criteriaValidation)) return criteriaValidation;
+  const unsupportedCriteria = new Map(
+    criteriaValidation.unsupported.map((item) => [
+      item.criterion.criterion_id,
+      item.error,
+    ]),
+  );
   const paths = candidatePaths(
     validated.data,
     criteriaValidation.requirements.requiresScenario,
@@ -786,6 +886,7 @@ export const matchProperty = (
       criteria,
       path,
       criteriaValidation.requirements,
+      unsupportedCriteria,
     );
     if (!("pairs" in evaluated)) return evaluated;
     candidates.push(evaluated);

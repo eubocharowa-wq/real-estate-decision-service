@@ -421,3 +421,82 @@ describe("TASK-007 Matching Engine v1", () => {
     });
   });
 });
+
+describe("P1: an unsupported criterion degrades instead of dropping the property", () => {
+  // A field the criteria registry has never heard of and never will — a
+  // stand-in for exactly the kind of parser/registry naming drift the three
+  // previously fixed criteria (market type, cities, rooms) turned out to be.
+  const madeUpField = criterion("criterion_made_up_field", {
+    field: "property.definitely_not_a_real_field",
+    operator: "eq",
+    target: "whatever",
+    priority: "must",
+    critical_if_unknown: true,
+  });
+
+  it("keeps the property in the result, with the unknown field as a critical unknown", () => {
+    const outcome = matchProperty(
+      input(
+        request("request_unsupported_field", [budgetCriterion(), madeUpField]),
+      ),
+    );
+
+    expect(outcome.success).toBe(true);
+    if (!outcome.success) return;
+    expect(outcome.result.match_result.eligibility_status).toBe(
+      "eligible_with_unknowns",
+    );
+    expect(outcome.result.match_result.unknown_critical).toContain(
+      "criterion_made_up_field",
+    );
+    const madeUpResult = outcome.result.match_result.criteria_results.find(
+      (result) => result.criterion_id === "criterion_made_up_field",
+    );
+    expect(madeUpResult).toMatchObject({
+      status: "unknown",
+      verification_status: "unknown",
+      unknown_reason: "UNSUPPORTED_CRITERION",
+    });
+    // The real criterion is unaffected: it still evaluates normally
+    // alongside the one the registry cannot resolve.
+    const budgetResult = outcome.result.match_result.criteria_results.find(
+      (result) => result.criterion_id === "criterion_budget",
+    );
+    expect(budgetResult?.status).not.toBe("unknown");
+  });
+
+  it("does not force eligible_with_unknowns for a non-critical soft unknown field", () => {
+    const softUnsupported = criterion("criterion_soft_unsupported", {
+      field: "property.also_not_a_real_field",
+      operator: "eq",
+      target: "whatever",
+      priority: "preferred",
+      critical_if_unknown: false,
+    });
+    const outcome = matchProperty(
+      input(request("request_soft_unsupported", [softUnsupported])),
+    );
+
+    expect(outcome.success).toBe(true);
+    if (!outcome.success) return;
+    // Same as any other soft, non-critical unknown: absorbed silently,
+    // excluded from the score, not held against eligibility.
+    expect(outcome.result.match_result.eligibility_status).toBe("eligible");
+    expect(outcome.result.match_result.unknown_critical).toEqual([]);
+  });
+
+  it("still fails the whole match for a criterion that is not even valid, not merely unsupported", () => {
+    const outcome = matchProperty(
+      input(
+        request("request_duplicate_ids", [
+          budgetCriterion(),
+          budgetCriterion(),
+        ]),
+      ),
+    );
+
+    expect(outcome).toMatchObject({ success: false });
+    if (outcome.success) return;
+    expect(outcome.error.code).toBe("DUPLICATE_CRITERION_ID");
+  });
+});
