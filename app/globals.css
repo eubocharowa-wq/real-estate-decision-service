@@ -702,6 +702,7 @@ h3 {
 
 .button-primary {
   background: var(--forest);
+  font-weight: 750;
   color: var(--forest-contrast);
 }
 
@@ -711,13 +712,24 @@ h3 {
 
 .button-secondary {
   border-color: var(--forest);
-  background: transparent;
+  background: var(--forest-tint);
+  font-weight: 700;
   color: var(--forest);
 }
 
+.button-secondary:hover:not(:disabled) {
+  background: var(--sage);
+}
+
 .button-ghost {
-  border-color: var(--line);
+  border-color: transparent;
   background: transparent;
+  font-weight: 650;
+  color: var(--muted);
+}
+
+.button-ghost:hover:not(:disabled) {
+  border-color: var(--line);
   color: var(--ink);
 }
 
@@ -3057,6 +3069,7 @@ fieldset {
 }
 
 .site-header {
+  border-top: 2px solid var(--brand-gold);
   border-bottom: 1px solid var(--line);
   background: var(--surface);
 }
@@ -3137,12 +3150,24 @@ fieldset {
 }
 
 .site-footer-column h2 {
-  margin-bottom: 0.7rem;
+  position: relative;
+  margin-bottom: 1rem;
+  padding-bottom: 0.65rem;
   color: var(--muted);
   font-size: 0.73rem;
   font-weight: 800;
   letter-spacing: 0.14em;
   text-transform: uppercase;
+}
+
+.site-footer-column h2::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 1.75rem;
+  height: 2px;
+  background: var(--brand-gold);
 }
 
 .site-footer-column ul {
@@ -3179,12 +3204,28 @@ fieldset {
   text-transform: uppercase;
 }
 
+.public-page-hero .public-kicker {
+  position: relative;
+  display: inline-block;
+  padding-bottom: 0.75rem;
+}
+
+.public-page-hero .public-kicker::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 2.5rem;
+  height: 2px;
+  background: var(--brand-gold);
+}
+
 .public-page-hero h1 {
   max-width: 18ch;
   margin-bottom: 1.2rem;
   font-family: var(--font-display), Georgia, "Times New Roman", serif;
   font-size: clamp(2.5rem, 6vw, 5.8rem);
-  font-weight: 500;
+  font-weight: 600;
   letter-spacing: -0.055em;
   line-height: 0.95;
 }
@@ -3193,6 +3234,7 @@ fieldset {
   max-width: 48rem;
   color: var(--muted);
   font-size: clamp(1rem, 2vw, 1.2rem);
+  font-weight: 500;
   line-height: 1.55;
 }
 
@@ -3206,8 +3248,9 @@ fieldset {
 
 .public-cta {
   width: min(100% - 2rem, 76rem);
-  margin: 3rem auto;
-  border-radius: 0.35rem;
+  margin: var(--section-y) auto;
+  border-top: 2px solid var(--brand-gold);
+  border-radius: 0 0 0.35rem 0.35rem;
   background: var(--ink);
   padding: clamp(1.5rem, 4vw, 3.2rem);
   color: var(--surface);
@@ -3217,7 +3260,7 @@ fieldset {
   margin-bottom: 0.6rem;
   font-family: var(--font-display), Georgia, "Times New Roman", serif;
   font-size: 2rem;
-  font-weight: 500;
+  font-weight: 600;
 }
 
 .public-cta p {
@@ -3226,8 +3269,22 @@ fieldset {
 }
 
 .public-cta .button-primary {
+  border-color: var(--amber);
   background: var(--amber-soft);
   color: var(--ink);
+}
+
+/*
+ * .public-cta's own background is `var(--ink)`, which is the page-inverse
+ * tone in each contour — a dark card on the light buyer pages, but a light
+ * card on the dark invest pages (see app/design-system.css). The button
+ * above stays legible on the buyer card for free, but needs its own pairing
+ * here so its text isn't a light gold tint on the invest density's
+ * light card.
+ */
+[data-contour="invest"] .public-cta .button-primary {
+  background: var(--gold-strong);
+  color: var(--paper);
 }
 
 .coverage-note {
@@ -3289,7 +3346,7 @@ fieldset {
   width: min(100% - 2rem, 76rem);
   margin: 0 auto;
   border-bottom: 1px solid var(--line);
-  padding: 2.5rem 0;
+  padding: var(--section-y) 0;
 }
 
 .public-section:last-of-type {
@@ -3297,21 +3354,34 @@ fieldset {
 }
 
 .public-section h2 {
+  position: relative;
   max-width: 24ch;
-  margin-bottom: 1rem;
+  margin-bottom: 1.1rem;
   font-family: var(--font-display), Georgia, "Times New Roman", serif;
   font-size: clamp(1.65rem, 3vw, 2.4rem);
-  font-weight: 500;
+  font-weight: 600;
   letter-spacing: -0.035em;
 }
 
+.public-section h2::before {
+  content: "";
+  position: absolute;
+  top: -1.4rem;
+  left: 0;
+  width: 1.75rem;
+  height: 2px;
+  background: var(--brand-gold);
+}
+
 .public-section h3 {
-  max-width: 32ch;
-  margin: 2rem 0 0.6rem;
-  font-family: var(--font-display), Georgia, "Times New Roman", serif;
-  font-size: clamp(1.15rem, 2vw, 1.45rem);
-  font-weight: 500;
-  letter-spacing: -0.02em;
+  max-width: 40ch;
+  margin: 2.5rem 0 0.75rem;
+  color: var(--muted);
+  font-family: var(--font-interface), Arial, Helvetica, sans-serif;
+  font-size: 0.85rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .public-section p,
@@ -3323,9 +3393,20 @@ fieldset {
 
 .public-list {
   display: grid;
-  gap: 0.55rem;
+  gap: 0;
   margin: 0;
-  padding-left: 1.2rem;
+  padding: 0;
+  list-style: none;
+}
+
+.public-list li {
+  padding: 0.7rem 0;
+  border-top: 1px solid var(--line);
+}
+
+.public-list li:first-child {
+  border-top: 0;
+  padding-top: 0;
 }
 
 .public-steps {
@@ -3348,6 +3429,10 @@ fieldset {
 .public-steps h2 {
   margin-bottom: 0.5rem;
   font-size: clamp(1.25rem, 2.5vw, 1.6rem);
+}
+
+.public-steps h2::before {
+  display: none;
 }
 
 .public-steps p:last-child {
@@ -3389,8 +3474,13 @@ fieldset {
 }
 
 .public-cards h3 {
-  margin-bottom: 0.6rem;
-  font-size: 1.05rem;
+  margin: 0 0 0.6rem;
+  color: var(--ink);
+  font-family: var(--font-display), Georgia, "Times New Roman", serif;
+  font-size: 1.15rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  text-transform: none;
 }
 
 .public-cards p {
