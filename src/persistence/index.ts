@@ -61,6 +61,10 @@ export {
   type RepositorySet,
 } from "./repositories";
 export {
+  getApplicationRepositorySet,
+  resetApplicationRepositorySetForTests,
+} from "./runtime-repositories";
+export {
   createPostgresContext,
   createPostgresRepositories,
   mapDatabaseError,

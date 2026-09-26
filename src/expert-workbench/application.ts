@@ -2,8 +2,8 @@ import {
   expertAuditEventSchema,
   type CompleteExpertRequestOutcome,
   type ExpertAuditEvent,
-  type ExpertCompletionService,
   type ExpertIdFactory,
+  type ExpertResult,
   type ExpertRequest,
   type ExpertRequestRepository,
   type ExpertRequestService,
@@ -58,6 +58,25 @@ const contextLabel = (request: ExpertRequest): string =>
 
 const unique = (values: readonly string[]): string[] => [...new Set(values)];
 
+export interface ExpertCompletionPort {
+  complete(candidate: ExpertResult): Promise<CompleteExpertRequestOutcome>;
+}
+
+export interface ExpertWorkbenchRuntimeHooks {
+  transition?(input: {
+    readonly actor: ExpertWorkbenchActor;
+    readonly request: ExpertRequest;
+    readonly status:
+      "in_progress" | "waiting_for_user" | "waiting_for_external_info";
+    readonly reasonCode: string;
+  }): Promise<ExpertRequest>;
+  resolveRecompute?(input: {
+    readonly request: ExpertRequest;
+    readonly context: ExpertResultReviewInput["contextPackage"];
+    readonly result: ExpertResult | null;
+  }): Promise<RecomputePresentation | null>;
+}
+
 export class ExpertWorkbenchApplicationService {
   private readonly recomputeByRequest = new Map<
     string,
@@ -68,10 +87,11 @@ export class ExpertWorkbenchApplicationService {
     private readonly repository: ExpertRequestRepository,
     private readonly drafts: ExpertResultDraftRepository,
     private readonly requestService: ExpertRequestService,
-    private readonly completionService: ExpertCompletionService,
+    private readonly completionService: ExpertCompletionPort,
     private readonly permissions: ExpertWorkbenchPermissionPolicy,
     private readonly createId: ExpertIdFactory,
     private readonly clock: () => string,
+    private readonly runtimeHooks: ExpertWorkbenchRuntimeHooks = {},
   ) {}
 
   async listActiveQueue(
@@ -328,13 +348,20 @@ export class ExpertWorkbenchApplicationService {
       !this.permissions.canEditExpertRequest(input.actor, request)
     )
       throw new Error("EXPERT_REQUEST_EDIT_DENIED");
-    return this.requestService.transition({
-      requestId: input.requestId,
-      status: input.status,
-      actorType: "expert",
-      actorRef: actorRef(input.actor),
-      reasonCode: input.reasonCode,
-    });
+    return this.runtimeHooks.transition
+      ? this.runtimeHooks.transition({
+          actor: input.actor,
+          request,
+          status: input.status,
+          reasonCode: input.reasonCode,
+        })
+      : this.requestService.transition({
+          requestId: input.requestId,
+          status: input.status,
+          actorType: "expert",
+          actorRef: actorRef(input.actor),
+          reasonCode: input.reasonCode,
+        });
   }
 
   async complete(input: {
@@ -411,12 +438,21 @@ export class ExpertWorkbenchApplicationService {
       actor_ref: actor.actor_ref,
       metadata: { status: request.status },
     });
+    const result = await this.repository.getResult(requestId);
+    const persistedRecompute = this.runtimeHooks.resolveRecompute
+      ? await this.runtimeHooks.resolveRecompute({
+          request,
+          context: contextPackage,
+          result,
+        })
+      : null;
     return validateExpertResultReviewInput({
       request,
       contextPackage,
-      result: await this.repository.getResult(requestId),
+      result,
       auditEvents: await this.repository.listAudit(requestId),
       recompute:
+        persistedRecompute ??
         this.recomputeByRequest.get(requestId) ??
         defaultRecomputePresentation(contextPackage),
     });

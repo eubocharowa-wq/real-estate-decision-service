@@ -5,9 +5,14 @@ import path from "node:path";
 import { afterAll, afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { BuyerJourneyApplication } from "../../src/buyer-journey";
+import { createRealExpertWorkbenchRuntime } from "../../src/expert-workbench";
 import { createPilotRuntimeConfig } from "../../src/pilot-hardening/config";
 import { buildEisjsCandidate } from "../../src/pilot-hardening/eisjs-candidate";
-import { createPostgresRepositories, migrateUp } from "../../src/persistence";
+import {
+  createInMemoryRepositorySet,
+  createPostgresRepositories,
+  migrateUp,
+} from "../../src/persistence";
 import {
   createTestDatabase,
   dropTestDatabase,
@@ -213,8 +218,14 @@ describe("curated pilot expert request — demo/pilot mode isolation", () => {
   });
 
   it("grants expert-context access to the same real curated property in pilot mode", async () => {
+    const repositories = createInMemoryRepositorySet();
     const pilot = new BuyerJourneyApplication({
       clock: () => "2026-08-15T00:00:00.000Z",
+      repository: repositories.repository,
+      expertRepository: repositories.expertRepository,
+      instrumentation: repositories.instrumentation,
+      feedbackRepository: repositories.feedbackRepository,
+      errorRepository: repositories.errorRepository,
       pilotRuntimeConfig: createPilotRuntimeConfig({ mode: "pilot" }),
       curatedPilotDirectory,
     });
@@ -223,7 +234,11 @@ describe("curated pilot expert request — demo/pilot mode isolation", () => {
       rawRequestText: GOLDEN_RAW_REQUEST,
     });
     await confirmParsedJourney(pilot, journey);
-    await pilot.runJourneyMatching(journey.journey_id);
+    const { bundle } = await pilot.runJourneyMatching(journey.journey_id);
+    expect(bundle.dataset_snapshot.dataset_type).toBe("manual_curated_pilot");
+    expect(
+      bundle.entries.every((entry) => entry.origin === "manual_curated"),
+    ).toBe(true);
 
     const created = await pilot.createJourneyExpertRequest(journey.journey_id, {
       requestType: "information_verification",
@@ -236,5 +251,21 @@ describe("curated pilot expert request — demo/pilot mode isolation", () => {
     });
     expect(created.status).toBe("queued");
     expect(created.property_ids).toEqual([curatedPropertyId]);
+    const workbench = createRealExpertWorkbenchRuntime({
+      repositories,
+      buyerApplication: pilot,
+      actor: {
+        actor_type: "expert",
+        actor_ref: "pilot_mortgage_specialist",
+        specialist_type: "mortgage_specialist",
+      },
+    });
+    const queue = await workbench.application.listActiveQueue(workbench.actor);
+    expect(queue.items.map((item) => item.request.request_id)).toEqual([
+      created.request_id,
+    ]);
+    expect(
+      queue.items.some((item) => item.request.request_id.includes("fixture")),
+    ).toBe(false);
   });
 });

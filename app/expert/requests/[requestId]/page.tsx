@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 
 import {
-  EXPERT_FIXTURE_ACTORS,
   ExpertWorkbench,
-  getExpertWorkbenchFixtureRuntime,
+  getRealExpertWorkbenchRuntime,
 } from "../../../../src/expert-workbench";
+
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Рабочая задача эксперта · Основание",
@@ -17,13 +19,17 @@ export default async function ExpertWorkbenchPage({
   readonly params: Promise<{ readonly requestId: string }>;
 }) {
   const { requestId } = await params;
-  const runtime = await getExpertWorkbenchFixtureRuntime();
+  const runtime = getRealExpertWorkbenchRuntime();
+  if (runtime.actor.actor_type !== "expert")
+    return (
+      <main className="expert-empty" role="alert">
+        <h1>Рабочая задача недоступна</h1>
+        <p>Trusted expert actor не настроен для этого окружения.</p>
+      </main>
+    );
   let input;
   try {
-    input = await runtime.application.openWorkbench(
-      EXPERT_FIXTURE_ACTORS.real_estate_expert,
-      requestId,
-    );
+    input = await runtime.application.openWorkbench(runtime.actor, requestId);
   } catch (error) {
     const denied =
       error instanceof Error && error.message.includes("ACCESS_DENIED");
@@ -32,7 +38,7 @@ export default async function ExpertWorkbenchPage({
         <h1>{denied ? "Нет доступа к задаче" : "Задача не найдена"}</h1>
         <p>
           {denied
-            ? "Permission boundary отклонил доступ текущего fixture-специалиста."
+            ? "Permission boundary отклонил доступ текущего специалиста."
             : "Проверьте идентификатор экспертной задачи."}
         </p>
       </main>

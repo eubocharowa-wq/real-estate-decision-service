@@ -299,12 +299,13 @@ Commit
 
 ## Current Status
 
-Application-слой реализует полный buyer journey от свободного запроса до
-обновлённого решения после экспертной проверки. HTTP-runtime
-(`app/api/buyer-journeys`, `app/api/expert-requests`) обслуживает путь
-покупателя и создание экспертного запроса. Экспертный workbench/result UI пока
-остаётся fixture-backed; единый внешний staging golden flow через него ещё
-должен быть доказан и не заявляется как готовый production workflow.
+Application-слой и HTTP-runtime используют одну persistence boundary для
+buyer journey, экспертной заявки, очереди, workbench, structured result и
+affected-only decision recompute. Fixture expert runtime остаётся только у
+явных тестовых/demo fixtures; production/pilot expert routes читают реальные
+сохранённые заявки. Единый внешний staging golden flow всё ещё должен быть
+проверен на managed PostgreSQL deployment и не заявляется как готовый
+production workflow только на основании repository tests.
 
 Persistence переключается конфигурацией, а не флагом в коде: при заданном
 `DATABASE_URL` состояние (buyer journeys, expert requests, matching bundles)

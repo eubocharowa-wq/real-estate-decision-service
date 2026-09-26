@@ -133,9 +133,17 @@ export class ExpertCompletionService {
       !result.disclaimer
     )
       throw new Error("LEGAL_BOUNDARY_DISCLAIMER_REQUIRED");
+    const candidateEvidenceRefs = new Set(
+      result.evidence_candidates.map(
+        (evidence) => evidence.evidence_candidate_id,
+      ),
+    );
+    const existingEvidenceRefs = result.evidence_refs.filter(
+      (reference) => !candidateEvidenceRefs.has(reference),
+    );
     if (
       !(await this.evidenceHook.validateExistingReferences(
-        result.evidence_refs,
+        existingEvidenceRefs,
       ))
     )
       throw new Error("UNKNOWN_EVIDENCE_REFERENCE");

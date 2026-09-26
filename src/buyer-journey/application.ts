@@ -83,7 +83,7 @@ import {
 import { buildDecisionUpdate } from "./decision-update";
 import { BuyerJourneyError } from "./errors";
 import {
-  createSequentialBuyerJourneyIdFactory,
+  createRandomBuyerJourneyIdFactory,
   type BuyerJourneyIdFactory,
 } from "./id";
 import {
@@ -268,7 +268,7 @@ export class BuyerJourneyApplication {
     this.errorRepository =
       dependencies.errorRepository ?? new InMemoryApplicationErrorRepository();
     this.createId =
-      dependencies.createId ?? createSequentialBuyerJourneyIdFactory();
+      dependencies.createId ?? createRandomBuyerJourneyIdFactory();
     this.clock = dependencies.clock ?? (() => new Date().toISOString());
     this.feedbackService = new JourneyFeedbackService(
       this.feedbackRepository,
@@ -1122,11 +1122,21 @@ export class BuyerJourneyApplication {
         "Expert request not found",
         false,
       );
-    await this.expertService.assignExpertRequest({
-      requestId: request.request_id,
-      specialistRef: input.specialistRef,
-      specialistType: request.required_specialist,
-    });
+    if (request.status === "queued")
+      await this.expertService.assignExpertRequest({
+        requestId: request.request_id,
+        specialistRef: input.specialistRef,
+        specialistType: request.required_specialist,
+      });
+    else if (
+      request.status !== "assigned" ||
+      request.assigned_specialist_ref !== input.specialistRef
+    )
+      throw new BuyerJourneyError(
+        "INVALID_TRANSITION",
+        "Expert request is not assigned to this specialist",
+        true,
+      );
     const inProgress = await this.expertService.transition({
       requestId: request.request_id,
       status: "in_progress",

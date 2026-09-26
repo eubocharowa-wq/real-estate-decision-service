@@ -34,9 +34,17 @@ file:
 | `REDS_APPLICATION_MODE` | Exactly `pilot`, set deliberately. Missing means `demo`; it is never promoted automatically. |
 | `REDS_PILOT_COHORT` | `internal_test` for TASK-025. |
 | `NEXT_PUBLIC_SITE_URL` | Exact HTTPS origin of this staging deployment, without a path or trailing slash. |
+| `REDS_EXPERT_ACTOR_REF` | Server-only internal expert identity for the controlled single-operator workbench. Missing means fail closed. |
+| `REDS_EXPERT_SPECIALIST_TYPE` | The actor's allowed specialist type from the checked-in expert contract. Missing/invalid means fail closed. |
 
 Keep every collection/refresh/OpenClaw feature and kill switch at its existing
 policy-controlled safe value. TASK-025 does not change source approvals.
+
+The two expert actor settings select a server-side staging operator and keep
+specialist routing fail-closed. They are not user authentication and do not
+make the workbench suitable for an unrestricted public deployment; a trusted
+access layer remains an external staging/production requirement. Never expose
+either setting through `NEXT_PUBLIC_*` or client responses.
 
 `DATABASE_URL` and any provider credentials are full secrets. They must exist
 only in Vercel secret storage and the protected migration environment. Never
@@ -116,20 +124,22 @@ home → /selection → request → confirmation → shortlist
 → expert workbench/result → decision recompute
 ```
 
-At the start of TASK-025 the workbench/result web route is fixture-backed and
-is not connected to the persisted journey expert request. That is a hard
-golden-flow blocker, not something the readiness endpoint hides. Do not expose
-an unauthenticated result-submission shortcut to make a smoke test pass; wire a
-coherent, access-controlled runtime boundary before recording external
-golden-flow evidence.
+TASK-025A connects workbench/result routes to the persisted journey request and
+the existing evidence/recompute pipeline. Owner result access is checked
+against the browser-held session identity; knowing a request ID is not enough.
+The internal expert route fails closed without its server-side actor settings.
+Do not expose an unauthenticated result-submission shortcut to make a smoke
+test pass. The deployment must also place the internal workbench behind a
+trusted access layer before recording external golden-flow evidence.
 
 Refresh each stateful page, reopen the journey using the browser-held journey
 and session identifiers, and verify the server restores the state. A second
 application/runtime instance must read the same journey and expert request
-from PostgreSQL. The repository-level proof is
-`tests/buyer-journey/journey-restoration.test.ts` and
-`tests/expert/curated-persistence.test.ts`; the external staging pass remains
-required as deployment evidence.
+from PostgreSQL. The repository-level proof includes
+`tests/buyer-journey/journey-restoration.test.ts`,
+`tests/expert/curated-persistence.test.ts`, and the TASK-025A real-runtime
+golden-flow regressions; the external staging pass remains required as
+deployment evidence.
 
 On every pilot shortlist, require `dataset_type=manual_curated_pilot` and no
 entry with `origin=synthetic`. In demo mode require
@@ -163,6 +173,12 @@ deleting those decision records is not an acceptable automatic rollback.
 Prefer application rollback with the additive schema retained. The local
 TASK-025 populated-database check confirmed the failure leaves migration 0003
 applied and the schema unchanged.
+
+Migration `0004_expert_terminal_status.down.sql` narrows the status constraint
+back to the legacy set. It therefore fails transactionally when a persisted
+`unable_to_complete` request exists. Retain the additive constraint or archive
+through a separately reviewed data migration; never delete an expert outcome
+merely to force this down migration through.
 
 ## Evidence to retain
 

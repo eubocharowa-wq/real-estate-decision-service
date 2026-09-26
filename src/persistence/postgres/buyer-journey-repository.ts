@@ -658,8 +658,8 @@ export class PostgresBuyerJourneyRepository implements BuyerJourneyRepository {
           entity_type: evidence.entity_type,
           entity_id: evidence.entity_id,
           field: evidence.field,
-          value: evidence.value,
-          raw_value: evidence.raw_value,
+          value: toPostgresJsonValue(evidence.value),
+          raw_value: toPostgresJsonValue(evidence.raw_value),
           source_id: evidence.source_id,
           snapshot_id: evidence.snapshot_id,
           source_url: evidence.source_url,
@@ -722,7 +722,7 @@ export class PostgresBuyerJourneyRepository implements BuyerJourneyRepository {
           entity_type: overlay.entity_type,
           entity_id: overlay.entity_id,
           field: overlay.field,
-          value: overlay.value,
+          value: toPostgresJsonValue(overlay.value),
           verification_status: overlay.verification_status,
           evidence_id: overlay.evidence_id,
           created_at: overlay.created_at,
@@ -774,6 +774,14 @@ const stableStringify = (value: unknown): string => {
     .map(([key, item]) => `${JSON.stringify(key)}:${stableStringify(item)}`)
     .join(",")}}`;
 };
+
+/**
+ * node-postgres serializes objects and arrays for jsonb parameters, but sends
+ * JavaScript strings verbatim. A bare string such as `confirmed` is not valid
+ * JSON, so quote string scalars explicitly before PostgreSQL parses jsonb.
+ */
+const toPostgresJsonValue = (value: unknown): unknown =>
+  typeof value === "string" ? JSON.stringify(value) : value;
 
 /** Timestamps come back as Date; the domain speaks ISO strings. */
 export const toIsoString = (value: Date | string): string =>

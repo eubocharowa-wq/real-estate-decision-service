@@ -1,5 +1,8 @@
 import { resolvePilotRuntimeConfig } from "../pilot-hardening/config";
-import { createRepositorySet } from "../persistence/repositories";
+import {
+  getApplicationRepositorySet,
+  resetApplicationRepositorySetForTests,
+} from "../persistence/runtime-repositories";
 import { BuyerJourneyApplication } from "./application";
 
 /**
@@ -40,7 +43,7 @@ const runtimeGlobal = globalThis as RuntimeGlobal;
  * turns on PostgreSQL — never a side effect of deploying.
  */
 const createRuntime = (): BuyerJourneyApplication => {
-  const repositories = createRepositorySet();
+  const repositories = getApplicationRepositorySet();
   return new BuyerJourneyApplication({
     repository: repositories.repository,
     expertRepository: repositories.expertRepository,
@@ -56,4 +59,5 @@ export const getBuyerJourneyRuntime = (): BuyerJourneyApplication =>
 
 export const resetBuyerJourneyRuntimeForTests = (): void => {
   delete runtimeGlobal[RUNTIME_KEY];
+  resetApplicationRepositorySetForTests();
 };

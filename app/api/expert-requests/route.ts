@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import { getApplicationRepositorySet } from "../../../src/persistence";
 import { entityIdSchema, userRequestSchema } from "../../../src/domain";
 import {
   ExpertRequestService,
@@ -8,7 +9,6 @@ import {
   expertQuestionCategorySchema,
   expertRequestTypeSchema,
   expertTriggerTypeSchema,
-  getExpertRequestRepository,
   requestOwnerSchema,
 } from "../../../src/expert";
 import { loadPilotDataset } from "../../../src/pilot-dataset";
@@ -145,21 +145,20 @@ const resolveExpertPropertyDetail = (
  * createSequentialExpertIdFactory restarts its counter at 1 in every new
  * process — fine for the in-memory repository it was designed for, since
  * that state never outlives the process either. Once the repository is
- * durably backed by PostgreSQL (getExpertRequestRepository, see
- * src/expert/web-runtime.ts), a restarted process would immediately collide
+ * durably backed by PostgreSQL (through the shared application repository
+ * set), a restarted process would immediately collide
  * with request_ids a previous process already persisted. IDs from this route
  * must stay unique across restarts, so they use createRandomExpertIdFactory,
  * not the sequential one.
  */
 const createWebExpertId = createRandomExpertIdFactory("web_expert");
 
-// Built fresh per request, the same way the buyer-journey route resolves
-// getBuyerJourneyRuntime() per request: the repository behind it is pinned to
-// globalThis, but the service wrapping it must not cache a repository chosen
-// before resetExpertRequestRepositoryForTests() (or a real env change) ran.
+// Built fresh per request. The repositories behind buyer and expert routes
+// come from one process-level composition root, while this service must not
+// cache a repository selected before a test/environment reset.
 const buildExpertRequestService = (): ExpertRequestService =>
   new ExpertRequestService(
-    getExpertRequestRepository(),
+    getApplicationRepositorySet().expertRepository,
     {
       canAccess: async ({ owner, entityType, entityId }) => {
         const ids = resolveExpertPropertyIds();

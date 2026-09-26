@@ -1,16 +1,21 @@
 import { z } from "zod";
 
 import {
-  EXPERT_FIXTURE_ACTORS,
+  buildExpertResultReviewView,
   expertCheckItemDraftSchema,
   expertFindingDraftSchema,
   expertResultDraftSchema,
-  getExpertWorkbenchFixtureRuntime,
+  getRealExpertWorkbenchRuntime,
 } from "../../../../src/expert-workbench";
+import { requestOwnerSchema } from "../../../../src/expert";
 
 export const runtime = "nodejs";
 
 const actionSchema = z.discriminatedUnion("type", [
+  z.strictObject({
+    type: z.literal("open_result"),
+    owner: requestOwnerSchema,
+  }),
   z.strictObject({ type: z.literal("claim") }),
   z.strictObject({
     type: z.literal("transition"),
@@ -57,17 +62,35 @@ export async function POST(
   }
   const parsed = actionSchema.safeParse(raw);
   if (!parsed.success) return failure(422, "INVALID_WORKBENCH_ACTION");
-  const fixture = await getExpertWorkbenchFixtureRuntime();
-  const actor = EXPERT_FIXTURE_ACTORS.real_estate_expert;
+  const runtime = getRealExpertWorkbenchRuntime();
   try {
     const action = parsed.data;
+    if (action.type === "open_result") {
+      const input = await runtime.application.openResultReview(
+        {
+          actor_type: "owner",
+          actor_ref: action.owner.owner_id,
+          owner: action.owner,
+        },
+        requestId,
+      );
+      return Response.json({
+        view: buildExpertResultReviewView(
+          input,
+          runtime.application.buildTechnicalEscalationHref(input),
+        ),
+      });
+    }
+    const actor = runtime.actor;
+    if (actor.actor_type !== "expert")
+      return failure(403, "EXPERT_RUNTIME_ACTOR_NOT_CONFIGURED");
     if (action.type === "claim")
       return Response.json(
-        await fixture.application.claimRequest(actor, requestId),
+        await runtime.application.claimRequest(actor, requestId),
       );
     if (action.type === "transition")
       return Response.json(
-        fixture.application.transition({
+        runtime.application.transition({
           actor,
           requestId,
           status: action.status,
@@ -76,7 +99,7 @@ export async function POST(
       );
     if (action.type === "update_check")
       return Response.json(
-        fixture.application.updateCheckItem({
+        runtime.application.updateCheckItem({
           actor,
           requestId,
           item: action.item,
@@ -84,7 +107,7 @@ export async function POST(
       );
     if (action.type === "add_finding")
       return Response.json(
-        fixture.application.addFinding({
+        runtime.application.addFinding({
           actor,
           requestId,
           finding: action.finding,
@@ -92,14 +115,14 @@ export async function POST(
       );
     if (action.type === "save_draft")
       return Response.json(
-        fixture.application.saveDraft({
+        runtime.application.saveDraft({
           actor,
           requestId,
           draft: action.draft,
         }),
       );
     return Response.json(
-      await fixture.application.complete({ actor, requestId }),
+      await runtime.application.complete({ actor, requestId }),
     );
   } catch (error) {
     const code = error instanceof Error ? error.message : "WORKBENCH_ERROR";

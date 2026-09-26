@@ -36,14 +36,14 @@ describe.skipIf(!isDatabaseAvailable)(
       expect(migrated).toMatchObject({
         reachable: true,
         schemaCompatible: true,
-        expectedMigrationCount: 3,
-        appliedMigrationCount: 3,
+        expectedMigrationCount: 4,
+        appliedMigrationCount: 4,
       });
 
       await migrateDown(database.pool, { steps: 1 });
       const rolledBack = await inspectDatabaseMigrationReadiness(database.pool);
       expect(rolledBack.schemaCompatible).toBe(false);
-      expect(rolledBack.pendingVersions).toEqual(["0003"]);
+      expect(rolledBack.pendingVersions).toEqual(["0004"]);
     });
   },
 );
