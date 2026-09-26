@@ -1,3 +1,5 @@
+import { randomUUID } from "node:crypto";
+
 export type BuyerJourneyIdKind =
   | "journey"
   | "parsed_request"
@@ -16,3 +18,9 @@ export const createSequentialBuyerJourneyIdFactory = (
   let sequence = 0;
   return (kind) => `${namespace}_${kind}_${++sequence}`;
 };
+
+/** IDs that remain unique when a durable runtime is re-instantiated. */
+export const createRandomBuyerJourneyIdFactory =
+  (namespace = "buyer_journey"): BuyerJourneyIdFactory =>
+  (kind) =>
+    `${namespace}_${kind}_${randomUUID()}`;

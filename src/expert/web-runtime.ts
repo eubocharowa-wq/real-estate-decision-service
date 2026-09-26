@@ -1,4 +1,7 @@
-import { createRepositorySet } from "../persistence/repositories";
+import {
+  getApplicationRepositorySet,
+  resetApplicationRepositorySetForTests,
+} from "../persistence/runtime-repositories";
 import type { ExpertRequestRepository } from "./repository";
 
 /**
@@ -15,18 +18,10 @@ import type { ExpertRequestRepository } from "./repository";
  * export surface stays just {POST, runtime} — see the lockdown test in
  * tests/expert/core.test.ts.
  */
-const REPOSITORY_KEY = Symbol.for("reds.expert-request-repository");
-
-type RepositoryGlobal = typeof globalThis & {
-  [REPOSITORY_KEY]?: ExpertRequestRepository;
-};
-
-const repositoryGlobal = globalThis as RepositoryGlobal;
-
 export const getExpertRequestRepository = (): ExpertRequestRepository =>
-  (repositoryGlobal[REPOSITORY_KEY] ??= createRepositorySet().expertRepository);
+  getApplicationRepositorySet().expertRepository;
 
 /** For tests: forces the next call to re-read DATABASE_URL from the env. */
 export const resetExpertRequestRepositoryForTests = (): void => {
-  delete repositoryGlobal[REPOSITORY_KEY];
+  resetApplicationRepositorySetForTests();
 };

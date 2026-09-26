@@ -254,6 +254,10 @@ Real-buyer pilot hardening, release gate and rollback:
 
 [`docs/09-pilot/README.md`](docs/09-pilot/README.md)
 
+Dynamic staging deployment, migration verification and rollback:
+
+[`docs/09-pilot/dynamic-staging.md`](docs/09-pilot/dynamic-staging.md)
+
 ---
 
 ## Development Workflow
@@ -295,10 +299,13 @@ Commit
 
 ## Current Status
 
-Реализован полный buyer journey от свободного запроса до обновлённого решения
-после экспертной проверки, работающий через настоящий HTTP-runtime приложения
-(`app/api/buyer-journeys`, `app/api/expert-requests`), а не только напрямую
-через application-слой.
+Application-слой и HTTP-runtime используют одну persistence boundary для
+buyer journey, экспертной заявки, очереди, workbench, structured result и
+affected-only decision recompute. Fixture expert runtime остаётся только у
+явных тестовых/demo fixtures; production/pilot expert routes читают реальные
+сохранённые заявки. Единый внешний staging golden flow всё ещё должен быть
+проверен на managed PostgreSQL deployment и не заявляется как готовый
+production workflow только на основании repository tests.
 
 Persistence переключается конфигурацией, а не флагом в коде: при заданном
 `DATABASE_URL` состояние (buyer journeys, expert requests, matching bundles)
@@ -319,6 +326,12 @@ buyer-journey runtime — live source coverage за пределами этог�
 где-либо развёрнуто как production service. Полноценный dynamic staging,
 browser-level E2E, operational release gate и real-buyer pilot остаются
 следующими шагами — см. `docs/08-roadmap/current-execution-plan.md`.
+
+Обычная Next.js/Vercel сборка остаётся динамическим Node.js-приложением.
+`GET /api/readiness` проверяет production-like staging fail-closed: явный
+`pilot` mode, curated dataset, доступный PostgreSQL с совместимой схемой и
+совпадающий `NEXT_PUBLIC_SITE_URL`. Endpoint ничего не мигрирует и не выводит
+connection string, имена хостов или тексты ошибок базы.
 
 ---
 

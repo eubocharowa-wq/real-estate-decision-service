@@ -393,12 +393,46 @@ export const describeRepositoryConformance = (
           ),
         ).rejects.toThrow("EVIDENCE_ID_CONFLICT");
       });
+
+      it("round-trips string scalar values through json storage", async () => {
+        const evidence = makeEvidence({
+          evidence_id: "evidence_string_scalar_1",
+          field: "availability",
+          value: "confirmed",
+          raw_value: "confirmed",
+        });
+
+        await set.repository.appendEvidence(evidence);
+
+        expect(await set.repository.listEvidence()).toEqual([evidence]);
+      });
     });
 
     describe("canonical overlays", () => {
       it("stores an overlay backed by evidence", async () => {
         await set.repository.appendEvidence(makeEvidence());
         const overlay = makeOverlay();
+        await set.repository.saveCanonicalOverlay(overlay);
+
+        expect(await set.repository.listCanonicalOverlays()).toEqual([overlay]);
+      });
+
+      it("round-trips string scalar overlay values through json storage", async () => {
+        await set.repository.appendEvidence(
+          makeEvidence({
+            evidence_id: "evidence_string_overlay_1",
+            field: "availability",
+            value: "confirmed",
+            raw_value: "confirmed",
+          }),
+        );
+        const overlay = makeOverlay({
+          overlay_id: "overlay_string_scalar_1",
+          field: "availability",
+          value: "confirmed",
+          evidence_id: "evidence_string_overlay_1",
+        });
+
         await set.repository.saveCanonicalOverlay(overlay);
 
         expect(await set.repository.listCanonicalOverlays()).toEqual([overlay]);

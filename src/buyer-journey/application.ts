@@ -4,8 +4,11 @@ import {
   ExpertCompletionService,
   ExpertRequestService,
   InMemoryExpertRequestRepository,
+  EXPERT_CONFIRMED_FACT_EVIDENCE_MISMATCH,
+  assertExpertResultEvidenceIntegrity,
   canAccessSessionDocumentReference,
   createRandomExpertIdFactory,
+  findConfirmedFieldEvidence,
   type CompleteExpertRequestOutcome,
   type ExpertIdFactory,
   type ExpertQuestionCategory,
@@ -83,7 +86,7 @@ import {
 import { buildDecisionUpdate } from "./decision-update";
 import { BuyerJourneyError } from "./errors";
 import {
-  createSequentialBuyerJourneyIdFactory,
+  createRandomBuyerJourneyIdFactory,
   type BuyerJourneyIdFactory,
 } from "./id";
 import {
@@ -268,7 +271,7 @@ export class BuyerJourneyApplication {
     this.errorRepository =
       dependencies.errorRepository ?? new InMemoryApplicationErrorRepository();
     this.createId =
-      dependencies.createId ?? createSequentialBuyerJourneyIdFactory();
+      dependencies.createId ?? createRandomBuyerJourneyIdFactory();
     this.clock = dependencies.clock ?? (() => new Date().toISOString());
     this.feedbackService = new JourneyFeedbackService(
       this.feedbackRepository,
@@ -1122,11 +1125,21 @@ export class BuyerJourneyApplication {
         "Expert request not found",
         false,
       );
-    await this.expertService.assignExpertRequest({
-      requestId: request.request_id,
-      specialistRef: input.specialistRef,
-      specialistType: request.required_specialist,
-    });
+    if (request.status === "queued")
+      await this.expertService.assignExpertRequest({
+        requestId: request.request_id,
+        specialistRef: input.specialistRef,
+        specialistType: request.required_specialist,
+      });
+    else if (
+      request.status !== "assigned" ||
+      request.assigned_specialist_ref !== input.specialistRef
+    )
+      throw new BuyerJourneyError(
+        "INVALID_TRANSITION",
+        "Expert request is not assigned to this specialist",
+        true,
+      );
     const inProgress = await this.expertService.transition({
       requestId: request.request_id,
       status: "in_progress",
@@ -1171,22 +1184,34 @@ export class BuyerJourneyApplication {
         true,
       );
 
+    const journeyDataset = await loadJourneyDataset(this.repository);
+    const storedEvidenceBeforeCompletion = await this.repository.listEvidence();
+    assertExpertResultEvidenceIntegrity({
+      request,
+      context,
+      result: candidate,
+      existingEvidence: [
+        ...journeyDataset.fieldEvidence,
+        ...storedEvidenceBeforeCompletion,
+      ],
+    });
+
     const evidenceIdByCandidate = new Map<string, string>();
     let lastDecisionUpdate: DecisionUpdate | null = null;
     const completion = new ExpertCompletionService(
       this.expertRepository,
       {
         validateExistingReferences: async (refs) => {
-          const dataset = await loadJourneyDataset(this.repository);
           const stored = await this.repository.listEvidence();
           const known = new Set([
-            ...dataset.fieldEvidence.map((evidence) => evidence.evidence_id),
+            ...journeyDataset.fieldEvidence.map(
+              (evidence) => evidence.evidence_id,
+            ),
             ...stored.map((evidence) => evidence.evidence_id),
           ]);
           return refs.every((ref) => known.has(ref));
         },
         integrate: async ({ candidates }) => {
-          const dataset = await loadJourneyDataset(this.repository);
           const createdEvidenceIds: string[] = [];
           const affectedPropertyIds: string[] = [];
           const affectedOfferIds: string[] = [];
@@ -1222,14 +1247,14 @@ export class BuyerJourneyApplication {
               affectedPropertyIds.push(evidenceCandidate.entity_id);
             if (evidenceCandidate.entity_type === "offer") {
               affectedOfferIds.push(evidenceCandidate.entity_id);
-              const offer = dataset.offers.find(
+              const offer = journeyDataset.offers.find(
                 (item) => item.offer_id === evidenceCandidate.entity_id,
               );
               if (offer) affectedPropertyIds.push(offer.property_id);
             }
             if (evidenceCandidate.entity_type === "purchase_scenario") {
               affectedScenarioIds.push(evidenceCandidate.entity_id);
-              const scenario = dataset.purchaseScenarios.find(
+              const scenario = journeyDataset.purchaseScenarios.find(
                 (item) => item.scenario_id === evidenceCandidate.entity_id,
               );
               if (scenario) affectedPropertyIds.push(scenario.property_id);
@@ -1237,9 +1262,10 @@ export class BuyerJourneyApplication {
             if (
               evidenceCandidate.entity_type === "property_financing_eligibility"
             ) {
-              const eligibility = dataset.propertyFinancingEligibility.find(
-                (item) => item.eligibility_id === evidenceCandidate.entity_id,
-              );
+              const eligibility =
+                journeyDataset.propertyFinancingEligibility.find(
+                  (item) => item.eligibility_id === evidenceCandidate.entity_id,
+                );
               if (eligibility)
                 affectedPropertyIds.push(eligibility.property_id);
             }
@@ -1255,19 +1281,24 @@ export class BuyerJourneyApplication {
       {
         requestCanonicalUpdate: async ({ result, conflictResolutions }) => {
           const updateRequestIds: string[] = [];
+          const allEvidence = [
+            ...journeyDataset.fieldEvidence,
+            ...(await this.repository.listEvidence()),
+          ];
           for (const fact of result.confirmed) {
-            const evidenceId =
-              fact.evidence_refs
-                .map((ref) => evidenceIdByCandidate.get(ref) ?? ref)
-                .find(Boolean) ?? null;
-            const evidenceCandidate = result.evidence_candidates.find(
-              (item) =>
-                item.entity_id === fact.entity_id && item.field === fact.field,
+            const resolvedEvidenceIds = fact.evidence_refs.map(
+              (ref) => evidenceIdByCandidate.get(ref) ?? ref,
             );
-            const entityType = evidenceCandidate?.entity_type;
+            const evidence = findConfirmedFieldEvidence({
+              fact,
+              evidence: allEvidence.filter((item) =>
+                resolvedEvidenceIds.includes(item.evidence_id),
+              ),
+            });
+            if (!evidence)
+              throw new Error(EXPERT_CONFIRMED_FACT_EVIDENCE_MISMATCH);
+            const entityType = evidence.entity_type;
             if (
-              !evidenceId ||
-              !entityType ||
               ![
                 "property",
                 "offer",
@@ -1285,11 +1316,11 @@ export class BuyerJourneyApplication {
               overlay_id: overlayId,
               entity_type:
                 entityType as CanonicalDecisionOverlay["entity_type"],
-              entity_id: fact.entity_id,
-              field: fact.field,
-              value: fact.value,
+              entity_id: evidence.entity_id,
+              field: evidence.field,
+              value: evidence.value,
               verification_status: "confirmed",
-              evidence_id: evidenceId,
+              evidence_id: evidence.evidence_id,
               created_at: result.completed_at,
             });
             updateRequestIds.push(overlayId);
@@ -1300,7 +1331,7 @@ export class BuyerJourneyApplication {
               for (const [field, value] of [
                 ["verification_status", "confirmed"],
                 ["freshness_status", "fresh"],
-                ["applicability_evidence_refs", [evidenceId]],
+                ["applicability_evidence_refs", [evidence.evidence_id]],
               ] as const) {
                 const derivedOverlayId = this.createId("canonical_overlay");
                 await this.repository.saveCanonicalOverlay({
@@ -1310,7 +1341,7 @@ export class BuyerJourneyApplication {
                   field,
                   value,
                   verification_status: "confirmed",
-                  evidence_id: evidenceId,
+                  evidence_id: evidence.evidence_id,
                   created_at: result.completed_at,
                 });
                 updateRequestIds.push(derivedOverlayId);

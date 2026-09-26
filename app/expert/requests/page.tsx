@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 
 import {
-  EXPERT_FIXTURE_ACTORS,
   ExpertQueue,
-  getExpertWorkbenchFixtureRuntime,
+  getRealExpertWorkbenchRuntime,
 } from "../../../src/expert-workbench";
+
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Экспертные задачи · Основание",
@@ -12,9 +14,14 @@ export const metadata: Metadata = {
 };
 
 export default async function ExpertRequestsPage() {
-  const runtime = await getExpertWorkbenchFixtureRuntime();
-  const view = await runtime.application.listActiveQueue(
-    EXPERT_FIXTURE_ACTORS.real_estate_expert,
-  );
+  const runtime = getRealExpertWorkbenchRuntime();
+  if (runtime.actor.actor_type !== "expert")
+    return (
+      <main className="expert-empty" role="alert">
+        <h1>Рабочая очередь недоступна</h1>
+        <p>Trusted expert actor не настроен для этого окружения.</p>
+      </main>
+    );
+  const view = await runtime.application.listActiveQueue(runtime.actor);
   return <ExpertQueue view={view} />;
 }

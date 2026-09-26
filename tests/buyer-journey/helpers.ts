@@ -51,6 +51,11 @@ export const createGoldenJourney = async (input?: {
   return { application, clock, journey, confirmation, matching };
 };
 
+/**
+ * Schema-only semantic fixture. Journey integration deliberately rejects its
+ * financing-eligibility candidate until ExpertContextPackage can prove that
+ * eligibility row belongs to the saved request context.
+ */
 export const completeFamilyMortgageResult = (input: {
   readonly requestId: string;
   readonly specialistRef: string;
@@ -105,6 +110,76 @@ export const completeFamilyMortgageResult = (input: {
         checked_at: input.completedAt ?? "2026-08-15T01:00:00.000Z",
         checked_by: input.specialistRef,
         method: "manual_program_verification",
+        supporting_reference: null,
+        note: "Synthetic expert fixture; no live source content.",
+      },
+    ],
+    specialist: {
+      specialist_ref: input.specialistRef,
+      specialist_type: input.specialistType,
+    },
+    choice_assistance: null,
+    disclaimer: null,
+    completed_at: input.completedAt ?? "2026-08-15T01:00:00.000Z",
+  };
+};
+
+export const completeOfferPriceResult = (input: {
+  readonly requestId: string;
+  readonly offerId: string;
+  readonly specialistRef: string;
+  readonly specialistType:
+    | "real_estate_expert"
+    | "lawyer"
+    | "mortgage_specialist"
+    | "property_inspector"
+    | "technical_specialist";
+  readonly completedAt?: string;
+}) => {
+  const evidenceCandidateId = "expert_candidate_offer_price";
+  const price = { amount: "4525000.00", currency: "RUB" };
+  return {
+    result_version: "expert-result-v1" as const,
+    expert_result_id: "expert_result_offer_price",
+    request_id: input.requestId,
+    status: "completed" as const,
+    checked_items: [
+      {
+        item_id: "check_offer_price",
+        subject: "Цена выбранного предложения",
+        method: "Ручная проверка экспертом",
+        outcome: "confirmed" as const,
+        evidence_refs: [evidenceCandidateId],
+        note: null,
+      },
+    ],
+    findings: [],
+    confirmed: [
+      {
+        entity_id: input.offerId,
+        field: "listing_price",
+        value: price,
+        evidence_refs: [evidenceCandidateId],
+      },
+    ],
+    unconfirmed: [],
+    conflicts: [],
+    risks: [],
+    recommendations: ["Использовать подтверждённую цену предложения."],
+    next_actions: ["Пересчитать решение."],
+    evidence_refs: [],
+    evidence_candidates: [
+      {
+        evidence_candidate_id: evidenceCandidateId,
+        evidence_type: "manual_expert" as const,
+        entity_type: "offer",
+        entity_id: input.offerId,
+        field: "listing_price",
+        value: price,
+        verification_status: "confirmed" as const,
+        checked_at: input.completedAt ?? "2026-08-15T01:00:00.000Z",
+        checked_by: input.specialistRef,
+        method: "manual_offer_price_verification",
         supporting_reference: null,
         note: "Synthetic expert fixture; no live source content.",
       },

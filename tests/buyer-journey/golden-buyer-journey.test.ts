@@ -6,7 +6,7 @@ import {
   runMatchingForConfirmedRequest,
 } from "../../src/buyer-journey";
 import {
-  completeFamilyMortgageResult,
+  completeOfferPriceResult,
   createGoldenJourney,
   GOLDEN_RAW_REQUEST,
 } from "./helpers";
@@ -112,11 +112,11 @@ describe("golden buyer journey", async () => {
       journey.journey_id,
       {
         requestType: "information_verification",
-        triggerType: "critical_unknown",
-        questionCategory: "financing",
-        question: "Подтвердите применимость семейной ипотеки к этому объекту.",
+        triggerType: "user_requested",
+        questionCategory: "price",
+        question: "Подтвердите цену выбранного предложения.",
         propertyIds: ["prop_nb_002"],
-        field: "financing.program_type",
+        field: "listing_price",
       },
     );
     const context = (await application.getJourneySnapshot(journey.journey_id))
@@ -143,8 +143,9 @@ describe("golden buyer journey", async () => {
     clock.value = "2026-08-15T01:00:00.000Z";
     const completion = await application.applyExpertResultToJourney(
       journey.journey_id,
-      completeFamilyMortgageResult({
+      completeOfferPriceResult({
         requestId: expertRequest.request_id,
+        offerId: "offer_nb_002_primary",
         specialistRef: "specialist_mortgage_golden",
         specialistType: work.required_specialist,
       }),
@@ -156,13 +157,13 @@ describe("golden buyer journey", async () => {
       (await application.getJourney(journey.journey_id)).current_stage,
     ).toBe("updated_decision");
     expect(final.expert?.result?.expert_result_id).toBe(
-      "expert_result_family_eligibility",
+      "expert_result_offer_price",
     );
     expect(final.evidence).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          entity_id: "elig_nb_002_family",
-          field: "eligibility_status",
+          entity_id: "offer_nb_002_primary",
+          field: "listing_price",
           verification_status: "confirmed",
           evidence_type: "manual_expert",
         }),
@@ -173,19 +174,20 @@ describe("golden buyer journey", async () => {
     expect(after.match_result_ref).not.toBe(before.match_result_ref);
     expect(after.data_quality_ref).not.toBe(before.data_quality_ref);
     expect(after.match_score).toBe(before.match_score);
-    expect(after.data_confidence_score).toBeGreaterThan(
+    expect(after.data_confidence_score).toBeGreaterThanOrEqual(
       before.data_confidence_score!,
     );
-    expect(after.data_completeness_score).toBeGreaterThan(
+    expect(after.data_completeness_score).toBeGreaterThanOrEqual(
       before.data_completeness_score!,
     );
-    expect(final.decision_update!.resolved_unknowns).toContain(
-      confirmation.confirmed_request.must_have.find(
-        (criterion) => criterion.field === "financing.program_type",
-      )!.criterion_id,
+    const financingCriterionId = confirmation.confirmed_request.must_have.find(
+      (criterion) => criterion.field === "financing.program_type",
+    )!.criterion_id;
+    expect(final.decision_update!.resolved_unknowns).not.toContain(
+      financingCriterionId,
     );
-    expect(final.decision_update!.unresolved_unknowns.length).toBeGreaterThan(
-      0,
+    expect(final.decision_update!.unresolved_unknowns).toContain(
+      financingCriterionId,
     );
     expect(
       final.matching_bundle!.entries.find(

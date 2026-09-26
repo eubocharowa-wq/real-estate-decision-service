@@ -2,6 +2,7 @@ export * from "./completion";
 export * from "./context-builder";
 export * from "./contracts";
 export * from "./dedup";
+export * from "./evidence-integrity";
 export * from "./opaque-reference-access";
 export * from "./presentation";
 export * from "./priority";

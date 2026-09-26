@@ -91,13 +91,14 @@ The project is therefore **not a rewrite candidate**. Work should close operatio
 
 ## 4. Known gaps that define the next implementation sequence
 
-### 4.1 Expert runtime is split
+### 4.1 Expert workbench runtime split
 
-The main buyer-journey runtime receives repositories from `createRepositorySet()` and therefore can use PostgreSQL when `DATABASE_URL` is configured. It also receives `resolvePilotRuntimeConfig()`.
-
-However, `document_review` and `onsite_check` can still go through the separate `/api/expert-requests` path, which currently constructs an in-memory expert repository and separately reads the pilot dataset. This creates persistence and dataset/runtime drift.
-
-This is the first blocker to close.
+TASK-023 made buyer and standalone expert-request creation PostgreSQL-capable,
+but the public workbench/result routes still used a separately seeded fixture
+runtime. TASK-025A closes this remaining split through the shared application
+repository composition root and the buyer journey's existing evidence and
+affected-only recomputation pipeline. Fixture workbench data remains limited
+to explicit test/demo fixtures.
 
 ### 4.2 Published GitHub Pages is not the real application runtime
 
@@ -247,6 +248,14 @@ Also verify:
 ### Exit criteria
 
 An external staging URL runs the complete application flow over PostgreSQL and survives runtime restart/re-instantiation without losing required journey/expert state.
+
+## TASK-025A — Real persisted expert workbench and decision recompute
+
+Before browser automation, connect the persisted buyer expert request to the
+real queue, workbench, durable draft/result storage and affected-only decision
+recompute. Preserve owner/specialist access boundaries and demo/pilot
+isolation. Repository completion does not itself satisfy the external TASK-025
+deployment exit criterion.
 
 ---
 
@@ -574,6 +583,7 @@ TASK-023  Unify expert runtime + durable persistence
 TASK-024  Deployment/security/documentation hygiene
 TASK-024B Honest GitHub Pages preview
 TASK-025  Full dynamic staging
+TASK-025A Persisted expert workbench + decision recompute
 TASK-026  Browser E2E
 TASK-027  Operational pilot release gate
 TASK-028  Evidence Artifact storage

@@ -40,6 +40,10 @@ export {
 } from "./config";
 export { closeDatabasePool, getDatabasePool } from "./pool";
 export {
+  inspectDatabaseMigrationReadiness,
+  type DatabaseMigrationReadiness,
+} from "./readiness";
+export {
   defaultMigrationsDirectory,
   listApplied,
   migrateDown,
@@ -56,6 +60,10 @@ export {
   createRepositorySet,
   type RepositorySet,
 } from "./repositories";
+export {
+  getApplicationRepositorySet,
+  resetApplicationRepositorySetForTests,
+} from "./runtime-repositories";
 export {
   createPostgresContext,
   createPostgresRepositories,

@@ -68,8 +68,10 @@ export const INTERNAL_ROUTE_PREFIXES = [
  * Returns the configured origin without a trailing slash, or null when it is
  * unset or not a usable absolute URL.
  */
-export const resolveSiteUrl = (): string | null => {
-  const configured = process.env.NEXT_PUBLIC_SITE_URL?.trim();
+export const resolveSiteUrl = (
+  environment: Readonly<Record<string, string | undefined>> = process.env,
+): string | null => {
+  const configured = environment.NEXT_PUBLIC_SITE_URL?.trim();
   if (!configured) return null;
 
   let parsed: URL;
@@ -79,6 +81,14 @@ export const resolveSiteUrl = (): string | null => {
     return null;
   }
   if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return null;
+  if (
+    parsed.username ||
+    parsed.password ||
+    parsed.pathname !== "/" ||
+    parsed.search ||
+    parsed.hash
+  )
+    return null;
 
   return parsed.origin;
 };
