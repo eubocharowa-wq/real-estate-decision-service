@@ -42,8 +42,9 @@ keeps its own origin.
 - Matching data, automatic user-URL adapter, refresh execution and all
   OpenClaw CI cases are fixture-backed and offline.
 - Manual import and expert verification remain explicit manual flows.
-- There is no production database, distributed queue, source scheduler or
-  production persistence in this task.
+- PostgreSQL persistence is implemented for the application state, but it is
+  not evidence that a managed staging database has been configured. The
+  distributed queue and source scheduler remain out of scope.
 
 ## Source and OpenClaw status
 
@@ -123,6 +124,15 @@ npm run test:pilot-performance
 Standard tests do not execute live network or OpenClaw/browser smoke.
 The existing CI runs the offline pilot and performance commands explicitly.
 
+### Dynamic staging boundary
+
+The normal Vercel/Next.js build is dynamic and separate from the GitHub Pages
+static preview. TASK-025 staging requires PostgreSQL, all migrations applied,
+an explicit `REDS_APPLICATION_MODE=pilot`, a matching
+`NEXT_PUBLIC_SITE_URL`, and a green cache-disabled `/api/readiness` response.
+The endpoint never migrates the database and never returns database
+credentials or raw errors. See [the staging and rollback runbook](dynamic-staging.md).
+
 ### OpenClaw Gateway prerequisite
 
 The preparatory Gateway executor does not enable or modify OpenClaw. Before an
@@ -199,10 +209,12 @@ decision; and OpenClaw denied with executor not called.
 - real-pilot coverage is limited to two user-supplied Avito candidates; the
   Edinstvo URL still requires unit-specific manual selection;
 - refresh and OpenClaw execution are fixture-backed only;
-- expert SLA and production persistence are undefined;
+- expert SLA and the managed production/staging database provider are
+  undefined; the PostgreSQL persistence implementation itself exists;
 - the performance benchmark is a reproducible local measurement, not a
   production SLA;
 - feedback does not tune matching, parsing or source policy automatically.
 
-See [privacy inventory](privacy-inventory.md) and
-[rollback procedure](rollback.md).
+See [privacy inventory](privacy-inventory.md),
+[pilot rollback procedure](rollback.md), and
+[dynamic staging runbook](dynamic-staging.md).

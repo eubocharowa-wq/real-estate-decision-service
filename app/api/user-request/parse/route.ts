@@ -1,5 +1,7 @@
 import { parseUserRequest } from "../../../../src/user-request-parser";
 
+export const runtime = "nodejs";
+
 export async function POST(request: Request) {
   let body: unknown;
   try {

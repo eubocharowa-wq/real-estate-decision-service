@@ -40,6 +40,10 @@ export {
 } from "./config";
 export { closeDatabasePool, getDatabasePool } from "./pool";
 export {
+  inspectDatabaseMigrationReadiness,
+  type DatabaseMigrationReadiness,
+} from "./readiness";
+export {
   defaultMigrationsDirectory,
   listApplied,
   migrateDown,
