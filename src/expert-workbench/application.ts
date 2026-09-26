@@ -30,6 +30,7 @@ import {
   type ExpertResultDraftRepository,
 } from "./draft";
 import type { ExpertWorkbenchPermissionPolicy } from "./permissions";
+import { assertExpertDraftEvidenceIntegrity } from "./evidence-integrity";
 
 const ACTIVE_QUEUE_STATUSES = [
   "queued",
@@ -297,6 +298,10 @@ export class ExpertWorkbenchApplicationService {
       })
     )
       throw new Error("EXPERT_CHECK_PLAN_IS_IMMUTABLE");
+    const context = await this.repository.getContext(
+      request.context_package_id,
+    );
+    if (!context) throw new Error("EXPERT_CONTEXT_NOT_FOUND");
     const contextualIds = new Set([
       ...request.property_ids,
       ...request.offer_ids,
@@ -309,10 +314,7 @@ export class ExpertWorkbenchApplicationService {
     ];
     if (referencedEntityIds.some((id) => !contextualIds.has(id)))
       throw new Error("EXPERT_DRAFT_ENTITY_OUTSIDE_CONTEXT");
-    const context = await this.repository.getContext(
-      request.context_package_id,
-    );
-    if (!context) throw new Error("EXPERT_CONTEXT_NOT_FOUND");
+    assertExpertDraftEvidenceIntegrity({ request, context, draft });
     const contextualConflicts = new Map(
       context.conflicts.map((conflict) => [conflict.conflict_id, conflict]),
     );
@@ -326,7 +328,6 @@ export class ExpertWorkbenchApplicationService {
           ),
       ) ||
       draft.conflicts.some((conflict) => {
-        if (conflict.outcome !== "resolution_requested") return false;
         const expected = contextualConflicts.get(conflict.conflict_id);
         return !expected || expected.field !== conflict.field;
       })

@@ -2,6 +2,7 @@ export * from "./application";
 export * from "./components";
 export * from "./contracts";
 export * from "./draft";
+export * from "./evidence-integrity";
 export * from "./fixtures";
 export * from "./labels";
 export * from "./permissions";

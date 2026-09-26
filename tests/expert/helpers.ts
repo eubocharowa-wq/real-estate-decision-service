@@ -400,7 +400,7 @@ export const makeResult = (
     {
       evidence_candidate_id: "evidence_candidate_fixture_1",
       evidence_type: "manual_expert",
-      entity_type: "property_financing_eligibility",
+      entity_type: "property",
       entity_id: dataset.properties[0]!.identity.property_id,
       field: "financing.family_mortgage",
       value: true,

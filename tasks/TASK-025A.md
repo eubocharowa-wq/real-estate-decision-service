@@ -120,6 +120,15 @@ invent that final name.
   fallback is expected.
 - External Vercel staging readiness remains separate and still requires a
   managed staging database and deployment verification.
+- Expert evidence for `property_financing_eligibility` is fail-closed in this
+  stage. `ExpertContextPackage` does not persist an eligibility identifier or
+  a relationship that proves it belongs to the contextual Property, Offer or
+  PurchaseScenario. Support requires an explicit context-contract change in a
+  later task; the canonical allowlist alone is not authority to create it.
+- `/expert/requests`, the workbench and its mutation APIs remain suitable for
+  managed staging only behind a trusted deployment access layer.
+  `REDS_EXPERT_ACTOR_REF` selects a server-side operator identity; it does not
+  authenticate the HTTP user.
 - Rollback of migration `0003` may be blocked by existing comparison references;
   application rollback with additive compatible schema retained is preferred
   over destructive data deletion.

@@ -8,6 +8,7 @@ import {
 } from "./contracts";
 import type { ExpertClock, ExpertIdFactory } from "./service";
 import type { ExpertRequestRepository } from "./repository";
+import { assertDeclaredCandidateEvidenceIntegrity } from "./evidence-integrity";
 
 export interface ExpertEvidenceIntegrationOutcome {
   readonly createdEvidenceIds: readonly string[];
@@ -109,6 +110,10 @@ export class ExpertCompletionService {
     const result = expertResultSchema.parse(candidate);
     const request = await this.repository.get(result.request_id);
     if (!request) throw new Error("EXPERT_REQUEST_NOT_FOUND");
+    const context = await this.repository.getContext(
+      request.context_package_id,
+    );
+    if (!context) throw new Error("EXPERT_CONTEXT_NOT_FOUND");
     if (request.status !== "in_progress")
       throw new Error("EXPERT_REQUEST_NOT_IN_PROGRESS");
     if (
@@ -133,6 +138,7 @@ export class ExpertCompletionService {
       !result.disclaimer
     )
       throw new Error("LEGAL_BOUNDARY_DISCLAIMER_REQUIRED");
+    assertDeclaredCandidateEvidenceIntegrity({ request, context, result });
     const candidateEvidenceRefs = new Set(
       result.evidence_candidates.map(
         (evidence) => evidence.evidence_candidate_id,

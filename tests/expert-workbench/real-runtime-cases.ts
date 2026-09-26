@@ -34,14 +34,16 @@ const verifiedPriceDraft = (
 ): ExpertResultDraft => {
   const priceEvidenceId = "expert_candidate_verified_price";
   const statusEvidenceId = "expert_candidate_verified_offer_status";
-  const evidenceRefs = [priceEvidenceId, statusEvidenceId];
   return {
     ...draft,
     check_items: draft.check_items.map((item) => ({
       ...item,
       status: "checked_confirmed",
       verification_method: "expert_analysis",
-      evidence_refs: evidenceRefs,
+      evidence_refs:
+        item.related_field === "verification_status"
+          ? [statusEvidenceId]
+          : [priceEvidenceId],
       note: "Проверено вручную по сохранённому контексту теста.",
     })),
     confirmed: [

@@ -381,6 +381,24 @@ describe("TASK-016 structured completion pipeline", async () => {
             evidence_refs: ["evidence_candidate_fixture_1"],
           },
         ],
+        confirmed: [],
+        findings: [],
+        evidence_candidates: [
+          {
+            evidence_candidate_id: "evidence_candidate_fixture_1",
+            evidence_type: "manual_expert",
+            entity_type: "property",
+            entity_id: request.property_ids[0]!,
+            field: "listing_price",
+            value: { amount: "9800000", currency: "RUB" },
+            verification_status: "confirmed",
+            checked_at: NOW,
+            checked_by: "specialist_fixture_1",
+            method: "seller_confirmation",
+            supporting_reference: "seller_confirmation_ref_1",
+            note: null,
+          },
+        ],
       }),
     );
     expect(harness.canonical.lastInput?.conflictResolutions[0]).toMatchObject({

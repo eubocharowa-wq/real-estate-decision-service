@@ -9,7 +9,7 @@ import {
 } from "../../src/buyer-journey";
 import { requestConfirmationResultSchema } from "../../src/request-confirmation";
 import {
-  completeFamilyMortgageResult,
+  completeOfferPriceResult,
   confirmParsedJourney,
   createGoldenJourney,
   GOLDEN_RAW_REQUEST,
@@ -120,11 +120,11 @@ describe("buyer journey versions and recovery", async () => {
       journey.journey_id,
       {
         requestType: "information_verification",
-        triggerType: "critical_unknown",
-        questionCategory: "financing",
-        question: "Подтвердите применимость семейной ипотеки для решения.",
+        triggerType: "user_requested",
+        questionCategory: "price",
+        question: "Подтвердите цену выбранного предложения для решения.",
         propertyIds: ["prop_nb_002"],
-        field: "financing.program_type",
+        field: "listing_price",
       },
     );
     const work = await application.startJourneyExpertWork({
@@ -135,8 +135,9 @@ describe("buyer journey versions and recovery", async () => {
     clock.value = "2026-08-15T01:00:00.000Z";
     const outcome = await application.applyExpertResultToJourney(
       journey.journey_id,
-      completeFamilyMortgageResult({
+      completeOfferPriceResult({
         requestId: request.request_id,
+        offerId: "offer_nb_002_primary",
         specialistRef: "specialist_recompute_failure",
         specialistType: work.required_specialist,
       }),
@@ -149,7 +150,7 @@ describe("buyer journey versions and recovery", async () => {
     expect(
       (await application.expertRepository.getResult(request.request_id))
         ?.expert_result_id,
-    ).toBe("expert_result_family_eligibility");
+    ).toBe("expert_result_offer_price");
   });
 
   it("preserves an unable-to-verify result and does not invent a resolution", async () => {
