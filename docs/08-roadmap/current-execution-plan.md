@@ -257,6 +257,17 @@ recompute. Preserve owner/specialist access boundaries and demo/pilot
 isolation. Repository completion does not itself satisfy the external TASK-025
 deployment exit criterion.
 
+## TASK-025B — Managed dynamic staging and external golden flow
+
+Close TASK-025's remaining external exit criterion before browser automation:
+use a separate protected Vercel Preview/staging environment, an isolated
+managed PostgreSQL database with migrations through `0004`, deliberate pilot
+configuration and platform-native trusted deployment access. Verify the actual
+`/api/readiness` response, buyer/expert flow, owner denial, evidence integrity
+and persistence across a demonstrably new runtime instance. A production
+deployment, local PostgreSQL or repository test cannot substitute for this
+evidence.
+
 ---
 
 # Phase D — Real browser E2E
@@ -584,6 +595,7 @@ TASK-024  Deployment/security/documentation hygiene
 TASK-024B Honest GitHub Pages preview
 TASK-025  Full dynamic staging
 TASK-025A Persisted expert workbench + decision recompute
+TASK-025B Managed staging + trusted expert access + external golden flow
 TASK-026  Browser E2E
 TASK-027  Operational pilot release gate
 TASK-028  Evidence Artifact storage
