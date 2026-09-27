@@ -81,3 +81,16 @@ application-level test harness.
   separate Playwright browser process.
 - The staging dataset must remain `manual_curated_pilot`; the test must stop on
   a demo/synthetic or mixed response instead of relabelling it.
+
+## Completion evidence
+
+- Status: completed.
+- Completion date: 2026-09-28.
+- Staging readiness: HTTP 200, `status=ready`.
+- Browser result: 9/9 passed.
+- Viewports: 360, 768 and 1280 pixels.
+- Dataset: `manual_curated_pilot`.
+- Synthetic mixing: none.
+- Repository checks: format, typecheck, lint, full tests, production build and
+  `git diff --check` passed.
+- Remaining blocker: none.

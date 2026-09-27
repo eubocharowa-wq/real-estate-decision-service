@@ -274,6 +274,9 @@ evidence.
 
 ## TASK-026 — Browser-level golden journey
 
+**Status: completed.** Deployed protected staging browser golden journey:
+9/9 passed across the required viewports.
+
 Use Playwright or equivalent browser automation against the real deployed application.
 
 Minimum coverage:
@@ -291,6 +294,8 @@ Minimum coverage:
 ### Exit criteria
 
 The deployed golden buyer journey is green in a real browser, not only in application tests.
+
+Next active stage: **TASK-027 — Operational pilot release gate**.
 
 ---
 
