@@ -20,8 +20,26 @@ interface PropertyDetailClientProps {
 
 type RemoteState =
   | { readonly status: "loading" }
-  | { readonly status: "error"; readonly message: string }
+  | {
+      readonly status: "error";
+      readonly title: string;
+      readonly description: string;
+    }
   | { readonly status: "ready"; readonly view: PropertyDetailView };
+
+const LOAD_ERROR_TITLE = "Не удалось загрузить объект";
+const LOAD_ERROR_DESCRIPTION =
+  "Попробуйте ещё раз или вернитесь к ранее подобранным вариантам.";
+
+const responseText = (
+  payload: unknown,
+  field: "title" | "message",
+  fallback: string,
+): string => {
+  if (typeof payload !== "object" || payload === null) return fallback;
+  const value = Reflect.get(payload, field);
+  return typeof value === "string" && value.trim() ? value : fallback;
+};
 
 const isPropertyDetailView = (value: unknown): value is PropertyDetailView =>
   typeof value === "object" &&
@@ -55,7 +73,12 @@ export function PropertyDetailClient({
     initialView
       ? { status: "ready", view: initialView }
       : initialView === null
-        ? { status: "error", message: "Объект не найден" }
+        ? {
+            status: "error",
+            title: "Объект не найден",
+            description:
+              "Проверьте ссылку или вернитесь к ранее подобранным вариантам.",
+          }
         : { status: "loading" },
   );
 
@@ -77,13 +100,14 @@ export function PropertyDetailClient({
       .then(async (response) => {
         const payload: unknown = await response.json();
         if (!response.ok) {
-          const message =
-            typeof payload === "object" &&
-            payload !== null &&
-            typeof Reflect.get(payload, "message") === "string"
-              ? String(Reflect.get(payload, "message"))
-              : "Не удалось загрузить объект.";
-          throw new Error(message);
+          const title = responseText(payload, "title", LOAD_ERROR_TITLE);
+          const description = responseText(
+            payload,
+            "message",
+            LOAD_ERROR_DESCRIPTION,
+          );
+          setRemote({ status: "error", title, description });
+          return;
         }
         const view =
           typeof payload === "object" && payload !== null
@@ -93,14 +117,12 @@ export function PropertyDetailClient({
           throw new Error("Сервер вернул неполную модель объекта.");
         setRemote({ status: "ready", view });
       })
-      .catch((error: unknown) => {
+      .catch(() => {
         if (controller.signal.aborted) return;
         setRemote({
           status: "error",
-          message:
-            error instanceof Error
-              ? error.message
-              : "Не удалось загрузить объект.",
+          title: LOAD_ERROR_TITLE,
+          description: LOAD_ERROR_DESCRIPTION,
         });
       });
     return () => controller.abort();
@@ -112,14 +134,19 @@ export function PropertyDetailClient({
     return <PropertyDetailLoading />;
   if (initialView === undefined && !journeyId)
     return (
-      <PropertyDetailNotFound message="Сначала опишите задачу и откройте объект из текущего подбора." />
+      <PropertyDetailNotFound title="Сначала опишите задачу и откройте объект из текущего подбора." />
     );
 
   if (remote.status === "loading") {
     return <PropertyDetailLoading />;
   }
   if (remote.status === "error")
-    return <PropertyDetailNotFound message={remote.message} />;
+    return (
+      <PropertyDetailNotFound
+        title={remote.title}
+        description={remote.description}
+      />
+    );
   return (
     <PropertyDetailPageView
       view={remote.view}
