@@ -90,7 +90,7 @@ export async function POST(
       );
     if (action.type === "transition")
       return Response.json(
-        runtime.application.transition({
+        await runtime.application.transition({
           actor,
           requestId,
           status: action.status,
@@ -99,7 +99,7 @@ export async function POST(
       );
     if (action.type === "update_check")
       return Response.json(
-        runtime.application.updateCheckItem({
+        await runtime.application.updateCheckItem({
           actor,
           requestId,
           item: action.item,
@@ -107,7 +107,7 @@ export async function POST(
       );
     if (action.type === "add_finding")
       return Response.json(
-        runtime.application.addFinding({
+        await runtime.application.addFinding({
           actor,
           requestId,
           finding: action.finding,
@@ -115,7 +115,7 @@ export async function POST(
       );
     if (action.type === "save_draft")
       return Response.json(
-        runtime.application.saveDraft({
+        await runtime.application.saveDraft({
           actor,
           requestId,
           draft: action.draft,
