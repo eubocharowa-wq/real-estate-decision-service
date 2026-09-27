@@ -72,7 +72,10 @@ test("completes the deployed buyer journey and restores it after reload", async 
   await expectNoSeriousAccessibilityViolations(page);
   await expectViewportContained(page);
 
-  await page.getByRole("link", { name: "Вернуться к вариантам" }).click();
+  await page
+    .getByRole("navigation", { name: "Навигация по объекту" })
+    .getByRole("link", { name: /Вернуться к вариантам/ })
+    .click();
   await expect(cards).toHaveCount(5);
   const comparisonResponse = waitForJourneyAction(page, "comparison");
   await page.getByRole("link", { name: "Сравнить выбранные" }).click();
