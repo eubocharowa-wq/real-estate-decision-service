@@ -2651,7 +2651,7 @@ fieldset {
 .detail-status.status-aging {
   border-color: rgb(168 97 35 / 30%);
   background: var(--amber-soft);
-  color: var(--amber);
+  color: var(--gold-ink);
 }
 
 .detail-strength-list,
