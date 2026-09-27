@@ -99,7 +99,7 @@ export function RequestEntry({ staticPreview = false }: RequestEntryProps) {
   };
 
   return (
-    <main className="entry-shell">
+    <div className="entry-shell">
       <section className="entry-card" aria-labelledby="entry-title">
         <p className="eyebrow">Не каталог. Инструмент выбора.</p>
         <h1 id="entry-title">Опишите, какую недвижимость вы ищете</h1>
@@ -157,6 +157,6 @@ export function RequestEntry({ staticPreview = false }: RequestEntryProps) {
           </button>
         ))}
       </aside>
-    </main>
+    </div>
   );
 }
