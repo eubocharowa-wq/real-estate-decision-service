@@ -153,15 +153,17 @@ const FinancingSection = ({
 );
 
 export function PropertyDetailNotFound({
-  message = "Объект не найден",
+  title = "Объект не найден",
+  description = "Проверьте ссылку или вернитесь к ранее подобранным вариантам.",
 }: {
-  readonly message?: string;
+  readonly title?: string;
+  readonly description?: string;
 }) {
   return (
     <main className="empty-state" role="alert">
       <p className="eyebrow">Страница объекта</p>
-      <h1>{message}</h1>
-      <p>Проверьте ссылку или вернитесь к ранее подобранным вариантам.</p>
+      <h1>{title}</h1>
+      <p>{description}</p>
       <Link className="button button-secondary" href="/shortlist">
         Вернуться к вариантам
       </Link>
