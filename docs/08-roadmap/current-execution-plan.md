@@ -1,20 +1,29 @@
-# Current Execution Plan — «Основание»
+# Current Execution Plan v4 — «Основание»
 
-**Status:** active source of truth for execution order  
-**Updated:** 2026-09-13  
-**Baseline HEAD when adopted:** `bfb8f4ba958f9057fe1c0e9f6fa9e393fb42fe00`
+**Status:** active source of truth for execution order
+**Updated:** 2026-10-03
+**Baseline HEAD:** `51a33b7071a3773897401777b6572bfb9f40b585`
 
-This document does not replace `PROJECT.md`, `AGENTS.md`, domain contracts, source policies, or historical task specifications. It defines the **current implementation sequence from the present repository state to a controlled real-buyer pilot and public beta**.
+This document does not replace `PROJECT.md`, `AGENTS.md`, domain contracts,
+source policies, or historical task specifications. It defines the current
+implementation sequence from the repository baseline above to a controlled
+real-buyer pilot and public beta.
 
-If a current `TASK-XXX.md` conflicts with this document, the task remains the immediate execution contract, but the conflict must be reported and resolved rather than silently changing product semantics.
+If an active `TASK-XXX.md` conflicts with this document, report and resolve the
+conflict explicitly. Do not silently change product semantics or rewrite task
+history.
 
 ---
 
 ## 1. Product destination
 
-«Основание» is not a listings portal. The product must help a buyer make a better real-estate decision.
+«Основание» is not a listings portal and does not merely “help choose.” The
+service forms an evidence-backed real-estate decision: it structures the
+request, compares relevant options, identifies trade-offs and risks, separates
+known facts from claims and unknowns, and states what still requires
+verification.
 
-Target user journey:
+Target journey:
 
 ```text
 Life task / natural-language request
@@ -27,28 +36,30 @@ Personal Match Score + Data Confidence
 ↓
 Reasons, compromises, unknowns and conflicts
 ↓
-Property detail
-↓
-Comparison of finalists
+Property detail and comparison
 ↓
 User-supplied property / URL when needed
 ↓
-Targeted expert verification when needed
+Targeted refresh or expert verification when needed
 ↓
 Evidence-backed result
 ↓
 Decision recomputation
 ↓
-Clearer next action
+Clear conclusion and next action
 ```
 
-The first production milestone is not nationwide coverage. It is a **small, trustworthy, end-to-end working buyer decision service** with real data, durable state, evidence provenance, controlled expert workflows, observable failures, and a release gate.
+The first production milestone is not nationwide or full-market coverage. It
+is a small, trustworthy, end-to-end decision service with real data, durable
+state, evidence provenance, controlled expert workflows, observable failures,
+measured source coverage, and a reproducible release gate.
 
 ---
 
-## 2. Product invariants that must not be changed by implementation work
+## 2. Product and data invariants
 
-The following remain non-negotiable unless the curator explicitly changes product architecture:
+These rules are non-negotiable unless the curator explicitly changes product
+architecture:
 
 - `Property != Offer`;
 - one Property may have multiple Offers;
@@ -56,470 +67,669 @@ The following remain non-negotiable unless the curator explicitly changes produc
 - `unknown != false` and `unknown != true`;
 - `claimed != confirmed`;
 - Match Score and Data Confidence remain separate;
-- hard criteria are gates and cannot be compensated by soft criteria;
+- hard criteria remain gates and cannot be compensated by soft criteria;
 - AI is not a factual source;
-- critical facts require source/provenance/evidence;
-- OpenClaw may collect/extract but does not rank, confirm advertisements, decide legal cleanliness, or write directly to canonical data;
-- source access, storage, display, refresh and attribution policy remain independent of technical scraping capability;
-- the product remains architecture-neutral to geography even when the pilot dataset is local;
-- a new capability is not implemented “along the way” unless required by the current task.
+- critical facts require provenance and evidence;
+- OpenClaw may collect/extract but cannot rank, confirm facts, decide legal
+  cleanliness, or write directly to canonical data;
+- source access, automation, storage, display, refresh, attribution, and
+  retention permissions remain independent of technical accessibility;
+- market source != verification source;
+- an official or verification source does not replace marketplace discovery;
+- a marketplace listing does not automatically confirm its claims;
+- source product priority and source technical-access status are separate
+  concepts;
+- lack of an open API must not silently remove a mandatory product source;
+- the architecture remains geography-neutral even when a pilot dataset is
+  local;
+- a capability is not implemented “along the way” unless required by the
+  active task.
 
 ---
 
-## 3. Current repository state at adoption
+## 3. Baseline status
 
-The project has already moved beyond the original mock-only MVP stage.
+### 3.1 Completed execution stages
 
-Confirmed current capabilities include:
+The following stages are complete at this document baseline:
+
+- `TASK-023` — unified expert runtime and durable persistence;
+- `TASK-024` — deployment/security/documentation hygiene;
+- `TASK-024B` — honest GitHub Pages preview;
+- `TASK-025` — dynamic staging readiness;
+- `TASK-025A` — persisted expert workbench and decision recompute;
+- `TASK-025B` — managed staging and external golden flow;
+- `TASK-026` — deployed browser golden journey, 9/9 passing at 360, 768,
+  and 1280 widths;
+- `TASK-027` — operational pilot release gate with verifiable external
+  evidence, revision binding, safe subprocess handling, and a deterministic
+  machine-readable artifact;
+- security hotfix — Next.js and `eslint-config-next` upgraded to `16.3.8`;
+  production dependency audit is green at the baseline.
+
+### 3.2 Confirmed repository capabilities
 
 - Next.js + React + TypeScript application with CI;
-- deterministic matching and separate data-quality/confidence semantics;
-- buyer journey, shortlist, property detail and comparison flows;
-- PostgreSQL repository implementations for durable user/application state;
-- server-side buyer journey recovery rather than tab-only state;
-- expert domain layer and expert workbench flows;
-- pilot hardening, telemetry contracts, feature flags, kill switches and release-gate logic;
-- source-policy model and data-collection abstractions;
-- five manually curated real ЕИСЖС pilot objects with field-level provenance discipline;
-- explicit `REDS_APPLICATION_MODE` and real curated data reachable through the actual buyer-journey HTTP runtime in `pilot` mode;
-- public brand «Основание» and public informational site;
-- GitHub Pages review deployment as a static, noindex visual preview only.
+- deterministic matching with separate Match Score and Data Confidence;
+- buyer journey, shortlist, property detail, comparison, expert request,
+  workbench/result, and affected-only recomputation;
+- PostgreSQL-backed durable application state;
+- protected dynamic staging with readiness and browser evidence;
+- source-policy and source-readiness boundaries;
+- versioned real pilot dataset validation with manually curated real records;
+- guarded OpenClaw gateway integration that remains disabled for live
+  collection until a source/use case is separately approved and pilot-ready;
+- feature flags, kill switches, offline regressions, and operational release
+  gate;
+- public informational surface and an explicitly demo-only GitHub Pages
+  preview.
 
-The project is therefore **not a rewrite candidate**. Work should close operational, persistence, deployment, evidence, data-quality and product-completion gaps around the existing architecture.
+### 3.3 Current release-gate state
 
----
+`TASK-027` is complete as infrastructure, but the gate is expected to return
+`ready=false` until later roadmap evidence exists. In particular, completion
+evidence remains required for the production Evidence Artifact lifecycle,
+canonical catalogue, semantic dedup, public/legal readiness, and operational
+backup/monitoring/restore.
 
-## 4. Known gaps that define the next implementation sequence
-
-### 4.1 Expert workbench runtime split
-
-TASK-023 made buyer and standalone expert-request creation PostgreSQL-capable,
-but the public workbench/result routes still used a separately seeded fixture
-runtime. TASK-025A closes this remaining split through the shared application
-repository composition root and the buyer journey's existing evidence and
-affected-only recomputation pipeline. Fixture workbench data remains limited
-to explicit test/demo fixtures.
-
-### 4.2 Published GitHub Pages is not the real application runtime
-
-`TASK-022` intentionally exports only a static review build. API routes, PostgreSQL-backed flows and dynamic buyer/expert screens are excluded.
-
-GitHub Pages therefore must remain a **visual preview**, not be treated as the production service.
-
-### 4.3 No production-like dynamic deployment has yet been accepted
-
-The next meaningful environment must run the real Next.js server/application runtime with PostgreSQL and pilot configuration.
-
-### 4.4 Browser-level end-to-end verification is missing
-
-Application/integration tests are strong, but a deployed browser journey must also be tested. This is required to catch broken navigation, missing APIs, environment/configuration drift and responsive UI failures.
-
-### 4.5 Release-gate logic exists but is not yet an operational deployment gate
-
-`evaluatePilotReleaseGate()` must be wired to real evidence and produce a machine-readable pass/fail result that can block pilot deployment.
-
-### 4.6 Evidence artifacts are not yet managed as a production evidence lifecycle
-
-The product model is evidence-first, but production storage must support raw evidence/artifact metadata, checksum, state, access boundaries and retention outside Git.
-
-### 4.7 Curated pilot dedup is not yet semantic identity resolution
-
-Duplicate IDs can be rejected, but the same physical property entered under different IDs can still evade duplicate detection. Before scaling the curated dataset, the project needs semantic/property identity resolution that preserves separate Offers.
-
-### 4.8 Canonical catalogue/data storage is still transitional
-
-Durable user/application state exists, but the real pilot property catalogue remains curated-dataset driven. A controlled transition to canonical Property/Offer/Source/Evidence storage is still required.
-
-### 4.9 Public product and legal content are not fully launch-ready
-
-The public second entry (“I already have options”), expert service scope/price/timing, selection-data privacy language, production domain metadata and final legal/operator review remain launch dependencies.
-
-### 4.10 Dependency/security triage must be completed before external pilot
-
-CI has reported dependency vulnerabilities. These must be classified into production-reachable, dev-only or non-exploitable categories, remediated where required, and turned into a repeatable security gate rather than ignored output.
+This is a correct fail-closed state. It is not permission to synthesize PASS
+evidence or to begin `TASK-020`.
 
 ---
 
-## 5. Execution order
+## 4. Source architecture v4
 
-The implementation order below is intentional. Do not jump to large-scale source collection, dataset growth or TASK-020 before the preceding exit criteria are met.
+### 4.1 Source roles
+
+Source roles are complementary. They do not imply equal authority and do not
+allow facts to be promoted without field-level evidence.
+
+#### MARKET / DISCOVERY
+
+- ЦИАН;
+- Авито;
+- Домклик;
+- Яндекс Недвижимость as an additional channel;
+- developer sites;
+- contractor/construction-organization sites.
+
+#### NEWBUILD
+
+- ЕИСЖС / наш.дом.рф;
+- developer sites;
+- ЕРЗ as analytics/reference, not as authoritative Property-fact evidence.
+
+#### IJS
+
+- строим.дом.рф / ДОМ.РФ ИЖС;
+- Домклик «Строительство домов»;
+- construction-organization and contractor sites.
+
+#### VERIFY
+
+- Росреестр / НСПД;
+- ФИАС / ГАР;
+- ГИС ЖКХ;
+- ФНС;
+- НОСТРОЙ where applicable;
+- Федресурс / ЕФРСБ;
+- КАД Арбитр.
+
+#### FINANCE
+
+- ДОМ.РФ;
+- official bank sources.
+
+#### GEO
+
+- Яндекс Карты API or another provider only after licensing and storage review.
+
+### 4.2 Mandatory market core
+
+ЦИАН, Авито, and Домклик are mandatory target market sources for the product.
+They cannot be moved to optional/secondary status, removed merely because a
+general public search API is unavailable, or replaced by ЕИСЖС or developer
+sites.
+
+Each mandatory source requires its own supported-access workstream:
+
+1. official partner/API access;
+2. approved source-specific channel;
+3. supported user-URL path;
+4. operator/manual fallback for a controlled pilot.
+
+A fallback is not equivalent to automated market-search coverage. No source is
+described as connected until its supported mode is proven, and no full-market
+coverage claim is permitted until coverage is measured.
+
+### 4.3 Source authority and coverage rules
+
+- market sources provide discovery and offer evidence but do not automatically
+  confirm Property facts;
+- verification sources may confirm specific facts but do not replace the
+  marketplace inventory needed to discover Offers;
+- registry presence is metadata, not proof of integration;
+- a credential reference is not proof that an API works;
+- a technically reachable page is not permission to automate, store, display,
+  or refresh its content;
+- supported access may differ by environment, URL/path scope, entity type, and
+  operation;
+- source-only share, overlap, duplicates, conflicts, freshness, and segment
+  coverage must be measured before making coverage claims.
 
 ---
 
-# Phase A — Runtime integrity and durable expert flow
+## 5. First-class ИЖС scenarios and future domain boundary
 
-## TASK-023 — Unify expert request runtime and durable persistence
+The roadmap includes a first-class scenario:
 
-### Goal
+> «У меня есть участок → хочу построить дом».
 
-All ExpertRequest types must use one coherent application/runtime boundary, the correct pilot dataset and durable persistence.
+A later scenario is:
 
-### Required result
+> «Хочу участок + строительство дома».
 
-- eliminate the split persistence behavior between buyer-journey expert requests and `/api/expert-requests`;
-- reuse the existing PostgreSQL expert repository rather than adding a new implementation;
-- apply `REDS_APPLICATION_MODE` consistently to expert context;
-- real curated pilot properties shown to the buyer must be valid expert-context properties;
-- preserve document-review and onsite-specific context and access boundaries;
-- add PostgreSQL persistence regression proving survival across a new application/runtime instance;
-- add pilot/demo isolation regression tests;
-- keep existing matching, evidence and verification semantics unchanged.
+The ИЖС extension must introduce explicit domain concepts rather than forcing
+construction into ready-property entities:
 
-### Exit criteria
+- `Contractor`;
+- `HouseProject`;
+- `ConstructionOffer`;
+- `ConstructionPackage`;
+- `ConstructionScope`;
+- `ConstructionTechnology`;
+- `ConstructionTimeline`;
+- `EscrowEligibility`;
+- `ContractorEvidence`;
+- `BuildScenario`.
 
-A real curated pilot property can be selected in the normal buyer journey and used to create every supported expert request type through the real server boundary. With PostgreSQL enabled, the request survives runtime/application re-instantiation.
+A ready house and a `ConstructionOffer` are not the same product. A project
+price is comparable only together with its package/completeness and
+`ConstructionScope`; headline prices without scope must not be treated as
+equivalent exact prices.
 
----
-
-# Phase B — Repository hygiene, security and honest preview
-
-## TASK-024 — Deployment/security hygiene
-
-### Scope
-
-- fix stale `.env.example` statements about PostgreSQL implementation;
-- synchronize README/status documentation with the actual architecture;
-- run and classify dependency audits, including production-only dependencies;
-- remediate reachable critical/high vulnerabilities or document a justified non-production exception;
-- review install-script/supply-chain warnings;
-- define the minimum dependency-security CI check for pilot.
-
-Do not combine this task with broad framework upgrades unless required to close an actual blocker.
-
-## TASK-024B — GitHub Pages preview integrity
-
-The static preview must not pretend that excluded backend flows work.
-
-Required:
-
-- no navigation link should point to a route removed by the Pages preparation step;
-- no primary CTA should attempt an API call that does not exist in the static deployment;
-- if interactive flows are shown for design review, they must be clearly non-operational/static;
-- generated `out/` artifacts should have an automated internal-link check;
-- keep preview noindex.
-
-### Exit criteria
-
-GitHub Pages is internally consistent and clearly a review-only surface. It is not used as evidence that the production application has been deployed.
+These concepts are planned, not implemented at this baseline.
 
 ---
 
-# Phase C — Full dynamic staging
+## 6. Authoritative execution order
 
-## TASK-025 — Production-like dynamic staging
-
-### Goal
-
-Deploy the actual Next.js application runtime rather than a static export.
-
-### Required environment
-
-- full dynamic Next.js runtime;
-- managed PostgreSQL;
-- safe connection/pooling configuration;
-- real environment-variable/secret management;
-- explicit `REDS_APPLICATION_MODE=pilot` only when deliberately enabled;
-- persistent journey/expert/feedback/error state;
-- no synthetic records presented as real pilot records;
-- health/readiness signal;
-- documented rollback path.
-
-### Required golden flow on staging
+### DONE
 
 ```text
-home
-→ request entry
-→ confirmation
-→ shortlist
-→ property detail
-→ comparison
-→ expert request
-→ expert workbench/result
-→ decision recompute
+TASK-023
+TASK-024
+TASK-024B
+TASK-025
+TASK-025A
+TASK-025B
+TASK-026
+TASK-027
+Next.js security hotfix 16.3.8
 ```
 
-Also verify:
+### NEXT
 
-- page reload/recovery;
-- a second runtime/process can read prior state from PostgreSQL;
-- demo mode remains isolated;
-- errors remain diagnosable without leaking sensitive internals.
-
-### Exit criteria
-
-An external staging URL runs the complete application flow over PostgreSQL and survives runtime restart/re-instantiation without losing required journey/expert state.
-
-## TASK-025A — Real persisted expert workbench and decision recompute
-
-Before browser automation, connect the persisted buyer expert request to the
-real queue, workbench, durable draft/result storage and affected-only decision
-recompute. Preserve owner/specialist access boundaries and demo/pilot
-isolation. Repository completion does not itself satisfy the external TASK-025
-deployment exit criterion.
-
-## TASK-025B — Managed dynamic staging and external golden flow
-
-Close TASK-025's remaining external exit criterion before browser automation:
-use a separate protected Vercel Preview/staging environment, an isolated
-managed PostgreSQL database with migrations through `0004`, deliberate pilot
-configuration and platform-native trusted deployment access. Verify the actual
-`/api/readiness` response, buyer/expert flow, owner denial, evidence integrity
-and persistence across a demonstrably new runtime instance. A production
-deployment, local PostgreSQL or repository test cannot substitute for this
-evidence.
-
----
-
-# Phase D — Real browser E2E
-
-## TASK-026 — Browser-level golden journey
-
-**Status: completed.** Deployed protected staging browser golden journey:
-9/9 passed across the required viewports.
-
-Use Playwright or equivalent browser automation against the real deployed application.
-
-Minimum coverage:
-
-- desktop and mobile viewports (at least representative 360, 768 and 1280 widths);
-- request → confirmation → shortlist → property → comparison;
-- expert request;
-- user URL entry path;
-- reload/recovery;
-- not-found/recoverable-error behavior;
-- dead-link/404 detection for primary navigation;
-- basic accessibility smoke checks;
-- both demo isolation and pilot mode where environment allows.
-
-### Exit criteria
-
-The deployed golden buyer journey is green in a real browser, not only in application tests.
-
-Next active stage: **TASK-027 — Operational pilot release gate**.
-
----
-
-# Phase E — Operational release gate
-
-## TASK-027 — Turn pilot release logic into a real gate
-
-### Goal
-
-Connect existing release-gate logic to real release evidence.
-
-### Runner must collect or receive evidence for at least
-
-- build/typecheck/lint status;
-- core regression status;
-- PostgreSQL/database checks;
-- browser E2E result;
-- secrets/security status;
-- source readiness;
-- provenance/evidence readiness;
-- hard-criteria semantics;
-- Match Score/Data Confidence separation;
-- expert evidence boundary;
-- URL-ingestion safety;
-- real pilot dataset readiness;
-- rollback readiness;
-- known warnings/limitations.
-
-### Output
-
-Produce a versioned machine-readable artifact, for example:
-
-```json
-{
-  "ready": false,
-  "blockers": [],
-  "warnings": [],
-  "evidence": {}
-}
+```text
+TASK-028
+TASK-029
+TASK-029B
+TASK-029C
+TASK-029D
+TASK-029E
+TASK-029F
+TASK-030A
+TASK-030A1
+TASK-030
+TASK-030B
+TASK-030C
+TASK-030D
+TASK-030E
+TASK-030F
+TASK-030G
+TASK-030H
+TASK-030I
+TASK-031
+TASK-031A
+TASK-031B
+TASK-031C
+TASK-031D
+OPS-01 through OPS-08
+TASK-020
+Public beta
 ```
 
-The command/CI step must exit non-zero when hard blockers make `ready=false`.
-
-### Exit criteria
-
-There is one reproducible command/CI job that answers whether TASK-020 may start. No manual assumption may substitute for it.
+Business-access work for `TASK-030A` (ЦИАН / Авито / Домклик) may begin in
+parallel earlier because partner lead times are external. The coding sequence
+does not skip `TASK-028`, `TASK-029`, or `TASK-029B`.
 
 ---
 
-# Phase F — Production evidence lifecycle
+## 7. Planned task contracts
 
-## TASK-028 — Evidence Artifact storage
-
-### Goal
+### TASK-028 — Production Evidence Artifact lifecycle
 
 Make evidence a durable first-class production asset outside Git.
 
-### Required concepts
-
-At minimum support:
+Minimum boundary:
 
 - object/blob storage;
 - immutable artifact identity;
-- source URL/reference;
-- source ID;
-- collection timestamp;
-- MIME/type metadata;
-- checksum (e.g. SHA-256);
-- artifact state such as `quarantine`, `staged`, `approved`;
-- access policy/private-by-default for user documents;
+- source URL/reference and source ID;
+- collection timestamp and MIME/type metadata;
+- checksum such as SHA-256;
+- lifecycle state such as `quarantine`, `staged`, `approved`;
+- private-by-default access for user documents;
 - retention policy;
 - linkage from `FieldEvidence` / source snapshots;
 - no public document URL by default;
-- no silent canonical write directly from raw collection output.
+- no direct canonical write from raw collection output.
 
-### Exit criteria
+Exit: an artifact can be stored, validated, referenced, audited, retained, and
+access-controlled without committing raw evidence to Git.
 
-A collected or uploaded evidence artifact can be stored, validated, referenced by normalized facts, audited and access-controlled without committing raw evidence to Git.
+### TASK-029 — Canonical catalogue transition
 
----
+Move real pilot Property/Offer/Source/Evidence data into durable canonical
+storage while preserving curated import as a controlled ingestion path.
 
-# Phase G — Canonical property data and semantic dedup
+Required: explicit Property and Offer persistence, source/evidence links,
+versioned import, provenance preservation, and no merging of commercial Offer
+differences into Property.
 
-## TASK-029 — Canonical catalogue transition
+### TASK-029B — Semantic dedup / identity resolution
 
-Move real pilot Property/Offer/Source/Evidence data toward durable canonical storage while preserving current curated import as a controlled ingestion path during transition.
+Detect the same physical Property under different identifiers while preserving
+distinct Offers. Cover different sources and IDs, multiple prices, same-layout
+different-unit protection, user-URL duplicates, false-merge protection, and
+reviewable ambiguous conflicts.
 
-Required:
+Large dataset expansion cannot precede this exit criterion.
 
-- explicit Property and Offer persistence;
-- source/evidence links;
-- versioned/importable curated data;
-- no loss of provenance;
-- no merging of commercial Offer differences into Property.
+### TASK-029C — API / credential inventory
 
-## TASK-029B — Semantic dedup / identity resolution
+Record credential references and integration status without storing secret
+values in this roadmap or repository.
 
-Support detecting the same physical property under different external/internal IDs.
+Minimum inventory:
 
-Minimum tests:
+- `OPENAI_API_KEY`;
+- OpenClaw model-provider credential;
+- `REDS_OPENCLAW_GATEWAY_TOKEN`;
+- CIAN access credential;
+- Avito partner credential;
+- Domclick credential;
+- Yandex Maps API key;
+- other actually purchased/available credentials.
 
-- same unit, different sources;
-- same unit, different candidate IDs;
-- same Property, different Offer/price;
-- same layout but different unit must not merge;
-- false-merge protection;
-- user URL duplicate against canonical inventory;
-- ambiguous cases produce a reviewable conflict rather than silent merge.
+Allowed statuses:
 
-### Exit criteria
+- `ACTIVE_AND_USED`;
+- `AVAILABLE_NOT_INTEGRATED`;
+- `PENDING_PARTNER_ACCESS`;
+- `UNUSED_REVOKE`.
 
-Scaling the dataset no longer depends on operators manually remembering which physical units were already entered.
+An available key remains not integrated until an allowed runtime path and
+provider smoke test prove its use.
 
----
+### TASK-029D — Parser quality benchmark / OpenAI decision
 
-# Phase H — Real data expansion and source coverage
+Benchmark 30–50 real, anonymized requests. Measure:
 
-## TASK-030 — Expand real pilot dataset safely
+- must/exclude accuracy;
+- missed hard criteria;
+- false hard criteria;
+- unknown preservation;
+- contradiction detection;
+- fuzzy Russian handling;
+- ИЖС requests.
 
-Only after Phase G protections.
+Add an OpenAI/LLM parser only if the benchmark demonstrates a material need.
+If added, require a schema-constrained adapter, deterministic validation,
+fallback behavior, and a cost cap. The model does not become a factual source.
 
-### First target
+### TASK-029E — ИЖС domain extension
 
-20–30 varied real properties, then 30–50 physical Properties / approximately 40–70 Offers where evidence permits.
+Introduce the domain concepts listed in section 5. Keep ready homes,
+`HouseProject`, and `ConstructionOffer` distinct. Model packages and scope so
+prices are not compared independently of completeness.
 
-Dataset should intentionally include:
+### TASK-029F — Source Registry v2
 
-- new-build and at least one additional relevant property segment when policy/data allow;
-- multiple Offers for selected Properties;
-- unknown fields;
-- conflicts;
-- stale/refresh cases;
-- financing scenarios;
-- duplicate identity cases;
-- hard-fail and critical-unknown benchmark cases.
+For each source store at least:
 
-### Measure
+- source ID;
+- role/category;
+- supported entity/property types;
+- domains;
+- access method;
+- automation rights;
+- storage rights;
+- display rights;
+- refresh rights;
+- attribution;
+- retention;
+- `credential_ref`;
+- environment;
+- URL/path scope;
+- rate limits;
+- freshness policy;
+- evidence contract;
+- `reviewed_at`;
+- production approval.
 
-- field coverage;
-- critical unknown rate;
-- duplicate/identity-resolution rate;
+Unknown or missing policy fields remain fail-closed.
+
+### TASK-030A — Core Market Access Program
+
+ЦИАН, Авито, and Домклик are all mandatory. Create a separate access dossier
+for each:
+
+```text
+docs/06-data-collection/access-dossiers/<source>.md
+```
+
+Each dossier covers:
+
+- official API/partner channel;
+- market-search scope;
+- credential process;
+- pricing/limits;
+- storage/display/refresh rights;
+- attribution;
+- permitted property types;
+- commercial-use status;
+- sandbox/test availability;
+- partner response;
+- final integration decision.
+
+Absence of partner access may produce a blocker or an approved bounded
+fallback; it does not make the source optional and does not permit broad
+crawling.
+
+### TASK-030A1 — Mandatory Source Coverage Gate
+
+A mandatory source is not connected merely because it appears in the registry.
+
+For each mandatory source prove:
+
+- registered;
+- policy reviewed;
+- supported mode exists;
+- credential/config status known;
+- adapter or manual path proven;
+- freshness mode known;
+- evidence/provenance produced;
+- health/smoke status known.
+
+Minimum coverage gate:
+
+- ЦИАН;
+- Авито;
+- Домклик;
+- ЕИСЖС;
+- at least one developer source;
+- at least one ИЖС source.
+
+OpenClaw readiness is a separate block:
+
+- gateway configured;
+- collector skill available;
+- model provider configured;
+- credential present;
+- approved source/use case exists;
+- live smoke passed.
+
+API readiness is also separate:
+
+- `credential_ref` exists;
+- runtime secret configured;
+- provider reachable;
+- scope valid;
+- billing/limits known;
+- integration smoke passed.
+
+Registry-only status must never satisfy this gate.
+
+### TASK-030 — Real pilot dataset expansion
+
+Begin only after canonical storage and semantic dedup.
+
+Targets:
+
+1. first 20–30 real Properties;
+2. then 30–50 physical Properties / approximately 40–70 Offers where evidence
+   permits.
+
+Include newbuild, secondary, ready houses, multiple Offers, market-core
+examples, unknown/conflict/stale cases, financing, duplicate identity, hard
+fail, and critical unknown cases.
+
+### TASK-030B — Multi-source coverage proof
+
+Measure rather than assume:
+
+- unique eligible Offers by source;
+- overlap;
+- source-only share;
+- duplicate rate;
+- price conflicts;
 - freshness;
-- conflict rate;
-- shortlist failure reasons;
-- matching misses;
-- source-specific gaps.
+- segment coverage.
 
-## TASK-030B — Add a second approved real source
+Do not publish an unverified percentage of market coverage.
 
-Do not add a source only to increase count. The second source exists to validate:
+### TASK-030C — OpenClaw LIVE vertical slice
 
-- multi-source provenance;
-- conflict handling;
-- semantic dedup;
-- different refresh/freshness policies;
-- source readiness gates;
-- coverage gain.
+Required flow:
 
-Prefer high-value approved sources such as developer/authoritative sources before broad aggregator dependence when policy and product coverage support that choice.
+```text
+approved source
+→ Collection Plan
+→ OpenClaw Gateway
+→ real-estate-collector
+→ staged result
+→ Evidence policy
+→ validation
+→ normalization
+→ identity/dedup
+→ canonical
+→ matching
+```
 
-### Exit criteria
+Rules:
 
-The product can explain not only what it found, but also the limits of its connected-source coverage.
+- exact target URLs only;
+- no arbitrary crawling;
+- no CAPTCHA/auth bypass;
+- no direct canonical write;
+- no ranking or verification promotion by OpenClaw;
+- bounded timeout/output/cost;
+- no secrets in logs.
+
+At this baseline OpenClaw is not live. This task cannot begin without the
+approved source/use-case and readiness evidence in `TASK-030A1`.
+
+### TASK-030D — Real source-discovery agent
+
+Use for discovery of regional sources, new developers, and ИЖС contractors.
+
+```text
+discovery
+→ candidate dossier
+→ human review
+→ Source Policy
+→ registry
+→ collector approval
+```
+
+Discovery must never auto-promote a source to production.
+
+### TASK-030E — Live user URL ingestion
+
+Provide real supported paths for ЦИАН, Авито, Домклик, and developer URLs,
+plus an unsupported-source fallback.
+
+Required safety: SSRF protection, redirect limits, private-IP block,
+size/type limit, timeout, provenance, and dedup against canonical data.
+
+### TASK-030F — Targeted refresh runtime
+
+Minimum scope:
+
+- price;
+- availability;
+- permitted promotions;
+- financing where policy allows;
+- stale detection;
+- bounded queue and controlled retries;
+- source health;
+- evidence;
+- affected-only recomputation;
+- kill switch.
+
+### TASK-030G — ИЖС contractor/project search proof
+
+Prove the end-to-end scenario:
+
+> «Есть участок, хочу дом 120 м², 3 спальни, до X млн, въехать до Y».
+
+Compare permitted data from строим.дом.рф, Домклик contractor/project paths,
+approved contractor sites, and ready houses as an alternative scenario.
+
+### TASK-030H — Verification vertical slice
+
+For a market Offer:
+
+```text
+Market Offer
+→ Property identity
+→ FIAS
+→ NSPD/Rosreestr
+→ project/building source
+→ FNS
+→ finance source
+→ evidence
+→ Data Confidence
+```
+
+For a Contractor, use FNS, НОСТРОЙ where applicable, Федресурс, КАД Арбитр,
+and platform evidence. Each verification result remains field-scoped and does
+not silently overwrite conflicts.
+
+### TASK-030I — Durable pilot telemetry
+
+In-memory telemetry is insufficient. Add persistent, privacy-safe telemetry
+for funnel, shortlist, comparison, URL ingestion, expert flow, recompute, and
+recoverable errors.
+
+Do not store raw user-request text, documents, contact data, or secrets in
+telemetry.
+
+### TASK-031 — Complete public product surface
+
+The public product must include:
+
+- «Опишите задачу»;
+- «У меня уже есть варианты»;
+- ready-house scenario;
+- ИЖС scenario only after `TASK-030G` is ready;
+- source-coverage disclosure;
+- methodology;
+- FAQ;
+- clearly labelled demo cases.
+
+Primary buyer-facing copy should use “формируем решение,” “проводим проверку,”
+“сопоставляем варианты,” “выявляем риски,” and “формируем вывод,” rather than
+“помогаем” as the main product formula.
+
+### TASK-031A — Expert operator access + notifications
+
+Add trusted operator authentication/authorization and bounded notifications
+around the existing expert workflow. Operator identity configuration is not a
+substitute for HTTP authentication.
+
+### TASK-031B — Privacy/legal/metadata
+
+Complete privacy treatment for buyer/journey/expert data, consent boundaries,
+operator/legal details, contact channels, canonical production URL, sitemap,
+robots, and indexation rules. No placeholder legal/service copy may be indexed
+in public production.
+
+### TASK-031C — Abuse/rate-limit/public API hardening
+
+Define and enforce public API abuse controls, rate limits, payload limits,
+safe diagnostics, and operational response procedures without weakening
+owner/access boundaries.
+
+### TASK-031D — Paid expert-service commerce
+
+Only after service scope, pricing, SLA, legal terms, access control, and result
+boundaries are approved, implement the paid-service boundary. Do not infer
+commercial terms or launch paid requests earlier.
 
 ---
 
-# Phase I — Public product and legal launch readiness
+## 8. Operational readiness gates
 
-## TASK-031 — Complete public product surface
+Operational readiness is explicit release evidence, not an assumption derived
+from successful hosting.
 
-Required product work:
+### OPS-01 — Production environment
 
-- expose the second entry point for users who already have properties/URLs;
-- ensure all primary public navigation corresponds to working product routes on the real deployment;
-- complete expert-service scope, result format, price/timing/SLA and onsite boundary after curator decision;
-- ensure result language clearly separates information review, legal opinion, visual onsite check and engineering inspection.
+Managed production runtime, database/pooling, environment separation, and
+readiness proof.
 
-## TASK-031B — Privacy/legal/production metadata
+### OPS-02 — Secrets
 
-Required before public indexing or paid requests:
+Secret inventory, least privilege, rotation/revocation, no client/log/artifact
+leakage, and validated runtime references.
 
-- complete privacy treatment for buyer-selection/journey data;
-- final operator/legal details and contact channels;
-- consent boundaries for pilot telemetry/feedback/expert context where required;
-- production `NEXT_PUBLIC_SITE_URL`;
-- final canonical URLs, sitemap and robots rules;
-- only launch-ready pages indexed;
-- no placeholder legal/service copy in public production.
+### OPS-03 — Backup/restore
 
-### Exit criteria
+Backup policies for PostgreSQL and evidence storage plus an actual restore
+drill with recorded evidence.
 
-A real user can understand what the service does, what expert work includes, what is stored, what is not guaranteed, and how to contact the operator.
+### OPS-04 — Monitoring
 
----
+Privacy-safe structured errors, health/readiness, source health, queue health,
+alerts, and ownership/runbooks.
 
-# Phase J — Production operations readiness
+### OPS-05 — Deploy/rollback/kill-switch drill
 
-Before real-buyer pilot, verify the operational layer rather than assuming hosting is enough.
+Prove deploy, rollback, feature-disable, source-disable, and incident-stop
+paths rather than relying only on documentation.
 
-Required:
+### OPS-06 — GitHub governance / branch protection
 
-- managed PostgreSQL and pooling;
-- backup policy and an actual restore drill;
-- object-storage backup/retention where applicable;
-- secrets management;
-- structured error monitoring;
-- health/readiness checks;
-- deploy/rollback runbook;
-- `demo` / `pilot` / `production` configuration separation;
-- kill switches tested;
-- no secrets or sensitive evidence in logs;
-- no synthetic data silently mixed into pilot/production.
+`main` must have required CI and PR governance before public beta. Direct
+unreviewed changes must not bypass the release process.
 
-This may be implemented as focused tasks rather than one large infrastructure task, but all items become release-gate evidence.
+### OPS-07 — Domain
+
+Production domain, DNS, TLS, canonical URL behavior, and metadata validation.
+
+### OPS-08 — Cost guardrails
+
+Budgets and limits for hosting, database, storage, maps/APIs, model providers,
+OpenClaw execution, notifications, and expert operations.
+
+All OPS items become verifiable release-gate evidence. Operational
+backup/monitoring/restore remains a hard blocker until proven.
 
 ---
 
-# Phase K — TASK-020 Controlled Real Buyer Pilot
+## 9. TASK-020 — Controlled Real Buyer Pilot
 
-`TASK-020` remains the authoritative task specification for pilot execution. Do not rewrite it into this plan.
+`TASK-020` remains the authoritative pilot-execution specification and stays
+last before public beta.
 
-Pilot may begin only after the operational release gate reports `ready=true`, unless the existing task’s explicitly defined curator override is deliberately used for a smaller internal/friendly cohort.
+Pilot begins only after the operational release gate reports `ready=true`,
+except for the already documented curator override if it is deliberately used
+for its existing smaller internal/friendly cohort. This plan does not broaden
+or reinterpret that override.
 
-Recommended sequence remains:
+Recommended waves:
 
 ```text
 Wave 1: 3–5 users
@@ -533,147 +743,90 @@ review again
 expand only by explicit decision
 ```
 
-Primary pilot question:
+Stop expansion for any critical issue, including a hard criterion violation,
+inconsistent Match Score, claimed-as-confirmed presentation, source-policy
+bypass, private-data leakage, incorrect Property/Offer merge, or unauditable
+expert overwrite.
 
-> Did the service make it clearer what the buyer should consider, why, what the trade-offs are, and what still needs verification before a decision?
-
-Do not optimize pilot success around clicks or purchase conversion alone.
-
-Stop expansion when a critical issue is found, including:
-
-- hard criterion silently violated;
-- inconsistent Match Score;
-- claimed fact shown as confirmed;
-- source-policy bypass;
-- private-data leakage;
-- incorrect Property/Offer merge;
-- expert result overwriting evidence without auditability.
+Public beta follows only after pilot evidence is reviewed and the release gate
+is rerun for material changes.
 
 ---
 
-# Phase L — Public beta after evidence
-
-After pilot:
-
-- cluster observations by evidence and root cause;
-- do not turn every comment into a feature;
-- create separate tasks only for repeated/material problems;
-- version matching changes rather than tuning weights after one user;
-- expand sources/geography only when coverage evidence justifies it;
-- re-run browser E2E, security and release gate after material changes;
-- then open a larger public beta cohort.
-
----
-
-## 6. Deferred expansion: investment platform contour
-
-The broader investment concept remains strategically compatible with the architecture, but it must not dilute the buyer MVP before the core decision service is proven.
-
-Potential later contours include:
-
-- investment properties and development projects seeking capital;
-- investor profiles/interests and mandate matching;
-- project/investment due-diligence workflows;
-- commercial, hospitality and other income-producing real estate;
-- project owner ↔ investor discovery/matching.
-
-When activated, reuse the existing strengths where appropriate:
-
-- evidence/provenance;
-- source verification;
-- structured criteria;
-- matching;
-- expert review;
-- decision explanations.
-
-Do **not** force investor/project entities into `Property`/`Offer` if their semantics differ. That expansion requires its own product/domain design decision after the buyer product is validated.
-
----
-
-## 7. Current task sequence
-
-Current intended order:
-
-```text
-TASK-023  Unify expert runtime + durable persistence
-TASK-024  Deployment/security/documentation hygiene
-TASK-024B Honest GitHub Pages preview
-TASK-025  Full dynamic staging
-TASK-025A Persisted expert workbench + decision recompute
-TASK-025B Managed staging + trusted expert access + external golden flow
-TASK-026  Browser E2E
-TASK-027  Operational pilot release gate
-TASK-028  Evidence Artifact storage
-TASK-029  Canonical catalogue transition
-TASK-029B Semantic dedup / identity resolution
-TASK-030  Expand real pilot dataset
-TASK-030B Second approved real source
-TASK-031  Public product completion
-TASK-031B Privacy/legal/production metadata
-Operational readiness / backup / monitoring checks
-TASK-020  Controlled real buyer pilot
-Public beta only after pilot evidence
-```
-
-Task numbering after `TASK-022` is an execution convention from this plan. If a number is already used on the actual branch when a new task begins, use the next free number rather than rewriting task history.
-
----
-
-## 8. Go / no-go rules
+## 10. Go / no-go rules
 
 ### GO
 
-- continue the current architecture;
-- fix runtime/persistence gaps in place;
-- use GitHub Pages only as a visual preview;
-- deploy a full dynamic staging runtime;
-- scale real data only after evidence and dedup protections;
-- start TASK-020 only through the release gate.
+- continue the current architecture and close gaps in place;
+- keep Property, Offer, Evidence, matching, and confidence semantics separate;
+- build Evidence Artifact storage before canonical scale-up;
+- establish canonical storage and semantic dedup before large dataset growth;
+- pursue mandatory-source access dossiers in parallel where external lead time
+  requires it;
+- measure multi-source coverage before making coverage claims;
+- add APIs, OpenClaw, discovery, URL ingestion, refresh, and verification only
+  through their explicit policy/readiness gates;
+- begin `TASK-020` only through the operational release gate or the existing
+  explicitly documented curator override.
 
 ### NO-GO
 
-- no rewrite of the product architecture without a demonstrated need;
-- no claim that static GitHub Pages is the production application;
-- no public paid expert requests while expert persistence/legal scope is incomplete;
-- no production indexing of unfinished legal/service pages;
-- no large-scale curated-data growth before semantic dedup;
+- no registry-only claim that a source is connected;
+- no market-wide coverage claim without measurement;
+- no silent removal or demotion of ЦИАН, Авито, or Домклик because access is
+  difficult;
+- no replacement of mandatory marketplace sources by one official source or
+  developer sites;
+- no OpenClaw live collection without an approved source/use case;
+- no API key considered integrated until a runtime smoke test passes;
+- no broad crawling to compensate for missing partner access;
+- no CAPTCHA/auth bypass;
+- no large dataset before canonical storage and semantic dedup;
 - no raw evidence repository in Git as the production evidence store;
-- no uncontrolled crawler/source expansion;
+- no LLM promotion of facts or direct canonical writes;
+- no ИЖС feature claim before its domain and vertical slice are implemented;
 - no real-buyer pilot while hard blockers remain;
-- no investment-platform expansion before the buyer decision product proves value.
+- no public beta without required CI/PR governance, privacy/legal readiness,
+  and operational evidence.
 
 ---
 
-## 9. Curator decisions still required
+## 11. Decisions and external dependencies still requiring evidence
 
-Technical work must surface, not silently invent, decisions about:
+Do not silently invent decisions about:
 
-- production/dynamic hosting provider and region;
-- managed PostgreSQL provider/region;
+- partner/API access for ЦИАН, Авито, and Домклик;
+- commercial terms, pricing, quotas, storage/display/refresh rights;
+- approved ИЖС sources and contractor-verification scope;
+- geo-provider licensing and storage rights;
+- actual API/model/OpenClaw credential availability and use;
 - evidence/object-storage provider and region;
-- expert service scope;
-- expert price and turnaround/SLA;
-- exact expert result format;
-- onsite service boundary;
-- final privacy/legal wording and operator details;
-- final domain;
-- whether the dark/gold expert/investment contour remains part of the public «Основание» identity;
-- when to activate the investment-platform contour after buyer-MVP validation.
+- production hosting/database regions;
+- expert scope, pricing, turnaround/SLA, notifications, and commerce;
+- privacy/legal wording, operator details, contact channels, and final domain;
+- pilot expansion and public-beta timing.
+
+Record unknowns as blockers or open decisions. Do not describe credentials,
+source access, OpenClaw live execution, ИЖС capability, or market coverage as
+working before their task-specific evidence exists.
 
 ---
 
-## 10. How to use this document
+## 12. How to use this plan
 
-Before creating the next implementation task:
+Before starting the next implementation task:
 
 1. check actual `main` HEAD and working tree;
-2. review the previous task output and uncommitted changes;
-3. find the first phase in this plan whose exit criteria are not satisfied;
-4. create one atomic `TASK-XXX.md` for that gap;
+2. review prior task evidence and release-gate state;
+3. select the first incomplete task in section 6;
+4. create one atomic task specification for that gap;
 5. do not implement later phases “while here”;
-6. run the task-required tests and build;
-7. report exact results, known limitations and next dependency;
+6. run the task-required checks and build;
+7. report exact evidence, limitations, and the next dependency;
 8. review the diff before commit/push;
-9. update this execution plan when a phase is completed, reordered or intentionally superseded.
+9. update this plan only when completion, order, or an explicit curator decision
+   changes the source of truth.
 
-This document is intended to prevent agreed work from being lost when attention shifts to a new topic.
+At this baseline the next coding task is **TASK-028 — Production Evidence
+Artifact lifecycle**. `SYNC-ROADMAP-v4` changes documentation only and does not
+start that task.
