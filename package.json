@@ -19,6 +19,7 @@
     "fixtures:check": "node --import tsx scripts/generate-pilot-fixtures.ts --check",
     "fixtures:validate": "node --import tsx scripts/validate-pilot-fixtures.ts",
     "pilot:candidate": "node --import tsx scripts/pilot-candidate.ts",
+    "pilot:release-gate": "node --import tsx scripts/pilot-release-gate.ts",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "demo:seed": "node --import tsx scripts/seed-buyer-journey-demo.ts",

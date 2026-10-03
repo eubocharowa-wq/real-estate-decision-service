@@ -10,6 +10,7 @@
 /playwright-report/
 /test-results/
 /blob-report/
+/artifacts/pilot-release-gate.json
 
 # Local environment files
 .env*
