@@ -2,6 +2,7 @@ import type { Pool } from "pg";
 
 import { createPostgresContext, PostgresContext } from "./context";
 import { PostgresBuyerJourneyRepository } from "./buyer-journey-repository";
+import { PostgresEvidenceArtifactRepository } from "./evidence-artifact-repository";
 import { PostgresExpertRequestRepository } from "./expert-request-repository";
 import { PostgresRefreshQueueRepository } from "./refresh-queue-repository";
 import {
@@ -13,6 +14,7 @@ import {
 
 export { PostgresContext, createPostgresContext } from "./context";
 export { PostgresBuyerJourneyRepository } from "./buyer-journey-repository";
+export { PostgresEvidenceArtifactRepository } from "./evidence-artifact-repository";
 export { PostgresExpertRequestRepository } from "./expert-request-repository";
 export { PostgresRefreshQueueRepository } from "./refresh-queue-repository";
 export {
@@ -27,6 +29,7 @@ export type { Database } from "./database";
 export interface PostgresRepositories {
   readonly context: PostgresContext;
   readonly repository: PostgresBuyerJourneyRepository;
+  readonly evidenceArtifactRepository: PostgresEvidenceArtifactRepository;
   readonly expertRepository: PostgresExpertRequestRepository;
   readonly refreshQueue: PostgresRefreshQueueRepository;
   readonly instrumentation: PostgresJourneyInstrumentation;
@@ -50,6 +53,7 @@ export const createPostgresRepositories = (
   return {
     context,
     repository: new PostgresBuyerJourneyRepository(context),
+    evidenceArtifactRepository: new PostgresEvidenceArtifactRepository(context),
     expertRepository: new PostgresExpertRequestRepository(context),
     refreshQueue: new PostgresRefreshQueueRepository(context),
     instrumentation: new PostgresJourneyInstrumentation(context),

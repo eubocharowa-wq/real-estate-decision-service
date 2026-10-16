@@ -1,5 +1,6 @@
 import type { z } from "zod";
 
+import { evidenceArtifactSchema } from "./evidence-artifact/schema";
 import { expertRequestSchema, expertResultSchema } from "./expert/schema";
 import {
   financingOfferSchema,
@@ -65,6 +66,7 @@ export const validatePurchaseScenario = createValidator(purchaseScenarioSchema);
 export const validateSource = createValidator(sourceSchema);
 export const validateSourceSnapshot = createValidator(sourceSnapshotSchema);
 export const validateFieldEvidence = createValidator(fieldEvidenceSchema);
+export const validateEvidenceArtifact = createValidator(evidenceArtifactSchema);
 export const validateSourceConflict = createValidator(sourceConflictSchema);
 export const validateCriterion = createValidator(criterionSchema);
 export const validateCriterionEvaluationResult = createValidator(

@@ -36,6 +36,7 @@ describe.skipIf(!isDatabaseAvailable)(
             backend: "postgres",
             repository: postgres.repository,
             expertRepository: postgres.expertRepository,
+            evidenceArtifactRepository: postgres.evidenceArtifactRepository,
             refreshQueue: postgres.refreshQueue,
             instrumentation: postgres.instrumentation,
             feedbackRepository: postgres.feedbackRepository,

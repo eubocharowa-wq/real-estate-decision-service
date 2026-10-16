@@ -136,8 +136,8 @@ describe("TASK-025 staging readiness", () => {
           configuration_valid: true,
           reachable: true,
           schema_compatible: true,
-          expected_migration_count: 4,
-          applied_migration_count: 4,
+          expected_migration_count: 5,
+          applied_migration_count: 5,
         },
         public_origin: {
           configured: true,
@@ -231,7 +231,13 @@ describe("TASK-025 staging readiness", () => {
     } as unknown as Pick<Pool, "query">);
 
     expect(result).toMatchObject({ reachable: true, schemaCompatible: false });
-    expect(result.pendingVersions).toEqual(["0001", "0002", "0003", "0004"]);
+    expect(result.pendingVersions).toEqual([
+      "0001",
+      "0002",
+      "0003",
+      "0004",
+      "0005",
+    ]);
     expect(
       query.mock.calls.map(([statement]) => String(statement)).join("\n"),
     ).not.toMatch(/CREATE|INSERT|UPDATE|ALTER|DELETE/i);
@@ -292,7 +298,7 @@ describe("TASK-025 staging readiness", () => {
     );
 
     expect(missing.schemaCompatible).toBe(false);
-    expect(missing.pendingVersions).toEqual(["0004"]);
+    expect(missing.pendingVersions).toEqual(["0005"]);
     expect(renamed.mismatchedVersions).toEqual(["0001"]);
     expect(unknown.unexpectedVersions).toEqual(["9999"]);
     expect(failed).toMatchObject({

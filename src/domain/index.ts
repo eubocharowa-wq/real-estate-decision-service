@@ -1,4 +1,5 @@
 export * from "./common/schema";
+export * from "./evidence-artifact/schema";
 export * from "./expert/schema";
 export * from "./financing/schema";
 export * from "./matching/schema";

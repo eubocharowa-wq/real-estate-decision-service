@@ -9,6 +9,10 @@ import {
   type RefreshQueueRepository,
 } from "../data-collection/refresh/queue";
 import {
+  InMemoryEvidenceArtifactRepository,
+  type EvidenceArtifactRepository,
+} from "../evidence-artifacts";
+import {
   InMemoryExpertResultDraftRepository,
   type ExpertResultDraftRepository,
 } from "../expert-workbench/draft";
@@ -40,6 +44,7 @@ export interface RepositorySet {
   readonly backend: "postgres" | "memory";
   readonly repository: BuyerJourneyRepository;
   readonly expertRepository: ExpertRequestRepository;
+  readonly evidenceArtifactRepository: EvidenceArtifactRepository;
   readonly refreshQueue: RefreshQueueRepository;
   readonly instrumentation: JourneyInstrumentation;
   readonly feedbackRepository: FeedbackRepository;
@@ -51,6 +56,7 @@ export const createInMemoryRepositorySet = (): RepositorySet => ({
   backend: "memory",
   repository: new InMemoryBuyerJourneyRepository(),
   expertRepository: new InMemoryExpertRequestRepository(),
+  evidenceArtifactRepository: new InMemoryEvidenceArtifactRepository(),
   refreshQueue: new InMemoryRefreshQueueRepository(),
   instrumentation: new InMemoryJourneyInstrumentation(),
   feedbackRepository: new InMemoryFeedbackRepository(),
@@ -80,6 +86,7 @@ export const createRepositorySet = (
     backend: "postgres",
     repository: postgres.repository,
     expertRepository: postgres.expertRepository,
+    evidenceArtifactRepository: postgres.evidenceArtifactRepository,
     refreshQueue: postgres.refreshQueue,
     instrumentation: postgres.instrumentation,
     feedbackRepository: postgres.feedbackRepository,
