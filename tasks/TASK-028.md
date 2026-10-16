@@ -2,9 +2,10 @@
 
 ## Status
 
-**ACTIVE / NOT COMPLETED.** Slice A, Slice B1, and Slice B2a are implemented.
-Slice B2a adds operational retention, legal hold, and orphan reconciliation.
-Completing B2a does **not** complete TASK-028.
+**ACTIVE / NOT COMPLETED.** Slice A, Slice B1, Slice B2a, and the Slice B2b
+code boundary are implemented. The production target for user documents is
+now provider-neutral S3-compatible RU storage. No real bucket, credentials, or
+deployed storage proof exists yet, so TASK-028 is not complete.
 
 ## Goal
 
@@ -81,8 +82,7 @@ Slice A provides:
 
 ## Slice B1 — Private storage and authorized reads
 
-Slice B1 selects Vercel Private Blob for the initial production runtime and
-adds:
+Slice B1 added Vercel Private Blob as the first private adapter and adds:
 
 - a server-only private Blob adapter behind `EvidenceArtifactBlobStore`;
 - OIDC-preferred provider authentication without repository credentials;
@@ -107,10 +107,20 @@ during/after deletion, and maintenance-only orphan inventory reconciliation.
 Orphan discovery requires a controlled prefix and explicit grace period, is a
 dry run by default, and requires an issued operator context for deletion.
 
-## Remaining TASK-028 work after Slice B2a
+## Slice B2b — Provider-neutral production storage
 
-Slice B2b must provision a private Vercel Blob store, connect it to the project
-Preview runtime, prove OIDC-authenticated private write/head/read/delete, prove
-the PostgreSQL metadata + Blob integration on deployed Preview, and capture
-operational evidence. Only then may TASK-028 become completed. TASK-029 has not
-started.
+The B2b code boundary adds a private S3-compatible adapter and maintenance
+inventory using AWS SDK v3 behind the existing ports. Runtime selection is
+explicit (`s3 | vercel | memory`), production/pilot cannot silently fall back
+to memory, and user documents in those modes require the configured adapter to
+declare RU data residency. Vercel Private Blob remains supported as an
+optional/dev/non-PD adapter; provider URLs never become artifact identity.
+
+## Remaining operational proof
+
+An operator must provision a private S3-compatible bucket in Russia, configure
+deployment secrets, and prove private write/head/read/delete plus inventory,
+retention deletion, orphan reconciliation, and PostgreSQL metadata integration
+on deployed Preview. The proof must confirm bucket privacy, checksum behavior,
+data residency, credential isolation, and rollback. Only then may TASK-028
+become completed. TASK-029 has not started.

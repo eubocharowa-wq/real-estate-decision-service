@@ -82,6 +82,7 @@ const setupUserDocument = async () => {
   const service = new EvidenceArtifactService({
     repository,
     blobStore,
+    applicationMode: "test",
     now: () => NOW,
     createEventId: () => "artifact_event_b1",
   });
@@ -146,6 +147,7 @@ describe("Vercel Private Blob adapter", () => {
     const service = new EvidenceArtifactService({
       repository,
       blobStore: new VercelPrivateEvidenceArtifactBlobStore(fake.client),
+      applicationMode: "test",
       now: () => NOW,
       createEventId: () => "artifact_event_provider_url",
     });
@@ -247,6 +249,7 @@ describe("Evidence Artifact application authorization", () => {
     const service = new EvidenceArtifactService({
       repository,
       blobStore,
+      applicationMode: "test",
       now: () => NOW,
       createEventId: () => "artifact_event_internal",
     });
@@ -296,7 +299,11 @@ describe("Evidence Artifact application authorization", () => {
   it("validates owner-scoped references during user_document creation", async () => {
     const repository = new InMemoryEvidenceArtifactRepository();
     const blobStore = new InMemoryEvidenceArtifactBlobStore();
-    const service = new EvidenceArtifactService({ repository, blobStore });
+    const service = new EvidenceArtifactService({
+      repository,
+      blobStore,
+      applicationMode: "test",
+    });
 
     await expect(
       service.createQuarantinedArtifact({
@@ -333,6 +340,7 @@ describe("Evidence Artifact orphan compensation", () => {
     const service = new EvidenceArtifactService({
       repository: failingRepository(),
       blobStore,
+      applicationMode: "test",
     });
 
     await expect(
@@ -347,6 +355,7 @@ describe("Evidence Artifact orphan compensation", () => {
   it("returns a deterministic error when orphan cleanup also fails", async () => {
     const delegate = new InMemoryEvidenceArtifactBlobStore();
     const blobStore: EvidenceArtifactBlobStore = {
+      capabilities: delegate.capabilities,
       putImmutable: (value) => delegate.putImmutable(value),
       head: (storageKey) => delegate.head(storageKey),
       get: (storageKey) => delegate.get(storageKey),
@@ -357,6 +366,7 @@ describe("Evidence Artifact orphan compensation", () => {
     const service = new EvidenceArtifactService({
       repository: failingRepository(),
       blobStore,
+      applicationMode: "test",
     });
 
     await expect(
@@ -370,6 +380,7 @@ describe("Evidence Artifact orphan compensation", () => {
     const service = new EvidenceArtifactService({
       repository: new InMemoryEvidenceArtifactRepository(),
       blobStore,
+      applicationMode: "test",
     });
 
     await service.createQuarantinedArtifact(userDocumentInput());

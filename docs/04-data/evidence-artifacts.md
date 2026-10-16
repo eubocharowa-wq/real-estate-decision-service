@@ -9,16 +9,22 @@ that can support either record.
 
 PostgreSQL stores only artifact metadata, links, lifecycle state, and audit
 events. Bytes go through `EvidenceArtifactBlobStore`; they are never stored in
-metadata, audit records, Git, or a public URL. Vercel Private Blob is the
-initial production provider, isolated behind the same low-level port as the
-offline in-memory adapter. Provider URLs are discarded and are not artifact
+metadata, audit records, Git, or a public URL. The physical provider is runtime
+configuration and provider URLs are discarded rather than becoming artifact
 identity.
 
-The production adapter uses private access only, disables overwrite and random
-pathname suffixes, and uses the artifact's opaque `storage_key` as the exact
-pathname. Authentication is resolved server-side by the SDK; Vercel OIDC with
-`BLOB_STORE_ID` is preferred. No long-lived provider credential belongs in the
-repository or artifact metadata.
+The production target for user documents is a private S3-compatible bucket
+with declared RU data residency. The adapter uses the opaque `storage_key` as
+the exact object key, performs conditional immutable writes, supplies and
+verifies SHA-256 checksums, returns bytes rather than URLs, and maps provider
+failures to deterministic application errors. Endpoint and credentials are
+server-only deployment configuration and never enter metadata or audit.
+
+The existing Vercel Private Blob adapter remains supported for
+optional/dev/non-PD usage. It still uses private access only, disables
+overwrite and random pathname suffixes, and prefers Vercel OIDC. The in-memory
+adapter remains offline/test/demo only. Production and pilot runtimes require
+an explicit provider and never silently fall back to memory.
 
 ## Lifecycle and access
 
@@ -67,11 +73,11 @@ leaves the pending state for retry. Reads fail closed for both pending and
 deleted blobs; metadata, links, and both audit histories remain intact.
 
 Orphan reconciliation uses a separate maintenance inventory port rather than
-the application BlobStore. The Vercel adapter lists private opaque pathnames
-and metadata without returning provider URLs. Candidates must be below the
-controlled prefix, have no matching `storage_key`, and be older than an
-explicit caller-supplied grace period. Runs are dry-run by default; execution
-requires both `execute=true` and an issued operator context.
+the application BlobStore. Both Vercel and S3 adapters list private opaque
+pathnames and metadata without returning provider URLs. Candidates must be
+below the controlled prefix, have no matching `storage_key`, and be older than
+an explicit caller-supplied grace period. Runs are dry-run by default;
+execution requires both `execute=true` and an issued operator context.
 
 ## Provenance linkage
 
@@ -83,7 +89,9 @@ artifact adoption incrementally.
 Raw collection output cannot write canonical Property or Offer data through
 this boundary. Canonical promotion remains a separate validated workflow.
 
-TASK-028 remains active. Slice A, B1, and B2a are implemented. Slice B2b still
-must provision the private Vercel Blob store, connect it to Preview, prove
-OIDC-authenticated private write/head/read/delete and PostgreSQL + Blob
-integration on deployed Preview, and capture operational evidence.
+TASK-028 remains active. Slice A, B1, B2a, and the B2b code boundary are
+implemented. Operational completion still requires a provisioned private
+S3-compatible RU bucket and deployed proof of private object operations,
+checksum enforcement, PostgreSQL integration, retention/orphan behavior,
+credential isolation, data residency, and rollback. No bucket is provisioned
+by repository code.

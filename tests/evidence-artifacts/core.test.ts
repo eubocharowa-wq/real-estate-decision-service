@@ -48,6 +48,7 @@ const setup = () => {
   const service = new EvidenceArtifactService({
     repository,
     blobStore,
+    applicationMode: "test",
     now: () => NOW,
     createEventId: () => `artifact_event_${++eventNumber}`,
   });
@@ -269,6 +270,7 @@ describe("Evidence Artifact Slice A", () => {
   it("creates no metadata when the blob write fails", async () => {
     const repository = new InMemoryEvidenceArtifactRepository();
     const blobStore: EvidenceArtifactBlobStore = {
+      capabilities: new InMemoryEvidenceArtifactBlobStore().capabilities,
       putImmutable: async () => {
         throw new Error("BLOB_WRITE_FAILED");
       },
@@ -276,7 +278,11 @@ describe("Evidence Artifact Slice A", () => {
       get: async () => new Uint8Array(),
       delete: async () => undefined,
     };
-    const service = new EvidenceArtifactService({ repository, blobStore });
+    const service = new EvidenceArtifactService({
+      repository,
+      blobStore,
+      applicationMode: "test",
+    });
 
     await expect(service.createQuarantinedArtifact(input())).rejects.toThrow(
       "BLOB_WRITE_FAILED",
@@ -304,6 +310,7 @@ describe("Evidence Artifact Slice A", () => {
     const service = new EvidenceArtifactService({
       repository,
       blobStore: new InMemoryEvidenceArtifactBlobStore(),
+      applicationMode: "test",
     });
 
     await expect(service.createQuarantinedArtifact(input())).rejects.toThrow(

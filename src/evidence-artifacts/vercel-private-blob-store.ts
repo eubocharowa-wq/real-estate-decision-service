@@ -102,6 +102,11 @@ const readStream = async (
  * credential is accepted by or retained in this adapter.
  */
 export class VercelPrivateEvidenceArtifactBlobStore implements EvidenceArtifactBlobStore {
+  readonly capabilities = Object.freeze({
+    provider: "vercel" as const,
+    dataResidency: "NON_RU" as const,
+  });
+
   constructor(
     private readonly client: VercelPrivateBlobClient = defaultClient,
   ) {}

@@ -1,8 +1,11 @@
 export {
   InMemoryEvidenceArtifactBlobStore,
   sha256Hex,
+  type EvidenceArtifactBlobCapabilities,
   type EvidenceArtifactBlobHead,
+  type EvidenceArtifactBlobProvider,
   type EvidenceArtifactBlobStore,
+  type EvidenceArtifactDataResidency,
 } from "./blob-store";
 export {
   createEvidenceArtifactOwnerContext,
@@ -60,3 +63,19 @@ export {
   VercelPrivateEvidenceArtifactBlobStore,
   type VercelPrivateBlobClient,
 } from "./vercel-private-blob-store";
+export { S3EvidenceArtifactBlobStore } from "./s3-blob-store";
+export { S3EvidenceArtifactBlobInventory } from "./s3-blob-inventory";
+export {
+  createS3EvidenceArtifactClient,
+  parseS3EvidenceArtifactConfig,
+  type S3EvidenceArtifactClient,
+  type S3EvidenceArtifactCommand,
+  type S3EvidenceArtifactConfig,
+} from "./s3-client";
+export {
+  resolveEvidenceArtifactBlobRuntime,
+  type EvidenceArtifactBlobRuntime,
+  type EvidenceArtifactBlobRuntimeEnvironment,
+  type EvidenceArtifactBlobRuntimeTestSeams,
+  type EvidenceArtifactRuntimeMode,
+} from "./runtime";

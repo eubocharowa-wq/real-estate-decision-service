@@ -33,6 +33,7 @@ const setup = async (input?: {
   const artifact = await new EvidenceArtifactService({
     repository: artifactRepository,
     blobStore,
+    applicationMode: "test",
     now: () => NOW,
     createEventId: () => "artifact_event_retention",
   }).createQuarantinedArtifact({
@@ -188,6 +189,7 @@ describe("Evidence Artifact retention and legal hold", () => {
     let attempts = 0;
     const blobStore: EvidenceArtifactBlobStore = {
       ...base.blobStore,
+      capabilities: base.blobStore.capabilities,
       putImmutable: (input) => base.blobStore.putImmutable(input),
       head: (key) => base.blobStore.head(key),
       get: (key) => base.blobStore.get(key),
@@ -226,6 +228,7 @@ describe("Evidence Artifact retention and legal hold", () => {
       allowDelete = resolve;
     });
     const blobStore: EvidenceArtifactBlobStore = {
+      capabilities: base.blobStore.capabilities,
       putImmutable: (input) => base.blobStore.putImmutable(input),
       head: (key) => base.blobStore.head(key),
       get: (key) => base.blobStore.get(key),
