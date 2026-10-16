@@ -391,6 +391,23 @@ export interface EvidenceArtifactEventTable {
   metadata: Json;
 }
 
+export interface EvidenceArtifactRetentionStateTable {
+  artifact_id: string;
+  effective_retain_until: Timestamp | null;
+  legal_hold_active: boolean;
+  blob_state: string;
+  updated_at: Timestamp;
+}
+
+export interface EvidenceArtifactRetentionEventTable {
+  event_id: string;
+  artifact_id: string;
+  event_type: string;
+  actor_type: string;
+  actor_ref: string | null;
+  occurred_at: Timestamp;
+}
+
 export interface Database {
   application_errors: ApplicationErrorTable;
   buyer_journeys: BuyerJourneyTable;
@@ -406,6 +423,8 @@ export interface Database {
   expert_result_drafts: ExpertResultDraftTable;
   expert_results: ExpertResultTable;
   evidence_artifact_events: EvidenceArtifactEventTable;
+  evidence_artifact_retention_events: EvidenceArtifactRetentionEventTable;
+  evidence_artifact_retention_state: EvidenceArtifactRetentionStateTable;
   evidence_artifact_links: EvidenceArtifactLinkTable;
   evidence_artifacts: EvidenceArtifactTable;
   field_evidence: FieldEvidenceTable;

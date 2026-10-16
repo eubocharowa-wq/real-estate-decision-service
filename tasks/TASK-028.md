@@ -2,9 +2,9 @@
 
 ## Status
 
-**ACTIVE / NOT COMPLETED.** Slice A and Slice B1 are implemented. Slice B1 adds
-the initial private production storage adapter, application read authorization,
-and orphan compensation. Completing B1 does **not** complete TASK-028.
+**ACTIVE / NOT COMPLETED.** Slice A, Slice B1, and Slice B2a are implemented.
+Slice B2a adds operational retention, legal hold, and orphan reconciliation.
+Completing B2a does **not** complete TASK-028.
 
 ## Goal
 
@@ -65,7 +65,7 @@ Slice A provides:
 - `npm test`
 - `npm run build`
 - `git diff --check`
-- PostgreSQL migration `0001 -> 0005`, `0005` down, and `0005` re-up when
+- PostgreSQL migrations `0001 -> 0006`, `0006` down, and `0006` re-up when
   `DATABASE_URL` is available.
 
 ## Out of scope for Slice A
@@ -97,8 +97,20 @@ adds:
 No public or signed download route is part of B1. The Blob store itself is not
 created by repository code.
 
-## Remaining TASK-028 work after Slice B1
+## Slice B2a — Retention operations and orphan reconciliation
 
-Slice B2 must implement and prove retention/deletion execution, define legal
-hold mutation semantics, clean up operational orphans, and provide deployed
-private-storage evidence. TASK-029 has not started.
+Slice B2a adds migration `0006` with mutable operational retention state and
+an append-only audit stream, without changing immutable artifact identity. It
+implements forward-only retention extension, trusted legal-hold placement,
+operator-only release, two-phase idempotent blob deletion, fail-closed reads
+during/after deletion, and maintenance-only orphan inventory reconciliation.
+Orphan discovery requires a controlled prefix and explicit grace period, is a
+dry run by default, and requires an issued operator context for deletion.
+
+## Remaining TASK-028 work after Slice B2a
+
+Slice B2b must provision a private Vercel Blob store, connect it to the project
+Preview runtime, prove OIDC-authenticated private write/head/read/delete, prove
+the PostgreSQL metadata + Blob integration on deployed Preview, and capture
+operational evidence. Only then may TASK-028 become completed. TASK-029 has not
+started.

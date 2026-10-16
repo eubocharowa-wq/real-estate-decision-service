@@ -49,6 +49,30 @@ If that cleanup also fails, it returns the deterministic
 `EVIDENCE_ARTIFACT_ORPHAN_CLEANUP_FAILED` error without raw bytes, credentials,
 or a provider URL.
 
+## Retention operations
+
+The immutable `retention_policy` and `retain_until` fields are the initial
+declaration. Migration `0006` backfills a separate mutable operational state:
+effective retention deadline, legal-hold flag, and blob state
+`present | deletion_pending | deleted`. Each change appends a retention event
+in the same PostgreSQL transaction. A legal-hold declaration initializes an
+active hold. Retention can only move forward; a null deadline is never treated
+as expired.
+
+Only issued trusted system/operator contexts may place a hold, and only an
+issued operator context may release it. Active holds block deletion. Expired
+blobs move atomically from `present` to `deletion_pending` before the provider
+call, then to `deleted` after an idempotent successful delete. Provider failure
+leaves the pending state for retry. Reads fail closed for both pending and
+deleted blobs; metadata, links, and both audit histories remain intact.
+
+Orphan reconciliation uses a separate maintenance inventory port rather than
+the application BlobStore. The Vercel adapter lists private opaque pathnames
+and metadata without returning provider URLs. Candidates must be below the
+controlled prefix, have no matching `storage_key`, and be older than an
+explicit caller-supplied grace period. Runs are dry-run by default; execution
+requires both `execute=true` and an issued operator context.
+
 ## Provenance linkage
 
 `evidence_artifact_links` references an existing `FieldEvidence` or
@@ -59,6 +83,7 @@ artifact adoption incrementally.
 Raw collection output cannot write canonical Property or Offer data through
 this boundary. Canonical promotion remains a separate validated workflow.
 
-TASK-028 remains active. Slice B2 still covers retention/deletion execution,
-legal-hold mutation semantics, operational orphan cleanup, and deployed
-private-storage proof.
+TASK-028 remains active. Slice A, B1, and B2a are implemented. Slice B2b still
+must provision the private Vercel Blob store, connect it to Preview, prove
+OIDC-authenticated private write/head/read/delete and PostgreSQL + Blob
+integration on deployed Preview, and capture operational evidence.

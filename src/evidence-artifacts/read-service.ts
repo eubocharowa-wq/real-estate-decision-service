@@ -5,10 +5,12 @@ import {
 } from "./access-policy";
 import { sha256Hex } from "./blob-store";
 import type { EvidenceArtifactRepository } from "./repository";
+import type { EvidenceArtifactRetentionRepository } from "./retention";
 
 export interface EvidenceArtifactReadServiceDependencies {
   readonly repository: EvidenceArtifactRepository;
   readonly blobStore: EvidenceArtifactBlobStore;
+  readonly retentionRepository: EvidenceArtifactRetentionRepository;
   readonly accessPolicy?: EvidenceArtifactAccessPolicy;
 }
 
@@ -38,6 +40,12 @@ export class EvidenceArtifactReadService {
     });
     if (decision.decision !== "allow")
       throw new Error("EVIDENCE_ARTIFACT_ACCESS_DENIED");
+
+    const retention = await this.dependencies.retentionRepository.getState(
+      artifact.artifact_id,
+    );
+    if (!retention || retention.blob_state !== "present")
+      throw new Error("EVIDENCE_ARTIFACT_BLOB_UNAVAILABLE");
 
     const bytes = await this.dependencies.blobStore.get(artifact.storage_key);
     if (

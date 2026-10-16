@@ -293,6 +293,7 @@ describe("Evidence Artifact Slice A", () => {
         throw new Error("METADATA_WRITE_FAILED");
       },
       getArtifact: (artifactId) => delegate.getArtifact(artifactId),
+      hasStorageKey: (storageKey) => delegate.hasStorageKey(storageKey),
       transitionArtifact: (artifactId, toState, event) =>
         delegate.transitionArtifact(artifactId, toState, event),
       linkArtifact: (link) => delegate.linkArtifact(link),

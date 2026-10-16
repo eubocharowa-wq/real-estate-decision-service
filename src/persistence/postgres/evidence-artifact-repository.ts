@@ -98,6 +98,17 @@ export class PostgresEvidenceArtifactRepository implements EvidenceArtifactRepos
     });
   }
 
+  hasStorageKey(storageKey: string): Promise<boolean> {
+    return withMappedErrors(async () => {
+      const row = await this.db
+        .selectFrom("evidence_artifacts")
+        .select("artifact_id")
+        .where("storage_key", "=", storageKey)
+        .executeTakeFirst();
+      return row !== undefined;
+    });
+  }
+
   transitionArtifact(
     artifactId: string,
     toState: EvidenceArtifactState,

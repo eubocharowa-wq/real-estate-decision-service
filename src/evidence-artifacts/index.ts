@@ -30,6 +30,33 @@ export {
   type EvidenceArtifactReadServiceDependencies,
 } from "./read-service";
 export {
+  createEvidenceArtifactRetentionContext,
+  evidenceArtifactBlobStateSchema,
+  evidenceArtifactRetentionEventSchema,
+  evidenceArtifactRetentionEventTypeSchema,
+  evidenceArtifactRetentionStateSchema,
+  EvidenceArtifactRetentionService,
+  InMemoryEvidenceArtifactRetentionRepository,
+  type EvidenceArtifactBlobState,
+  type EvidenceArtifactRetentionContext,
+  type EvidenceArtifactRetentionEvent,
+  type EvidenceArtifactRetentionRepository,
+  type EvidenceArtifactRetentionServiceDependencies,
+  type EvidenceArtifactRetentionState,
+} from "./retention";
+export {
+  createEvidenceArtifactOrphanOperatorContext,
+  EvidenceArtifactOrphanReconciler,
+  type EvidenceArtifactBlobInventory,
+  type EvidenceArtifactInventoryItem,
+  type EvidenceArtifactInventoryPage,
+  type EvidenceArtifactOrphanOperatorContext,
+} from "./orphan-reconciliation";
+export {
+  VercelPrivateEvidenceArtifactBlobInventory,
+  type VercelPrivateBlobInventoryClient,
+} from "./vercel-private-blob-inventory";
+export {
   VercelPrivateEvidenceArtifactBlobStore,
   type VercelPrivateBlobClient,
 } from "./vercel-private-blob-store";
