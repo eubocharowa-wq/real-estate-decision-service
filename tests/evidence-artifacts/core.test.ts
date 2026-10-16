@@ -13,9 +13,11 @@ import {
   type EvidenceArtifactBlobStore,
   type EvidenceArtifactRepository,
 } from "../../src/evidence-artifacts";
+import { createSessionDocumentReference } from "../../src/expert";
 
 const NOW = "2026-10-16T12:00:00.000Z";
 const BYTES = new TextEncoder().encode("private evidence payload sentinel");
+const OWNER = { owner_type: "session" as const, owner_id: "owner_test_1" };
 
 const input = (
   overrides: Partial<
@@ -26,7 +28,7 @@ const input = (
   artifactKind: "user_document" as const,
   sourceId: "source_user_upload",
   sourceUrl: null,
-  sourceReference: "document_ref_1",
+  sourceReference: createSessionDocumentReference(OWNER, "document_1"),
   collectedAt: NOW,
   mimeType: "application/pdf",
   bytes: BYTES,
@@ -35,6 +37,7 @@ const input = (
   retainUntil: "2027-10-16T12:00:00.000Z",
   actorType: "user" as const,
   actorRef: "owner_test_1",
+  ownerContext: OWNER,
   ...overrides,
 });
 
@@ -270,7 +273,8 @@ describe("Evidence Artifact Slice A", () => {
         throw new Error("BLOB_WRITE_FAILED");
       },
       head: async () => null,
-      getAuthorized: async () => new Uint8Array(),
+      get: async () => new Uint8Array(),
+      delete: async () => undefined,
     };
     const service = new EvidenceArtifactService({ repository, blobStore });
 

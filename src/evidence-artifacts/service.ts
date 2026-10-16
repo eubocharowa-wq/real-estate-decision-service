@@ -15,6 +15,8 @@ import {
   type EvidenceArtifactReasonCode,
   type EvidenceArtifactState,
 } from "../domain/evidence-artifact/schema";
+import { requestOwnerSchema, type RequestOwner } from "../expert/contracts";
+import { canAccessSessionDocumentReference } from "../expert/opaque-reference-access";
 import { sha256Hex, type EvidenceArtifactBlobStore } from "./blob-store";
 import type { EvidenceArtifactRepository } from "./repository";
 
@@ -41,6 +43,7 @@ export interface CreateEvidenceArtifactInput {
   readonly retainUntil: string | null;
   readonly actorType: EvidenceArtifactActorType;
   readonly actorRef: string | null;
+  readonly ownerContext?: RequestOwner;
   readonly links?: readonly {
     readonly subjectType: EvidenceArtifactLinkSubjectType;
     readonly subjectId: string;
@@ -64,6 +67,19 @@ export class EvidenceArtifactService {
   async createQuarantinedArtifact(
     input: CreateEvidenceArtifactInput,
   ): Promise<EvidenceArtifact> {
+    if (input.artifactKind === "user_document") {
+      if (input.sourceReference === null || input.ownerContext === undefined)
+        throw new Error("EVIDENCE_ARTIFACT_OWNER_REFERENCE_REQUIRED");
+      const owner = requestOwnerSchema.parse(input.ownerContext);
+      if (
+        !canAccessSessionDocumentReference({
+          owner,
+          documentRef: input.sourceReference,
+        })
+      )
+        throw new Error("EVIDENCE_ARTIFACT_OWNER_REFERENCE_MISMATCH");
+    }
+
     const computedSha256 = sha256Hex(input.bytes);
     if (
       input.expectedSha256 !== undefined &&
@@ -72,69 +88,84 @@ export class EvidenceArtifactService {
     )
       throw new Error("EVIDENCE_ARTIFACT_CHECKSUM_MISMATCH");
 
+    if (await this.dependencies.repository.getArtifact(input.artifactId))
+      throw new Error("EVIDENCE_ARTIFACT_ID_CONFLICT");
+
     const stored = await this.dependencies.blobStore.putImmutable({
       storageKey: input.storageKey,
       bytes: input.bytes,
       expectedSha256: computedSha256,
     });
-    const checked = await this.dependencies.blobStore.head(input.storageKey);
-    if (
-      !checked ||
-      checked.storageKey !== stored.storageKey ||
-      checked.sha256 !== computedSha256 ||
-      checked.byteSize !== input.bytes.byteLength
-    )
-      throw new Error("EVIDENCE_ARTIFACT_BLOB_VERIFICATION_FAILED");
+    try {
+      const checked = await this.dependencies.blobStore.head(input.storageKey);
+      if (
+        !checked ||
+        checked.storageKey !== stored.storageKey ||
+        (checked.sha256 !== null && checked.sha256 !== computedSha256) ||
+        checked.byteSize !== input.bytes.byteLength
+      )
+        throw new Error("EVIDENCE_ARTIFACT_BLOB_VERIFICATION_FAILED");
 
-    const createdAt = this.now();
-    const artifact = evidenceArtifactSchema.parse({
-      artifact_id: input.artifactId,
-      schema_version: EVIDENCE_ARTIFACT_SCHEMA_VERSION,
-      artifact_kind: input.artifactKind,
-      source_id: input.sourceId,
-      source_url: input.sourceUrl,
-      source_reference: input.sourceReference,
-      collected_at: input.collectedAt,
-      mime_type: input.mimeType,
-      byte_size: stored.byteSize,
-      sha256: stored.sha256,
-      storage_key: stored.storageKey,
-      state: "quarantine",
-      access_scope:
-        input.accessScope ??
-        (input.artifactKind === "user_document"
-          ? "private_owner"
-          : "restricted_internal"),
-      retention_policy: input.retentionPolicy,
-      retain_until: input.retainUntil,
-      created_at: createdAt,
-    });
+      const createdAt = this.now();
+      const artifact = evidenceArtifactSchema.parse({
+        artifact_id: input.artifactId,
+        schema_version: EVIDENCE_ARTIFACT_SCHEMA_VERSION,
+        artifact_kind: input.artifactKind,
+        source_id: input.sourceId,
+        source_url: input.sourceUrl,
+        source_reference: input.sourceReference,
+        collected_at: input.collectedAt,
+        mime_type: input.mimeType,
+        byte_size: stored.byteSize,
+        sha256: stored.sha256,
+        storage_key: stored.storageKey,
+        state: "quarantine",
+        access_scope:
+          input.accessScope ??
+          (input.artifactKind === "user_document"
+            ? "private_owner"
+            : "restricted_internal"),
+        retention_policy: input.retentionPolicy,
+        retain_until: input.retainUntil,
+        created_at: createdAt,
+      });
 
-    return this.dependencies.repository.transaction(async () => {
-      const created =
-        await this.dependencies.repository.createQuarantinedArtifact(artifact, {
-          event_id: this.createEventId(),
-          artifact_id: artifact.artifact_id,
-          event_type: "artifact_created",
-          from_state: null,
-          to_state: "quarantine",
-          actor_type: input.actorType,
-          actor_ref: input.actorRef,
-          occurred_at: createdAt,
-          metadata: { reason_code: null },
-        });
-      for (const link of input.links ?? [])
-        await this.dependencies.repository.linkArtifact(
-          evidenceArtifactLinkSchema.parse({
-            artifact_id: artifact.artifact_id,
-            subject_type: link.subjectType,
-            subject_id: link.subjectId,
-            relation: link.relation,
-            created_at: createdAt,
-          }),
-        );
-      return created;
-    });
+      return await this.dependencies.repository.transaction(async () => {
+        const created =
+          await this.dependencies.repository.createQuarantinedArtifact(
+            artifact,
+            {
+              event_id: this.createEventId(),
+              artifact_id: artifact.artifact_id,
+              event_type: "artifact_created",
+              from_state: null,
+              to_state: "quarantine",
+              actor_type: input.actorType,
+              actor_ref: input.actorRef,
+              occurred_at: createdAt,
+              metadata: { reason_code: null },
+            },
+          );
+        for (const link of input.links ?? [])
+          await this.dependencies.repository.linkArtifact(
+            evidenceArtifactLinkSchema.parse({
+              artifact_id: artifact.artifact_id,
+              subject_type: link.subjectType,
+              subject_id: link.subjectId,
+              relation: link.relation,
+              created_at: createdAt,
+            }),
+          );
+        return created;
+      });
+    } catch (error) {
+      try {
+        await this.dependencies.blobStore.delete(stored.storageKey);
+      } catch {
+        throw new Error("EVIDENCE_ARTIFACT_ORPHAN_CLEANUP_FAILED");
+      }
+      throw error;
+    }
   }
 
   async transitionArtifact(input: {

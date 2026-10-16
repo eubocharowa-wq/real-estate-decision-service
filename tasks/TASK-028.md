@@ -2,9 +2,9 @@
 
 ## Status
 
-**ACTIVE / NOT COMPLETED.** Slice A is implemented and provides the foundation
-and durable metadata lifecycle only. Completing Slice A does **not** complete
-TASK-028.
+**ACTIVE / NOT COMPLETED.** Slice A and Slice B1 are implemented. Slice B1 adds
+the initial private production storage adapter, application read authorization,
+and orphan compensation. Completing B1 does **not** complete TASK-028.
 
 ## Goal
 
@@ -79,10 +79,26 @@ Slice A provides:
 - expert UI changes;
 - declaring TASK-028 complete in the release gate or roadmap.
 
-## Remaining TASK-028 work after Slice A
+## Slice B1 — Private storage and authorized reads
 
-Slice B must select and integrate an approved production blob provider, bind
-authorized reads to the application access boundary, prove production
-retention and deletion behavior, and provide deployment/operational evidence.
-The production blob provider remains intentionally unresolved. TASK-029 has
-not started.
+Slice B1 selects Vercel Private Blob for the initial production runtime and
+adds:
+
+- a server-only private Blob adapter behind `EvidenceArtifactBlobStore`;
+- OIDC-preferred provider authentication without repository credentials;
+- opaque pathname writes with overwrite disabled and no persisted provider URL;
+- a separate fail-closed application access policy and read service;
+- owner isolation through the existing session/anonymous opaque document
+  reference boundary;
+- trusted internal access for restricted artifacts;
+- validation of owner-scoped references when user documents are created;
+- compensating blob deletion when metadata or link persistence fails.
+
+No public or signed download route is part of B1. The Blob store itself is not
+created by repository code.
+
+## Remaining TASK-028 work after Slice B1
+
+Slice B2 must implement and prove retention/deletion execution, define legal
+hold mutation semantics, clean up operational orphans, and provide deployed
+private-storage evidence. TASK-029 has not started.
