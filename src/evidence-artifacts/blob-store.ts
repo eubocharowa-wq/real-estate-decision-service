@@ -9,7 +9,16 @@ export interface EvidenceArtifactBlobHead {
   readonly sha256: string | null;
 }
 
+export type EvidenceArtifactDataResidency = "RU" | "NON_RU" | "LOCAL_ONLY";
+export type EvidenceArtifactBlobProvider = "s3" | "vercel" | "memory";
+
+export interface EvidenceArtifactBlobCapabilities {
+  readonly provider: EvidenceArtifactBlobProvider;
+  readonly dataResidency: EvidenceArtifactDataResidency;
+}
+
 export interface EvidenceArtifactBlobStore {
+  readonly capabilities: EvidenceArtifactBlobCapabilities;
   putImmutable(input: {
     readonly storageKey: string;
     readonly bytes: Uint8Array;
@@ -28,8 +37,13 @@ interface StoredBlob {
   readonly head: EvidenceArtifactBlobHead;
 }
 
-/** Offline adapter only. A production provider is intentionally out of scope. */
+/** Offline/test/demo adapter only. Production runtime selection rejects it. */
 export class InMemoryEvidenceArtifactBlobStore implements EvidenceArtifactBlobStore {
+  readonly capabilities = Object.freeze({
+    provider: "memory" as const,
+    dataResidency: "LOCAL_ONLY" as const,
+  });
+
   private readonly blobs = new Map<string, StoredBlob>();
 
   async putImmutable(input: {

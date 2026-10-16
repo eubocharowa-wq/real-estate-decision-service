@@ -23,6 +23,7 @@ import type { EvidenceArtifactRepository } from "./repository";
 export interface EvidenceArtifactServiceDependencies {
   readonly repository: EvidenceArtifactRepository;
   readonly blobStore: EvidenceArtifactBlobStore;
+  readonly applicationMode: "demo" | "test" | "pilot" | "production";
   readonly now?: () => string;
   readonly createEventId?: () => string;
 }
@@ -67,6 +68,14 @@ export class EvidenceArtifactService {
   async createQuarantinedArtifact(
     input: CreateEvidenceArtifactInput,
   ): Promise<EvidenceArtifact> {
+    if (
+      input.artifactKind === "user_document" &&
+      (this.dependencies.applicationMode === "pilot" ||
+        this.dependencies.applicationMode === "production") &&
+      this.dependencies.blobStore.capabilities.dataResidency !== "RU"
+    )
+      throw new Error("EVIDENCE_ARTIFACT_DATA_RESIDENCY_DENIED");
+
     if (input.artifactKind === "user_document") {
       if (input.sourceReference === null || input.ownerContext === undefined)
         throw new Error("EVIDENCE_ARTIFACT_OWNER_REFERENCE_REQUIRED");

@@ -36,6 +36,7 @@ describe.skipIf(!isDatabaseAvailable)("evidence artifact persistence", () => {
     const service = new EvidenceArtifactService({
       repository,
       blobStore: new InMemoryEvidenceArtifactBlobStore(),
+      applicationMode: "test",
       now: () => NOW,
       createEventId: () => `artifact_event_db_${++event}`,
     });
@@ -170,6 +171,7 @@ describe.skipIf(!isDatabaseAvailable)("evidence artifact persistence", () => {
     await new EvidenceArtifactService({
       repository: repositories.evidenceArtifactRepository,
       blobStore,
+      applicationMode: "test",
       now: () => NOW,
       createEventId: () => "artifact_event_db_retention",
     }).createQuarantinedArtifact({
@@ -254,6 +256,7 @@ describe.skipIf(!isDatabaseAvailable)("evidence artifact persistence", () => {
     await new EvidenceArtifactService({
       repository: repositories.evidenceArtifactRepository,
       blobStore: new InMemoryEvidenceArtifactBlobStore(),
+      applicationMode: "test",
       now: () => NOW,
       createEventId: () => "artifact_event_db_pending_guard",
     }).createQuarantinedArtifact({
