@@ -81,6 +81,12 @@ const CONSTRAINT_ERRORS: ReadonlyMap<string, string> = new Map([
   ["expert_results_pkey", "COMPLETED_RESULT_IS_IMMUTABLE"],
   ["expert_results_expert_result_id_key", "COMPLETED_RESULT_IS_IMMUTABLE"],
   ["field_evidence_pkey", "EVIDENCE_ID_CONFLICT"],
+  ["evidence_artifacts_pkey", "EVIDENCE_ARTIFACT_ID_CONFLICT"],
+  [
+    "evidence_artifacts_storage_key_key",
+    "EVIDENCE_ARTIFACT_STORAGE_KEY_CONFLICT",
+  ],
+  ["evidence_artifact_events_pkey", "EVIDENCE_ARTIFACT_EVENT_ID_CONFLICT"],
   ["canonical_decision_overlays_pkey", "CANONICAL_OVERLAY_ID_CONFLICT"],
   [
     "canonical_decision_overlays_evidence_id_fkey",

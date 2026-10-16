@@ -352,6 +352,45 @@ export interface RefreshTaskTable {
   last_error_code: string | null;
 }
 
+export interface EvidenceArtifactTable {
+  artifact_id: string;
+  schema_version: string;
+  artifact_kind: string;
+  source_id: string;
+  source_url: string | null;
+  source_reference: string | null;
+  collected_at: Timestamp;
+  mime_type: string;
+  byte_size: ColumnType<string, number, never>;
+  sha256: string;
+  storage_key: string;
+  state: string;
+  access_scope: string;
+  retention_policy: string;
+  retain_until: Timestamp | null;
+  created_at: Timestamp;
+}
+
+export interface EvidenceArtifactLinkTable {
+  artifact_id: string;
+  subject_type: string;
+  subject_id: string;
+  relation: string;
+  created_at: Timestamp;
+}
+
+export interface EvidenceArtifactEventTable {
+  event_id: string;
+  artifact_id: string;
+  event_type: string;
+  from_state: string | null;
+  to_state: string;
+  actor_type: string;
+  actor_ref: string | null;
+  occurred_at: Timestamp;
+  metadata: Json;
+}
+
 export interface Database {
   application_errors: ApplicationErrorTable;
   buyer_journeys: BuyerJourneyTable;
@@ -366,6 +405,9 @@ export interface Database {
   expert_requests: ExpertRequestTable;
   expert_result_drafts: ExpertResultDraftTable;
   expert_results: ExpertResultTable;
+  evidence_artifact_events: EvidenceArtifactEventTable;
+  evidence_artifact_links: EvidenceArtifactLinkTable;
+  evidence_artifacts: EvidenceArtifactTable;
   field_evidence: FieldEvidenceTable;
   imported_candidates: ImportedCandidateTable;
   journey_audit_events: JourneyAuditEventTable;

@@ -6,6 +6,7 @@ import {
   userRequestParserInputSchema,
   userRequestParserResultSchema,
 } from "../user-request-parser/contracts";
+import { evidenceArtifactSchema } from "./evidence-artifact/schema";
 import { expertRequestSchema, expertResultSchema } from "./expert/schema";
 import {
   financingOfferSchema,
@@ -113,6 +114,11 @@ export const topLevelSchemas = [
     file_name: "field-evidence.schema.json",
     id: schemaId("field-evidence"),
     schema: fieldEvidenceSchema,
+  },
+  {
+    file_name: "evidence-artifact.schema.json",
+    id: schemaId("evidence-artifact"),
+    schema: evidenceArtifactSchema,
   },
   {
     file_name: "source-conflict.schema.json",

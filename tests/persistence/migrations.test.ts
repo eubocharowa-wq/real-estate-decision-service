@@ -40,6 +40,7 @@ describe.skipIf(!isDatabaseAvailable)("schema migrations", () => {
       "0002",
       "0003",
       "0004",
+      "0005",
     ]);
     const tables = await listTables(database);
     for (const table of PHASE_ONE_TABLES) expect(tables).toContain(table);
@@ -49,7 +50,7 @@ describe.skipIf(!isDatabaseAvailable)("schema migrations", () => {
   it("records what it applied and reports status", async () => {
     expect(
       (await listApplied(database.pool)).map((row) => row.version),
-    ).toEqual(["0001", "0002", "0003", "0004"]);
+    ).toEqual(["0001", "0002", "0003", "0004", "0005"]);
     expect(await migrationStatus(database.pool)).toEqual([
       { version: "0001", name: "user_state", applied: true },
       { version: "0002", name: "ingestion_source_mode", applied: true },
@@ -61,6 +62,11 @@ describe.skipIf(!isDatabaseAvailable)("schema migrations", () => {
       {
         version: "0004",
         name: "expert_terminal_status",
+        applied: true,
+      },
+      {
+        version: "0005",
+        name: "evidence_artifacts",
         applied: true,
       },
     ]);
@@ -84,11 +90,22 @@ describe.skipIf(!isDatabaseAvailable)("schema migrations", () => {
       expect(tables).not.toContain(catalogueTable);
   });
 
+  it("rolls migration 0005 down and re-applies it", async () => {
+    const reverted = await migrateDown(database.pool, { steps: 1 });
+    expect(reverted.map((migration) => migration.version)).toEqual(["0005"]);
+    expect(await listTables(database)).not.toContain("evidence_artifacts");
+
+    const reapplied = await migrateUp(database.pool);
+    expect(reapplied.map((migration) => migration.version)).toEqual(["0005"]);
+    expect(await listTables(database)).toContain("evidence_artifacts");
+  });
+
   it("rolls back cleanly and can be re-applied", async () => {
     // Newest first, so each constraint fix comes off before the tables it
     // altered.
-    const reverted = await migrateDown(database.pool, { steps: 4 });
+    const reverted = await migrateDown(database.pool, { steps: 5 });
     expect(reverted.map((migration) => migration.version)).toEqual([
+      "0005",
       "0004",
       "0003",
       "0002",
@@ -109,6 +126,7 @@ describe.skipIf(!isDatabaseAvailable)("schema migrations", () => {
       "0002",
       "0003",
       "0004",
+      "0005",
     ]);
     expect(await listTables(database)).toContain("buyer_journeys");
   });

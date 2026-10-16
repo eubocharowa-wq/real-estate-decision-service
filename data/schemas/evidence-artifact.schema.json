@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://real-estate-decision-service.local/schemas/1.0/evidence-artifact.schema.json",
+  "type": "object",
+  "properties": {
+    "artifact_id": { "type": "string", "pattern": "^[a-z][a-z0-9:_-]*$" },
+    "schema_version": { "type": "string", "const": "1.0" },
+    "artifact_kind": {
+      "type": "string",
+      "enum": ["source_snapshot", "user_document", "manual_evidence"]
+    },
+    "source_id": { "type": "string", "pattern": "^[a-z][a-z0-9:_-]*$" },
+    "source_url": {
+      "anyOf": [{ "type": "string", "format": "uri" }, { "type": "null" }]
+    },
+    "source_reference": {
+      "anyOf": [{ "type": "string", "minLength": 1 }, { "type": "null" }]
+    },
+    "collected_at": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+    },
+    "mime_type": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9!#$&^_.+-]*\\/[a-z0-9][a-z0-9!#$&^_.+-]*$"
+    },
+    "byte_size": {
+      "type": "integer",
+      "minimum": -9007199254740991,
+      "maximum": 9007199254740991
+    },
+    "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "storage_key": { "type": "string", "minLength": 1, "maxLength": 512 },
+    "state": { "type": "string", "enum": ["quarantine", "staged", "approved"] },
+    "access_scope": {
+      "type": "string",
+      "enum": ["private_owner", "restricted_internal"]
+    },
+    "retention_policy": {
+      "type": "string",
+      "enum": ["transient", "standard", "user_document", "legal_hold"]
+    },
+    "retain_until": {
+      "anyOf": [
+        {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+        },
+        { "type": "null" }
+      ]
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+    }
+  },
+  "required": [
+    "artifact_id",
+    "schema_version",
+    "artifact_kind",
+    "source_id",
+    "source_url",
+    "source_reference",
+    "collected_at",
+    "mime_type",
+    "byte_size",
+    "sha256",
+    "storage_key",
+    "state",
+    "access_scope",
+    "retention_policy",
+    "retain_until",
+    "created_at"
+  ],
+  "additionalProperties": false,
+  "title": "EvidenceArtifact"
+}
