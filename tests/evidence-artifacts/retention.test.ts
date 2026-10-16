@@ -215,6 +215,76 @@ describe("Evidence Artifact retention and legal hold", () => {
     ).resolves.toEqual({ outcome: "deleted" });
   });
 
+  it("freezes retention mutations after a deletion claim wins the race", async () => {
+    const base = await setup();
+    let signalDeleteStarted!: () => void;
+    let allowDelete!: () => void;
+    const deleteStarted = new Promise<void>((resolve) => {
+      signalDeleteStarted = resolve;
+    });
+    const deleteAllowed = new Promise<void>((resolve) => {
+      allowDelete = resolve;
+    });
+    const blobStore: EvidenceArtifactBlobStore = {
+      putImmutable: (input) => base.blobStore.putImmutable(input),
+      head: (key) => base.blobStore.head(key),
+      get: (key) => base.blobStore.get(key),
+      delete: async (key) => {
+        signalDeleteStarted();
+        await deleteAllowed;
+        await base.blobStore.delete(key);
+      },
+    };
+    let event = 0;
+    const service = new EvidenceArtifactRetentionService({
+      repository: base.retentionRepository,
+      artifactRepository: base.artifactRepository,
+      blobStore,
+      now: () => NOW,
+      createEventId: () => `race_event_${++event}`,
+    });
+    const context = createEvidenceArtifactRetentionContext({
+      principalType: "operator",
+      principalRef: "operator_retention",
+    });
+
+    const deletion = service.deleteExpired({
+      artifactId: "artifact_retention",
+    });
+    await deleteStarted;
+    expect(
+      await base.retentionRepository.getState("artifact_retention"),
+    ).toMatchObject({
+      blob_state: "deletion_pending",
+      legal_hold_active: false,
+    });
+    await expect(
+      service.placeLegalHold({ artifactId: "artifact_retention", context }),
+    ).rejects.toThrow(
+      "EVIDENCE_ARTIFACT_RETENTION_FROZEN_AFTER_DELETION_CLAIM",
+    );
+    await expect(
+      service.extendRetention({
+        artifactId: "artifact_retention",
+        retainUntil: "2027-10-17T12:00:00.000Z",
+        context,
+      }),
+    ).rejects.toThrow(
+      "EVIDENCE_ARTIFACT_RETENTION_FROZEN_AFTER_DELETION_CLAIM",
+    );
+    await expect(
+      service.releaseLegalHold({ artifactId: "artifact_retention", context }),
+    ).rejects.toThrow(
+      "EVIDENCE_ARTIFACT_RETENTION_FROZEN_AFTER_DELETION_CLAIM",
+    );
+
+    allowDelete();
+    await expect(deletion).resolves.toEqual({ outcome: "deleted" });
+    expect(
+      await base.retentionRepository.getState("artifact_retention"),
+    ).toMatchObject({ blob_state: "deleted", legal_hold_active: false });
+  });
+
   it("denies reads while deletion is pending or complete", async () => {
     const base = await setup();
     await base.retentionRepository.claimDeletion({
@@ -327,6 +397,40 @@ describe("Evidence Artifact orphan reconciliation", () => {
     });
     expect(result.deletedPathnames).toEqual(["evidence/orphan_old/content"]);
     expect(fake.deletePathname).toHaveBeenCalledTimes(1);
+  });
+
+  it("rechecks metadata immediately before deleting an orphan candidate", async () => {
+    const base = await setup();
+    const fake = inventory([
+      {
+        pathname: "evidence/orphan_race/content",
+        uploadedAt: "2026-10-01T00:00:00.000Z",
+        size: 2,
+      },
+    ]);
+    const hasStorageKey = vi
+      .spyOn(base.artifactRepository, "hasStorageKey")
+      .mockResolvedValueOnce(false)
+      .mockResolvedValueOnce(true);
+
+    const result = await new EvidenceArtifactOrphanReconciler({
+      artifactRepository: base.artifactRepository,
+      inventory: fake.value,
+      controlledPrefix: "evidence/",
+      now: () => NOW,
+    }).reconcile({
+      prefix: "evidence/",
+      gracePeriodMs: 60_000,
+      execute: true,
+      context: createEvidenceArtifactOrphanOperatorContext("operator_real"),
+    });
+
+    expect(result.candidates.map((item) => item.pathname)).toEqual([
+      "evidence/orphan_race/content",
+    ]);
+    expect(result.deletedPathnames).toEqual([]);
+    expect(hasStorageKey).toHaveBeenCalledTimes(2);
+    expect(fake.deletePathname).not.toHaveBeenCalled();
   });
 
   it("uses private Vercel inventory and strips provider URLs", async () => {

@@ -206,6 +206,14 @@ describe.skipIf(!isDatabaseAvailable)("evidence artifact persistence", () => {
       context: operator,
     });
     await expect(
+      database.pool.query(
+        `UPDATE evidence_artifact_retention_state
+         SET blob_state = 'deletion_pending', updated_at = $2
+         WHERE artifact_id = $1`,
+        ["artifact_db_retention", "2026-10-17T12:00:00.000Z"],
+      ),
+    ).rejects.toThrow(/EVIDENCE_ARTIFACT_DELETION_NOT_ELIGIBLE/);
+    await expect(
       retention.deleteExpired({ artifactId: "artifact_db_retention" }),
     ).resolves.toEqual({ outcome: "not_eligible" });
     await retention.releaseLegalHold({
@@ -239,5 +247,68 @@ describe.skipIf(!isDatabaseAvailable)("evidence artifact persistence", () => {
         "artifact_db_retention",
       ),
     ).not.toBeNull();
+  });
+
+  it("rejects raw retention mutations after deletion is claimed", async () => {
+    const repositories = createPostgresRepositories(database.pool);
+    await new EvidenceArtifactService({
+      repository: repositories.evidenceArtifactRepository,
+      blobStore: new InMemoryEvidenceArtifactBlobStore(),
+      now: () => NOW,
+      createEventId: () => "artifact_event_db_pending_guard",
+    }).createQuarantinedArtifact({
+      artifactId: "artifact_db_pending_guard",
+      artifactKind: "source_snapshot",
+      sourceId: "source_db",
+      sourceUrl: "https://source.invalid/unit/pending-guard",
+      sourceReference: null,
+      collectedAt: NOW,
+      mimeType: "text/html",
+      bytes: new TextEncoder().encode("pending guard database fixture"),
+      storageKey: "evidence/artifact_db_pending_guard/content",
+      retentionPolicy: "standard",
+      retainUntil: "2026-10-15T12:00:00.000Z",
+      actorType: "service",
+      actorRef: null,
+    });
+    await repositories.evidenceArtifactRetentionRepository.claimDeletion({
+      artifactId: "artifact_db_pending_guard",
+      now: "2026-10-17T12:00:00.000Z",
+      eventId: "retention_event_db_pending_guard",
+    });
+
+    await expect(
+      database.pool.query(
+        `UPDATE evidence_artifact_retention_state
+         SET legal_hold_active = true, updated_at = $2
+         WHERE artifact_id = $1`,
+        ["artifact_db_pending_guard", "2026-10-17T13:00:00.000Z"],
+      ),
+    ).rejects.toThrow(
+      /EVIDENCE_ARTIFACT_RETENTION_FROZEN_AFTER_DELETION_CLAIM/,
+    );
+    await expect(
+      database.pool.query(
+        `UPDATE evidence_artifact_retention_state
+         SET effective_retain_until = $2, updated_at = $3
+         WHERE artifact_id = $1`,
+        [
+          "artifact_db_pending_guard",
+          "2027-10-17T12:00:00.000Z",
+          "2026-10-17T13:00:00.000Z",
+        ],
+      ),
+    ).rejects.toThrow(
+      /EVIDENCE_ARTIFACT_RETENTION_FROZEN_AFTER_DELETION_CLAIM/,
+    );
+    expect(
+      await repositories.evidenceArtifactRetentionRepository.getState(
+        "artifact_db_pending_guard",
+      ),
+    ).toMatchObject({
+      blob_state: "deletion_pending",
+      legal_hold_active: false,
+      effective_retain_until: "2026-10-15T12:00:00.000Z",
+    });
   });
 });

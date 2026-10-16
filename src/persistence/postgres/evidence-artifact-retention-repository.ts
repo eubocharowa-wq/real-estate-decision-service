@@ -84,6 +84,7 @@ export class PostgresEvidenceArtifactRetentionRepository implements EvidenceArti
 
   extendRetention(input: RetentionMutationInput & { retainUntil: string }) {
     return this.mutate(input.artifactId, async (state) => {
+      this.assertRetentionMutable(state);
       if (
         state.effective_retain_until === null ||
         new Date(input.retainUntil).getTime() <=
@@ -104,6 +105,7 @@ export class PostgresEvidenceArtifactRetentionRepository implements EvidenceArti
 
   placeLegalHold(input: RetentionMutationInput) {
     return this.mutate(input.artifactId, async (state) => {
+      this.assertRetentionMutable(state);
       if (state.legal_hold_active) return;
       await this.db
         .updateTable("evidence_artifact_retention_state")
@@ -116,6 +118,7 @@ export class PostgresEvidenceArtifactRetentionRepository implements EvidenceArti
 
   releaseLegalHold(input: RetentionMutationInput) {
     return this.mutate(input.artifactId, async (state) => {
+      this.assertRetentionMutable(state);
       if (!state.legal_hold_active) return;
       await this.db
         .updateTable("evidence_artifact_retention_state")
@@ -214,6 +217,13 @@ export class PostgresEvidenceArtifactRetentionRepository implements EvidenceArti
     const state = await this.getState(artifactId);
     if (!state) throw new Error("EVIDENCE_ARTIFACT_RETENTION_NOT_FOUND");
     return state;
+  }
+
+  private assertRetentionMutable(state: EvidenceArtifactRetentionState): void {
+    if (state.blob_state !== "present")
+      throw new Error(
+        "EVIDENCE_ARTIFACT_RETENTION_FROZEN_AFTER_DELETION_CLAIM",
+      );
   }
 
   private parseState(row: {

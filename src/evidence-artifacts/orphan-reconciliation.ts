@@ -109,6 +109,12 @@ export class EvidenceArtifactOrphanReconciler {
     const deletedPathnames: string[] = [];
     if (input.execute === true)
       for (const candidate of candidates) {
+        if (
+          await this.dependencies.artifactRepository.hasStorageKey(
+            candidate.pathname,
+          )
+        )
+          continue;
         await this.dependencies.inventory.deletePathname(candidate.pathname);
         deletedPathnames.push(candidate.pathname);
       }

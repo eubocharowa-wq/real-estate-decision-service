@@ -139,6 +139,7 @@ export class InMemoryEvidenceArtifactRetentionRepository implements EvidenceArti
     input: RetentionMutationInput & { retainUntil: string },
   ) {
     const state = this.required(input.artifactId);
+    assertRetentionMutable(state);
     const nextDate = isoDateTimeSchema.parse(input.retainUntil);
     if (
       state.effective_retain_until === null ||
@@ -153,6 +154,7 @@ export class InMemoryEvidenceArtifactRetentionRepository implements EvidenceArti
 
   async placeLegalHold(input: RetentionMutationInput) {
     const state = this.required(input.artifactId);
+    assertRetentionMutable(state);
     if (state.legal_hold_active) return clone(state);
     return this.mutate(state, input, "legal_hold_placed", {
       legal_hold_active: true,
@@ -161,6 +163,7 @@ export class InMemoryEvidenceArtifactRetentionRepository implements EvidenceArti
 
   async releaseLegalHold(input: RetentionMutationInput) {
     const state = this.required(input.artifactId);
+    assertRetentionMutable(state);
     if (!state.legal_hold_active) return clone(state);
     return this.mutate(state, input, "legal_hold_released", {
       legal_hold_active: false,
@@ -255,6 +258,13 @@ export class InMemoryEvidenceArtifactRetentionRepository implements EvidenceArti
     this.events.set(event.event_id, event);
   }
 }
+
+const assertRetentionMutable = (
+  state: EvidenceArtifactRetentionState,
+): void => {
+  if (state.blob_state !== "present")
+    throw new Error("EVIDENCE_ARTIFACT_RETENTION_FROZEN_AFTER_DELETION_CLAIM");
+};
 
 export interface EvidenceArtifactRetentionServiceDependencies {
   readonly repository: EvidenceArtifactRetentionRepository;

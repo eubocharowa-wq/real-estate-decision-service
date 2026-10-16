@@ -36,6 +36,13 @@ BEGIN
     RAISE EXCEPTION 'EVIDENCE_ARTIFACT_RETENTION_ID_IMMUTABLE'
       USING ERRCODE = 'restrict_violation';
   END IF;
+  IF OLD.blob_state <> 'present' AND (
+    NEW.effective_retain_until IS DISTINCT FROM OLD.effective_retain_until
+    OR NEW.legal_hold_active IS DISTINCT FROM OLD.legal_hold_active
+  ) THEN
+    RAISE EXCEPTION 'EVIDENCE_ARTIFACT_RETENTION_FROZEN_AFTER_DELETION_CLAIM'
+      USING ERRCODE = 'check_violation';
+  END IF;
   IF (
     OLD.effective_retain_until IS NULL
     AND NEW.effective_retain_until IS NOT NULL
@@ -54,6 +61,24 @@ BEGIN
     OR (OLD.blob_state = 'deletion_pending' AND NEW.blob_state = 'deleted')
   ) THEN
     RAISE EXCEPTION 'EVIDENCE_ARTIFACT_BLOB_STATE_INVALID_TRANSITION'
+      USING ERRCODE = 'check_violation';
+  END IF;
+  IF NEW.blob_state IS DISTINCT FROM OLD.blob_state AND (
+    NEW.effective_retain_until IS DISTINCT FROM OLD.effective_retain_until
+    OR NEW.legal_hold_active IS DISTINCT FROM OLD.legal_hold_active
+  ) THEN
+    RAISE EXCEPTION 'EVIDENCE_ARTIFACT_RETENTION_FIELDS_CHANGE_DURING_BLOB_TRANSITION'
+      USING ERRCODE = 'check_violation';
+  END IF;
+  IF OLD.blob_state = 'present'
+    AND NEW.blob_state = 'deletion_pending'
+    AND (
+      OLD.legal_hold_active
+      OR OLD.effective_retain_until IS NULL
+      OR OLD.effective_retain_until > NEW.updated_at
+    )
+  THEN
+    RAISE EXCEPTION 'EVIDENCE_ARTIFACT_DELETION_NOT_ELIGIBLE'
       USING ERRCODE = 'check_violation';
   END IF;
   IF NEW.updated_at < OLD.updated_at THEN
