@@ -56,12 +56,9 @@ interface S3GetOutput extends S3HeadOutput {
   };
 }
 
-/** Private S3-compatible object storage adapter for an RU-resident bucket. */
+/** Private S3-compatible object storage with explicit residency capability. */
 export class S3EvidenceArtifactBlobStore implements EvidenceArtifactBlobStore {
-  readonly capabilities = Object.freeze({
-    provider: "s3" as const,
-    dataResidency: "RU" as const,
-  });
+  readonly capabilities;
   private readonly bucket: string;
   private readonly client!: S3EvidenceArtifactClient;
 
@@ -71,6 +68,10 @@ export class S3EvidenceArtifactBlobStore implements EvidenceArtifactBlobStore {
   ) {
     const config = parseS3EvidenceArtifactConfig(input);
     this.bucket = config.bucket;
+    this.capabilities = Object.freeze({
+      provider: "s3" as const,
+      dataResidency: config.dataResidency,
+    });
     Object.defineProperty(this, "client", {
       value: client ?? createS3EvidenceArtifactClient(config),
       enumerable: false,

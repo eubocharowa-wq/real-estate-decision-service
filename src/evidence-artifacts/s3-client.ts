@@ -43,6 +43,7 @@ const s3ConfigSchema = z.strictObject({
     .min(3)
     .max(63)
     .regex(/^[a-z0-9][a-z0-9.-]*[a-z0-9]$/),
+  dataResidency: z.enum(["RU", "NON_RU"]),
   accessKeyId: z.string().trim().min(1),
   secretAccessKey: z.string().min(1),
 });
@@ -51,6 +52,7 @@ export interface S3EvidenceArtifactConfig {
   readonly endpoint: string;
   readonly region: string;
   readonly bucket: string;
+  readonly dataResidency: "RU" | "NON_RU";
   readonly accessKeyId: string;
   readonly secretAccessKey: string;
 }

@@ -32,6 +32,7 @@ export interface EvidenceArtifactBlobRuntimeEnvironment {
   readonly REDS_EVIDENCE_S3_ENDPOINT?: string;
   readonly REDS_EVIDENCE_S3_REGION?: string;
   readonly REDS_EVIDENCE_S3_BUCKET?: string;
+  readonly REDS_EVIDENCE_S3_DATA_RESIDENCY?: string;
   readonly REDS_EVIDENCE_S3_ACCESS_KEY_ID?: string;
   readonly REDS_EVIDENCE_S3_SECRET_ACCESS_KEY?: string;
 }
@@ -53,13 +54,19 @@ const resolveMode = (
 
 const s3ConfigFromEnvironment = (
   environment: EvidenceArtifactBlobRuntimeEnvironment,
-): S3EvidenceArtifactConfig => ({
-  endpoint: environment.REDS_EVIDENCE_S3_ENDPOINT ?? "",
-  region: environment.REDS_EVIDENCE_S3_REGION ?? "",
-  bucket: environment.REDS_EVIDENCE_S3_BUCKET ?? "",
-  accessKeyId: environment.REDS_EVIDENCE_S3_ACCESS_KEY_ID ?? "",
-  secretAccessKey: environment.REDS_EVIDENCE_S3_SECRET_ACCESS_KEY ?? "",
-});
+): S3EvidenceArtifactConfig => {
+  const dataResidency = environment.REDS_EVIDENCE_S3_DATA_RESIDENCY;
+  if (dataResidency !== "RU" && dataResidency !== "NON_RU")
+    throw new Error("EVIDENCE_ARTIFACT_S3_CONFIG_INVALID");
+  return {
+    endpoint: environment.REDS_EVIDENCE_S3_ENDPOINT ?? "",
+    region: environment.REDS_EVIDENCE_S3_REGION ?? "",
+    bucket: environment.REDS_EVIDENCE_S3_BUCKET ?? "",
+    dataResidency,
+    accessKeyId: environment.REDS_EVIDENCE_S3_ACCESS_KEY_ID ?? "",
+    secretAccessKey: environment.REDS_EVIDENCE_S3_SECRET_ACCESS_KEY ?? "",
+  };
+};
 
 export const resolveEvidenceArtifactBlobRuntime = (
   environment: EvidenceArtifactBlobRuntimeEnvironment = process.env,

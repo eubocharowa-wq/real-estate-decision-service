@@ -30,6 +30,7 @@ const S3_CONFIG: S3EvidenceArtifactConfig = {
   endpoint: "https://s3.storage.example",
   region: "ru-test-1",
   bucket: "reds-private-evidence",
+  dataResidency: "RU",
   accessKeyId: "test-access-key",
   secretAccessKey: "test-secret-key",
 };
@@ -298,6 +299,7 @@ describe("Evidence Artifact provider runtime and data residency", () => {
         REDS_EVIDENCE_S3_ENDPOINT: S3_CONFIG.endpoint,
         REDS_EVIDENCE_S3_REGION: S3_CONFIG.region,
         REDS_EVIDENCE_S3_BUCKET: S3_CONFIG.bucket,
+        REDS_EVIDENCE_S3_DATA_RESIDENCY: S3_CONFIG.dataResidency,
         REDS_EVIDENCE_S3_ACCESS_KEY_ID: S3_CONFIG.accessKeyId,
         REDS_EVIDENCE_S3_SECRET_ACCESS_KEY: S3_CONFIG.secretAccessKey,
       },
@@ -348,37 +350,94 @@ describe("Evidence Artifact provider runtime and data residency", () => {
     expect(JSON.stringify(artifact)).not.toContain("provider.example");
   });
 
-  it("keeps source snapshots provider-neutral in production", async () => {
-    const delegate = new InMemoryEvidenceArtifactBlobStore();
-    const blobStore: EvidenceArtifactBlobStore = {
-      capabilities: Object.freeze({
-        provider: "vercel",
-        dataResidency: "NON_RU",
-      }),
-      putImmutable: (input) => delegate.putImmutable(input),
-      head: (key) => delegate.head(key),
-      get: (key) => delegate.get(key),
-      delete: (key) => delegate.delete(key),
+  it("does not infer RU residency from an arbitrary S3 endpoint", async () => {
+    const fake = makeObjectClient();
+    const nonRuConfig = {
+      ...S3_CONFIG,
+      dataResidency: "NON_RU" as const,
     };
+    const blobStore = new S3EvidenceArtifactBlobStore(nonRuConfig, fake.client);
+    expect(blobStore.capabilities).toEqual({
+      provider: "s3",
+      dataResidency: "NON_RU",
+    });
     const service = new EvidenceArtifactService({
       repository: new InMemoryEvidenceArtifactRepository(),
       blobStore,
       applicationMode: "production",
-      now: () => NOW,
-      createEventId: () => "artifact_event_source_snapshot",
     });
     await expect(
-      service.createQuarantinedArtifact({
-        ...userDocumentInput(),
-        artifactKind: "source_snapshot",
-        sourceUrl: "https://source.invalid/unit/1",
-        sourceReference: null,
-        ownerContext: undefined,
-        actorType: "service",
-        actorRef: null,
-      }),
-    ).resolves.toMatchObject({ artifact_kind: "source_snapshot" });
+      service.createQuarantinedArtifact(userDocumentInput()),
+    ).rejects.toThrow("EVIDENCE_ARTIFACT_DATA_RESIDENCY_DENIED");
   });
+
+  it("rejects a missing or invalid S3 residency declaration", () => {
+    const fake = makeObjectClient();
+    expect(() =>
+      resolveEvidenceArtifactBlobRuntime(
+        {
+          REDS_APPLICATION_MODE: "pilot",
+          REDS_EVIDENCE_BLOB_PROVIDER: "s3",
+          REDS_EVIDENCE_S3_ENDPOINT: S3_CONFIG.endpoint,
+          REDS_EVIDENCE_S3_REGION: S3_CONFIG.region,
+          REDS_EVIDENCE_S3_BUCKET: S3_CONFIG.bucket,
+          REDS_EVIDENCE_S3_ACCESS_KEY_ID: S3_CONFIG.accessKeyId,
+          REDS_EVIDENCE_S3_SECRET_ACCESS_KEY: S3_CONFIG.secretAccessKey,
+        },
+        { s3Client: fake.client },
+      ),
+    ).toThrow("EVIDENCE_ARTIFACT_S3_CONFIG_INVALID");
+    expect(() =>
+      resolveEvidenceArtifactBlobRuntime(
+        {
+          REDS_APPLICATION_MODE: "pilot",
+          REDS_EVIDENCE_BLOB_PROVIDER: "s3",
+          REDS_EVIDENCE_S3_ENDPOINT: S3_CONFIG.endpoint,
+          REDS_EVIDENCE_S3_REGION: S3_CONFIG.region,
+          REDS_EVIDENCE_S3_BUCKET: S3_CONFIG.bucket,
+          REDS_EVIDENCE_S3_DATA_RESIDENCY: "UNKNOWN",
+          REDS_EVIDENCE_S3_ACCESS_KEY_ID: S3_CONFIG.accessKeyId,
+          REDS_EVIDENCE_S3_SECRET_ACCESS_KEY: S3_CONFIG.secretAccessKey,
+        },
+        { s3Client: fake.client },
+      ),
+    ).toThrow("EVIDENCE_ARTIFACT_S3_CONFIG_INVALID");
+  });
+
+  it.each(["source_snapshot", "manual_evidence"] as const)(
+    "keeps %s provider-neutral in production",
+    async (artifactKind) => {
+      const delegate = new InMemoryEvidenceArtifactBlobStore();
+      const blobStore: EvidenceArtifactBlobStore = {
+        capabilities: Object.freeze({
+          provider: "vercel",
+          dataResidency: "NON_RU",
+        }),
+        putImmutable: (input) => delegate.putImmutable(input),
+        head: (key) => delegate.head(key),
+        get: (key) => delegate.get(key),
+        delete: (key) => delegate.delete(key),
+      };
+      const service = new EvidenceArtifactService({
+        repository: new InMemoryEvidenceArtifactRepository(),
+        blobStore,
+        applicationMode: "production",
+        now: () => NOW,
+        createEventId: () => "artifact_event_source_snapshot",
+      });
+      await expect(
+        service.createQuarantinedArtifact({
+          ...userDocumentInput(),
+          artifactKind,
+          sourceUrl: "https://source.invalid/unit/1",
+          sourceReference: null,
+          ownerContext: undefined,
+          actorType: "service",
+          actorRef: null,
+        }),
+      ).resolves.toMatchObject({ artifact_kind: artifactKind });
+    },
+  );
 
   it("keeps demo/test memory flows usable", async () => {
     const runtime = resolveEvidenceArtifactBlobRuntime({
