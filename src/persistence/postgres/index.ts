@@ -3,6 +3,7 @@ import type { Pool } from "pg";
 import { createPostgresContext, PostgresContext } from "./context";
 import { PostgresBuyerJourneyRepository } from "./buyer-journey-repository";
 import { PostgresEvidenceArtifactRepository } from "./evidence-artifact-repository";
+import { PostgresEvidenceArtifactRetentionRepository } from "./evidence-artifact-retention-repository";
 import { PostgresExpertRequestRepository } from "./expert-request-repository";
 import { PostgresRefreshQueueRepository } from "./refresh-queue-repository";
 import {
@@ -15,6 +16,7 @@ import {
 export { PostgresContext, createPostgresContext } from "./context";
 export { PostgresBuyerJourneyRepository } from "./buyer-journey-repository";
 export { PostgresEvidenceArtifactRepository } from "./evidence-artifact-repository";
+export { PostgresEvidenceArtifactRetentionRepository } from "./evidence-artifact-retention-repository";
 export { PostgresExpertRequestRepository } from "./expert-request-repository";
 export { PostgresRefreshQueueRepository } from "./refresh-queue-repository";
 export {
@@ -30,6 +32,7 @@ export interface PostgresRepositories {
   readonly context: PostgresContext;
   readonly repository: PostgresBuyerJourneyRepository;
   readonly evidenceArtifactRepository: PostgresEvidenceArtifactRepository;
+  readonly evidenceArtifactRetentionRepository: PostgresEvidenceArtifactRetentionRepository;
   readonly expertRepository: PostgresExpertRequestRepository;
   readonly refreshQueue: PostgresRefreshQueueRepository;
   readonly instrumentation: PostgresJourneyInstrumentation;
@@ -54,6 +57,8 @@ export const createPostgresRepositories = (
     context,
     repository: new PostgresBuyerJourneyRepository(context),
     evidenceArtifactRepository: new PostgresEvidenceArtifactRepository(context),
+    evidenceArtifactRetentionRepository:
+      new PostgresEvidenceArtifactRetentionRepository(context),
     expertRepository: new PostgresExpertRequestRepository(context),
     refreshQueue: new PostgresRefreshQueueRepository(context),
     instrumentation: new PostgresJourneyInstrumentation(context),

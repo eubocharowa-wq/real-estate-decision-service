@@ -136,8 +136,8 @@ describe("TASK-025 staging readiness", () => {
           configuration_valid: true,
           reachable: true,
           schema_compatible: true,
-          expected_migration_count: 5,
-          applied_migration_count: 5,
+          expected_migration_count: 6,
+          applied_migration_count: 6,
         },
         public_origin: {
           configured: true,
@@ -237,6 +237,7 @@ describe("TASK-025 staging readiness", () => {
       "0003",
       "0004",
       "0005",
+      "0006",
     ]);
     expect(
       query.mock.calls.map(([statement]) => String(statement)).join("\n"),
@@ -298,7 +299,7 @@ describe("TASK-025 staging readiness", () => {
     );
 
     expect(missing.schemaCompatible).toBe(false);
-    expect(missing.pendingVersions).toEqual(["0005"]);
+    expect(missing.pendingVersions).toEqual(["0006"]);
     expect(renamed.mismatchedVersions).toEqual(["0001"]);
     expect(unknown.unexpectedVersions).toEqual(["9999"]);
     expect(failed).toMatchObject({

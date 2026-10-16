@@ -16,6 +16,7 @@ export interface EvidenceArtifactRepository {
     event: EvidenceArtifactEvent,
   ): Promise<EvidenceArtifact>;
   getArtifact(artifactId: string): Promise<EvidenceArtifact | null>;
+  hasStorageKey(storageKey: string): Promise<boolean>;
   transitionArtifact(
     artifactId: string,
     toState: EvidenceArtifactState,
@@ -90,6 +91,12 @@ export class InMemoryEvidenceArtifactRepository implements EvidenceArtifactRepos
   async getArtifact(artifactId: string): Promise<EvidenceArtifact | null> {
     const artifact = this.artifacts.get(artifactId);
     return artifact ? clone(artifact) : null;
+  }
+
+  async hasStorageKey(storageKey: string): Promise<boolean> {
+    return [...this.artifacts.values()].some(
+      (artifact) => artifact.storage_key === storageKey,
+    );
   }
 
   async transitionArtifact(

@@ -9,6 +9,7 @@ import {
   EvidenceArtifactService,
   InMemoryEvidenceArtifactBlobStore,
   InMemoryEvidenceArtifactRepository,
+  InMemoryEvidenceArtifactRetentionRepository,
   sha256Hex,
   VercelPrivateEvidenceArtifactBlobStore,
   type EvidenceArtifactBlobStore,
@@ -85,11 +86,25 @@ const setupUserDocument = async () => {
     createEventId: () => "artifact_event_b1",
   });
   const artifact = await service.createQuarantinedArtifact(userDocumentInput());
+  const retentionRepository = new InMemoryEvidenceArtifactRetentionRepository();
+  await retentionRepository.initialize({
+    artifactId: artifact.artifact_id,
+    retainUntil: artifact.retain_until,
+    retentionPolicy: artifact.retention_policy,
+    occurredAt: artifact.created_at,
+  });
   const readService = new EvidenceArtifactReadService({
     repository,
     blobStore,
+    retentionRepository,
   });
-  return { repository, blobStore, artifact, readService };
+  return {
+    repository,
+    retentionRepository,
+    blobStore,
+    artifact,
+    readService,
+  };
 };
 
 describe("Vercel Private Blob adapter", () => {
@@ -191,11 +206,13 @@ describe("Evidence Artifact application authorization", () => {
   });
 
   it("does not treat a forged allow object as authorization", async () => {
-    const { repository, blobStore } = await setupUserDocument();
+    const { repository, retentionRepository, blobStore } =
+      await setupUserDocument();
     const get = vi.spyOn(blobStore, "get");
     const readService = new EvidenceArtifactReadService({
       repository,
       blobStore,
+      retentionRepository,
     });
 
     await expect(
@@ -208,11 +225,13 @@ describe("Evidence Artifact application authorization", () => {
   });
 
   it("reads the blob only after policy approval", async () => {
-    const { repository, blobStore } = await setupUserDocument();
+    const { repository, retentionRepository, blobStore } =
+      await setupUserDocument();
     const get = vi.spyOn(blobStore, "get");
     const readService = new EvidenceArtifactReadService({
       repository,
       blobStore,
+      retentionRepository,
     });
 
     await readService.read({
@@ -231,7 +250,7 @@ describe("Evidence Artifact application authorization", () => {
       now: () => NOW,
       createEventId: () => "artifact_event_internal",
     });
-    await service.createQuarantinedArtifact({
+    const artifact = await service.createQuarantinedArtifact({
       ...userDocumentInput(),
       artifactId: "artifact_internal",
       artifactKind: "source_snapshot",
@@ -243,9 +262,18 @@ describe("Evidence Artifact application authorization", () => {
       actorType: "service",
       actorRef: null,
     });
+    const retentionRepository =
+      new InMemoryEvidenceArtifactRetentionRepository();
+    await retentionRepository.initialize({
+      artifactId: artifact.artifact_id,
+      retainUntil: artifact.retain_until,
+      retentionPolicy: artifact.retention_policy,
+      occurredAt: artifact.created_at,
+    });
     const readService = new EvidenceArtifactReadService({
       repository,
       blobStore,
+      retentionRepository,
     });
 
     await expect(
@@ -289,6 +317,7 @@ describe("Evidence Artifact orphan compensation", () => {
         throw new Error("METADATA_WRITE_FAILED");
       },
       getArtifact: (artifactId) => delegate.getArtifact(artifactId),
+      hasStorageKey: (storageKey) => delegate.hasStorageKey(storageKey),
       transitionArtifact: (artifactId, toState, event) =>
         delegate.transitionArtifact(artifactId, toState, event),
       linkArtifact: (link) => delegate.linkArtifact(link),

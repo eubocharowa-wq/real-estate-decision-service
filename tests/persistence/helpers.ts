@@ -92,6 +92,8 @@ export const PHASE_ONE_TABLES = [
   "expert_results",
   "evidence_artifact_events",
   "evidence_artifact_links",
+  "evidence_artifact_retention_events",
+  "evidence_artifact_retention_state",
   "evidence_artifacts",
   "field_evidence",
   "imported_candidates",
