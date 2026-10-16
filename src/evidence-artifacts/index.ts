@@ -3,8 +3,15 @@ export {
   sha256Hex,
   type EvidenceArtifactBlobHead,
   type EvidenceArtifactBlobStore,
-  type EvidenceArtifactReadAuthorization,
 } from "./blob-store";
+export {
+  createEvidenceArtifactOwnerContext,
+  createTrustedInternalEvidenceArtifactContext,
+  DefaultEvidenceArtifactAccessPolicy,
+  type EvidenceArtifactAccessContext,
+  type EvidenceArtifactAccessDecision,
+  type EvidenceArtifactAccessPolicy,
+} from "./access-policy";
 export {
   assertEvidenceArtifactTransition,
   canTransitionEvidenceArtifact,
@@ -18,3 +25,11 @@ export {
   type CreateEvidenceArtifactInput,
   type EvidenceArtifactServiceDependencies,
 } from "./service";
+export {
+  EvidenceArtifactReadService,
+  type EvidenceArtifactReadServiceDependencies,
+} from "./read-service";
+export {
+  VercelPrivateEvidenceArtifactBlobStore,
+  type VercelPrivateBlobClient,
+} from "./vercel-private-blob-store";

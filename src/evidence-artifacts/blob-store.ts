@@ -5,13 +5,8 @@ import { evidenceArtifactStorageKeySchema } from "../domain/evidence-artifact/sc
 export interface EvidenceArtifactBlobHead {
   readonly storageKey: string;
   readonly byteSize: number;
-  readonly sha256: string;
-}
-
-export interface EvidenceArtifactReadAuthorization {
-  readonly decision: "allow";
-  readonly artifactId: string;
-  readonly actorRef: string;
+  /** Null when the storage provider does not expose a content checksum. */
+  readonly sha256: string | null;
 }
 
 export interface EvidenceArtifactBlobStore {
@@ -21,10 +16,8 @@ export interface EvidenceArtifactBlobStore {
     readonly expectedSha256: string;
   }): Promise<EvidenceArtifactBlobHead>;
   head(storageKey: string): Promise<EvidenceArtifactBlobHead | null>;
-  getAuthorized(input: {
-    readonly storageKey: string;
-    readonly authorization: EvidenceArtifactReadAuthorization;
-  }): Promise<Uint8Array>;
+  get(storageKey: string): Promise<Uint8Array>;
+  delete(storageKey: string): Promise<void>;
 }
 
 export const sha256Hex = (bytes: Uint8Array): string =>
@@ -74,14 +67,15 @@ export class InMemoryEvidenceArtifactBlobStore implements EvidenceArtifactBlobSt
     return blob ? structuredClone(blob.head) : null;
   }
 
-  async getAuthorized(input: {
-    readonly storageKey: string;
-    readonly authorization: EvidenceArtifactReadAuthorization;
-  }): Promise<Uint8Array> {
-    if (input.authorization.decision !== "allow")
-      throw new Error("EVIDENCE_ARTIFACT_ACCESS_DENIED");
-    const blob = this.blobs.get(input.storageKey);
+  async get(storageKeyInput: string): Promise<Uint8Array> {
+    const storageKey = evidenceArtifactStorageKeySchema.parse(storageKeyInput);
+    const blob = this.blobs.get(storageKey);
     if (!blob) throw new Error("EVIDENCE_ARTIFACT_BLOB_NOT_FOUND");
     return new Uint8Array(blob.bytes);
+  }
+
+  async delete(storageKeyInput: string): Promise<void> {
+    const storageKey = evidenceArtifactStorageKeySchema.parse(storageKeyInput);
+    this.blobs.delete(storageKey);
   }
 }
