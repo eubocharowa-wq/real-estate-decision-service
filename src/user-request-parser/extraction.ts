@@ -189,9 +189,14 @@ const extractResultLimit = (draft: ParserDraft, rawText: string): void => {
 };
 
 const extractLocation = (draft: ParserDraft, rawText: string): void => {
+  // No case-insensitive (i) flag: with it, Unicode case folding makes
+  // [А-ЯЁ] in the captured group match lowercase Cyrillic too, so e.g.
+  // "Город пока не выбрали" would capture the ordinary word "пока" as a
+  // city. The trigger words are matched in both cases explicitly instead,
+  // which also covers a capitalised sentence start ("Квартиру в Туле...").
   const cityPatterns = [
-    /(?:квартир(?:у|ы)?|дом(?:а)?|недвижимость)\s+в\s+([А-ЯЁ][а-яё-]+)/giu,
-    /(?:город(?:е)?|только)\s+([А-ЯЁ][а-яё-]+)(?!\s+район)/giu,
+    /(?:[Кк]вартир(?:у|ы)?|[Дд]ом(?:а)?|[Нн]едвижимость)\s+в\s+([А-ЯЁ][а-яё-]+)/gu,
+    /(?:[Гг]ород(?:е)?|[Тт]олько)\s+([А-ЯЁ][а-яё-]+)(?!\s+район)/gu,
   ];
   for (const pattern of cityPatterns) {
     for (const match of rawText.matchAll(pattern)) {
@@ -1256,6 +1261,37 @@ export const extractRuleBasedDraft = (
   extractLifestyleAndInfrastructure(draft, rawText);
   extractPropertyFeatures(draft, rawText);
   extractSourceLinks(draft, rawText);
+
+  // Both are gates on reaching matching at all — see
+  // src/request-confirmation/state.ts's canConfirmRequest — not merely
+  // "nice to know": without a purchase-price ceiling the matcher cannot
+  // filter by price, and without a target city (or an explicit statement
+  // that the city doesn't matter) it cannot filter by location. Neither
+  // field is invented here — unknown stays unknown — this only flags that
+  // it is still missing once every extractor above has had its turn.
+  if (
+    draft.request.budget.purchase_price.maximum === null &&
+    draft.request.budget.total_budget === null
+  ) {
+    addUnknown(draft, {
+      field: "budget.amount",
+      reason: "not_specified",
+      explanation: "Бюджет покупки не указан.",
+      materiality: "critical",
+    });
+  }
+
+  if (
+    draft.request.location.cities.length === 0 &&
+    draft.request.location.location_flexible !== true
+  ) {
+    addUnknown(draft, {
+      field: "location.city",
+      reason: "not_specified",
+      explanation: "Целевой город не указан.",
+      materiality: "critical",
+    });
+  }
 
   if (draft.extracted_facts.length === 0) {
     draft.warnings.push({

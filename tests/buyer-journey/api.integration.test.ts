@@ -95,6 +95,58 @@ describe("buyer journey HTTP application boundary", async () => {
     );
   });
 
+  it("rejects a confirmation missing budget and city even when confirm_and_match is called directly, bypassing the confirmation screen", async () => {
+    const started = await post({
+      action: "start_and_parse",
+      sessionId: "session_api_bypass",
+      rawRequestText: "Хочу однушку в новостройке",
+    });
+    expect(started.status).toBe(201);
+    const startedBody: unknown = await started.json();
+    const journey = Reflect.get(startedBody as object, "journey") as {
+      journey_id: string;
+    };
+    const parserOutcome = userRequestParserOutcomeSchema.parse(
+      Reflect.get(startedBody as object, "parserOutcome"),
+    );
+    if (!parserOutcome.success) throw new Error(parserOutcome.error.message);
+    expect(parserOutcome.result.confirmation_view.can_confirm).toBe(false);
+
+    // The real confirmation screen never produces this: confirmRequest
+    // (src/request-confirmation/state.ts) refuses to confirm while budget
+    // or city is missing. This hand-built payload simulates a client that
+    // calls confirm_and_match directly, skipping that gate entirely.
+    const bypassConfirmation = {
+      schema_version: "1.0",
+      request_status: "confirmed",
+      original_raw_text: parserOutcome.result.raw_text,
+      confirmed_request: parserOutcome.result.parsed_request,
+      unresolved_nonblocking_unknowns: [],
+      answered_clarifications: [],
+      user_changes: [],
+      confirmed_at: "2026-08-15T00:00:00.000Z",
+    };
+
+    const confirmed = await post({
+      action: "confirm_and_match",
+      journeyId: journey.journey_id,
+      sessionId: "session_api_bypass",
+      confirmationResult: bypassConfirmation,
+    });
+    expect(confirmed.status).toBe(422);
+    const confirmedBody: unknown = await confirmed.json();
+    expect(Reflect.get(confirmedBody as object, "error")).toBe(
+      "INVALID_TRANSITION",
+    );
+
+    const shortlist = await post({
+      action: "shortlist",
+      journeyId: journey.journey_id,
+      sessionId: "session_api_bypass",
+    });
+    expect(shortlist.status).not.toBe(200);
+  });
+
   it("attaches an offline URL candidate to the owned journey matching bundle", async () => {
     const started = await post({
       action: "start_and_parse",

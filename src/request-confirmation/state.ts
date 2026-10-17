@@ -485,6 +485,26 @@ const amountValue = (
   value: { amount: string } | null | undefined,
 ): number | null => (value ? Number(value.amount) : null);
 
+/**
+ * A purchase-price ceiling and a target city (or an explicit statement that
+ * the city doesn't matter) are the two fields the matcher cannot run
+ * without — see the same gate in
+ * src/user-request-parser/extraction.ts. Exported so
+ * src/buyer-journey/application.ts can re-check it server-side: the
+ * confirmation screen blocking the button is not itself a guarantee, since
+ * confirmBuyerRequest takes a client-supplied RequestConfirmationResult
+ * directly.
+ */
+export const isBudgetAndCityPresent = (request: UserRequest): boolean => {
+  const hasBudget =
+    request.budget.purchase_price.maximum !== null ||
+    request.budget.total_budget !== null;
+  const hasCity =
+    request.location.cities.length > 0 ||
+    request.location.location_flexible === true;
+  return hasBudget && hasCity;
+};
+
 export const validateConfirmationSession = (
   request: UserRequest,
   criteria: readonly ConfirmationCriterion[],
@@ -596,6 +616,13 @@ export const validateConfirmationSession = (
     errors.push({
       field: "budget.purchase_price",
       message: "Минимальная цена не может быть больше максимальной.",
+    });
+  }
+  if (!isBudgetAndCityPresent(request)) {
+    errors.push({
+      field: "required_fields",
+      message:
+        "Укажите максимальный бюджет и город (или отметьте, что город не важен) — без них подбор не может начаться.",
     });
   }
   if (contradictions.some((contradiction) => contradiction.blocking)) {
@@ -928,6 +955,11 @@ export const answerClarification = (
       request.location.cities = [answer];
       request.location.location_flexible = false;
     }
+  } else if (
+    clarification.field === "budget.amount" &&
+    typeof answer === "number"
+  ) {
+    request.budget.purchase_price.maximum = money(answer);
   } else if (
     clarification.field === "location.travel_destination" &&
     typeof answer === "string"

@@ -9,10 +9,18 @@ import {
   type RequestConfirmationResult,
 } from "../../src/request-confirmation";
 
+// "Город пока не выбрали" is the parser's existing explicit-flexible-city
+// phrase (src/user-request-parser/extraction.ts): it sets location_flexible
+// so this stays confirmable under the new required-city/budget gate
+// (src/user-request-parser/extraction.ts, src/request-confirmation/state.ts)
+// without naming a real city — which would otherwise change matching
+// results for every test built on this fixture, far outside this fix's
+// scope.
 export const GOLDEN_RAW_REQUEST = `Найди 5 квартир до 5 млн.
 Семейная ипотека обязательна.
 Желательно без первоначального взноса.
-Первый этаж не рассматриваю.`;
+Первый этаж не рассматриваю.
+Город пока не выбрали.`;
 
 export class MutableJourneyClock {
   value = "2026-08-15T00:00:00.000Z";

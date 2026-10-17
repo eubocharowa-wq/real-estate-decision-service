@@ -7,6 +7,7 @@ import type { ReactNode } from "react";
 import "./design-system.css";
 import "./globals.css";
 import { resolveSiteUrl } from "../src/public-site";
+import { resolvePilotRuntimeConfig } from "../src/pilot-hardening/config";
 
 // Cyrillic is required: the whole interface is in Russian. Both families are
 // variable fonts, so the weights the stylesheet already uses (500 for display
@@ -24,13 +25,25 @@ const displayFont = Playfair_Display({
 });
 
 const siteUrl = resolveSiteUrl();
+const isProductionApplication =
+  resolvePilotRuntimeConfig().mode === "production";
 
 export const metadata: Metadata = {
   title: "Основание — выбор под ваши условия",
-  description: "Помогаем выбрать недвижимость под ваши условия.",
+  description:
+    "Формируем обоснованное решение по недвижимости под ваши условия.",
   // Stays undefined until an operator configures the origin, so relative
   // metadata is never resolved against a domain we do not control.
   ...(siteUrl ? { metadataBase: new URL(siteUrl) } : {}),
+  // A pilot/demo deployment is not the real product and must never be
+  // indexed or cited as evidence that production is live. A route that
+  // needs noindex for its own reasons (see the placeholder legal/about
+  // pages) still sets metadata.robots itself; this only covers routes that
+  // don't, and REDS_APPLICATION_MODE (src/pilot-hardening/config.ts) is the
+  // only switch — never the hostname.
+  ...(isProductionApplication
+    ? {}
+    : { robots: { index: false, follow: false } }),
 };
 
 type RootLayoutProps = Readonly<{

@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-import { SiteFooter, SiteHeader } from "./site-chrome";
+import { PilotModeBanner, SiteFooter, SiteHeader } from "./site-chrome";
 
 type PublicLayoutProps = Readonly<{
   children: ReactNode;
@@ -15,6 +15,7 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
       <a className="skip-link" href="#main-content">
         Перейти к основному содержанию
       </a>
+      <PilotModeBanner />
       <SiteHeader />
       <main id="main-content">{children}</main>
       <SiteFooter />
