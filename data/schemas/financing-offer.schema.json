@@ -50,7 +50,7 @@
             { "type": "null" }
           ]
         },
-        "rate_from": { "anyOf": [{ "type": "boolean" }, { "type": "null" }] },
+        "rate_from": { "type": ["boolean", "null"] },
         "periods": {
           "type": "array",
           "items": {
