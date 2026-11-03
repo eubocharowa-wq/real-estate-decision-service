@@ -1,4 +1,5 @@
 import type { Criterion, UserRequest } from "../domain";
+import { isKnownCityForm, resolveCityName } from "../geography";
 import type { ExtractedFact, UserRequestParserInput } from "./contracts";
 import {
   addCriterion,
@@ -194,14 +195,33 @@ const extractLocation = (draft: ParserDraft, rawText: string): void => {
   // "Город пока не выбрали" would capture the ordinary word "пока" as a
   // city. The trigger words are matched in both cases explicitly instead,
   // which also covers a capitalised sentence start ("Квартиру в Туле...").
+  //
+  // The capture group itself allows a lowercase first letter too
+  // ("квартиру в туле") — accepted below only when it resolves to a known
+  // city from src/geography's directory; an unrecognised lowercase word
+  // is rejected the same way "пока" always was, so this does not reopen
+  // that bug. A capitalised word is still accepted even when it is not in
+  // the directory — see the acceptance check right after the loop below.
+  //
+  // The dwelling-noun alternation also covers the colloquial room-count
+  // words ("Двушка в Туле") — kept in sync by hand with
+  // colloquialRoomCounts in extractPropertyFeatures below, which names the
+  // same stems for the opposite purpose (reading off the room count rather
+  // than anchoring a city mention).
   const cityPatterns = [
-    /(?:[Кк]вартир(?:у|ы)?|[Дд]ом(?:а)?|[Нн]едвижимость)\s+в\s+([А-ЯЁ][а-яё-]+)/gu,
-    /(?:[Гг]ород(?:е)?|[Тт]олько)\s+([А-ЯЁ][а-яё-]+)(?!\s+район)/gu,
+    /(?:[Кк]вартир(?:у|ы)?|[Дд]ом(?:а)?|[Нн]едвижимость|[Оо]дн(?:о(?:комнатн\p{L}*)|ушк\p{L}*)|[Дд]вух(?:комнатн\p{L}*)|[Дд]вушк\p{L}*|[Тт]р[её]х(?:комнатн\p{L}*)|[Тт]р[её]шк\p{L}*|[Чч]етыр[её]х(?:комнатн\p{L}*))\s+в\s+([А-ЯЁа-яё][а-яё-]+)/gu,
+    /(?:[Гг]ород(?:е)?|[Тт]олько)\s+([А-ЯЁа-яё][а-яё-]+)(?!\s+район)/gu,
+    // "в г. Тула" / "в г Тула" — the abbreviated form isn't a "город(е)?"
+    // match, so it needs its own pattern.
+    /в\s+г\.?\s+([А-ЯЁа-яё][а-яё-]+)/gu,
   ];
   for (const pattern of cityPatterns) {
     for (const match of rawText.matchAll(pattern)) {
-      const city = match[1];
-      if (!city || /район|област/u.test(city)) continue;
+      const rawCity = match[1];
+      if (!rawCity || /район|област/u.test(rawCity)) continue;
+      const knownCity = isKnownCityForm(rawCity);
+      if (!knownCity && !/^[А-ЯЁ]/u.test(rawCity)) continue;
+      const city = resolveCityName(rawCity);
       pushUnique(draft.request.location.cities, city);
       draft.request.location.location_flexible = /только/iu.test(match[0])
         ? false
@@ -314,11 +334,16 @@ const extractLocation = (draft: ParserDraft, rawText: string): void => {
   if (unknownCity) {
     draft.request.location.cities = [];
     draft.request.location.location_flexible = true;
+    // A city is required for every confirmed request (see the final check
+    // in extractRuleBasedDraft below and isBudgetAndCityPresent in
+    // src/request-confirmation/state.ts) — saying the city isn't chosen
+    // yet doesn't supply one, so this stays critical rather than a
+    // lower-materiality "nice to know" the way it used to be.
     addUnknown(draft, {
       field: "location.city",
       reason: "not_specified",
       explanation: "Целевой город явно не выбран.",
-      materiality: "high",
+      materiality: "critical",
     });
   }
 };
@@ -1071,6 +1096,25 @@ const extractLifestyleAndInfrastructure = (
   }
 };
 
+/**
+ * Colloquial apartment-type words that name a room count without a digit
+ * ("однушка", "четырёхкомнатная") — same stems as the dwelling-noun
+ * alternation in extractLocation above, which anchors a city mention off
+ * the same words ("Двушка в Туле"). "Студия" is deliberately absent: it
+ * names a layout, not a room count, so it stays unknown rather than being
+ * read as 1 room.
+ */
+const colloquialRoomCounts: ReadonlyArray<readonly [RegExp, number]> = [
+  [/[Оо]дн(?:о(?:комнатн\p{L}*)|ушк\p{L}*)/u, 1],
+  [/[Дд]вух(?:комнатн\p{L}*)|[Дд]вушк\p{L}*/u, 2],
+  [/[Тт]р[её]х(?:комнатн\p{L}*)|[Тт]р[её]шк\p{L}*/u, 3],
+  [/[Чч]етыр[её]х(?:комнатн\p{L}*)/u, 4],
+];
+
+/** "1к", "2к", ... — the other common shorthand for a room count. */
+const shorthandRoomCount = (rawText: string): RegExpExecArray | null =>
+  /(?<!\d)([1-9])к(?!\p{L})/u.exec(rawText);
+
 const extractPropertyFeatures = (draft: ParserDraft, rawText: string): void => {
   const area =
     /(?:площадь\s+)?(?:не меньше|минимум|от)\s+(\d+(?:[.,]\d+)?)\s*(?:м(?:2|²)|кв\.?\s*м|метр\p{L}*)/iu.exec(
@@ -1122,6 +1166,37 @@ const extractPropertyFeatures = (draft: ParserDraft, rawText: string): void => {
         "townhouse",
       ],
     });
+  } else {
+    const shorthand = shorthandRoomCount(rawText);
+    const colloquial = shorthand
+      ? { match: shorthand, value: Number(shorthand[1]) }
+      : (colloquialRoomCounts
+          .map(([pattern, value]) => {
+            const match = pattern.exec(rawText);
+            return match ? { match, value } : null;
+          })
+          .find((entry) => entry !== null) ?? null);
+    if (colloquial) {
+      draft.request.property.rooms_min = colloquial.value;
+      draft.request.property.rooms_max = colloquial.value;
+      addCriterion(draft, {
+        field: "property.rooms",
+        category: "property",
+        operator: "eq",
+        target: colloquial.value,
+        unit: "rooms",
+        priority: "preferred",
+        weight: 4,
+        source_span: matchSpan(rawText, colloquial.match),
+        priority_confidence: 0.85,
+        applicable_property_types: [
+          "apartment",
+          "apartments",
+          "house",
+          "townhouse",
+        ],
+      });
+    }
   }
 
   const floor = /(?:первый этаж|этаж вообще не важен|этаж не важен)/iu.exec(
@@ -1281,10 +1356,13 @@ export const extractRuleBasedDraft = (
     });
   }
 
-  if (
-    draft.request.location.cities.length === 0 &&
-    draft.request.location.location_flexible !== true
-  ) {
+  // No location_flexible escape hatch here: a city is always required now,
+  // whether the request never mentioned one or explicitly said it doesn't
+  // know yet (the unknownCity branch above, which still leaves cities
+  // empty) — see isBudgetAndCityPresent in
+  // src/request-confirmation/state.ts, which both the confirmation screen
+  // and the server (confirmBuyerRequest) gate on.
+  if (draft.request.location.cities.length === 0) {
     addUnknown(draft, {
       field: "location.city",
       reason: "not_specified",

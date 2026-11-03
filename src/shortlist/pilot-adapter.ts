@@ -1,4 +1,5 @@
 import type { Property, UserRequest } from "../domain";
+import { citiesInclude } from "../geography";
 import {
   calculateDataQuality,
   matchProperty,
@@ -54,9 +55,18 @@ export const matchesConfirmedScope = (
   ) {
     return false;
   }
+  // An unconfirmed city (address.city === null) does not exclude the
+  // property — unknown != false (AGENTS.md §11). It still reaches
+  // matching, where the "city" criterion evaluates to status "unknown"
+  // (src/matching/criteria/actual-value.ts's propertyActual) rather than a
+  // mismatch, and degrades Data Confidence instead of being read as a
+  // location non-match. Only a *known* city that doesn't match excludes it
+  // here, using the same normalized comparison as the matching engine's
+  // own city criterion (src/geography/city-directory.ts).
   if (
     request.location.cities.length > 0 &&
-    (address.city === null || !request.location.cities.includes(address.city))
+    address.city !== null &&
+    !citiesInclude(request.location.cities, address.city)
   ) {
     return false;
   }

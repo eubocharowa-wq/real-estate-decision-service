@@ -21,6 +21,28 @@ const withStatus = (
   },
 });
 
+const withScore = (
+  source: ShortlistCandidateInput,
+  matchScore: number,
+  dataConfidenceScore: number | null,
+): ShortlistCandidateInput => ({
+  ...source,
+  match: {
+    ...source.match,
+    match_result: { ...source.match.match_result, match_score: matchScore },
+  },
+  dataQuality:
+    dataConfidenceScore === null || source.dataQuality === null
+      ? null
+      : {
+          ...source.dataQuality,
+          data_quality: {
+            ...source.dataQuality.data_quality,
+            data_confidence_score: dataConfidenceScore,
+          },
+        },
+});
+
 describe("TASK-009 shortlist policy", () => {
   it("excludes hard_fail, matching-unavailable, and unavailable offers centrally", () => {
     const eligible = candidate("prop_nb_001");
@@ -42,7 +64,7 @@ describe("TASK-009 shortlist policy", () => {
     ).toEqual(["prop_nb_001"]);
   });
 
-  it("keeps eligible_with_unknowns and possible_match in provided order", () => {
+  it("includes eligible_with_unknowns and possible_match alongside eligible", () => {
     const possible = withStatus(candidate("prop_nb_001"), "possible_match");
     const unknowns = withStatus(
       candidate("prop_nb_002"),
@@ -51,11 +73,75 @@ describe("TASK-009 shortlist policy", () => {
     const eligible = withStatus(candidate("prop_nb_003"), "eligible");
 
     expect(
-      applyShortlistPolicy([possible, unknowns, eligible], 10).map(
-        (item) => item.match.match_result.eligibility_status,
-      ),
-    ).toEqual(["possible_match", "eligible_with_unknowns", "eligible"]);
-    expect(SHORTLIST_POLICY_V1.ordering).toBe("provided_input_order");
+      applyShortlistPolicy([possible, unknowns, eligible], 10)
+        .map((item) => item.match.match_result.eligibility_status)
+        .toSorted(),
+    ).toEqual(["eligible", "eligible_with_unknowns", "possible_match"].sort());
+  });
+
+  it("orders by Match Score, then by Data Confidence as a tiebreaker — never by eligibility status or input order", () => {
+    const base = candidate("prop_nb_001");
+    // Same Match Score (100), different Data Confidence: the better-confirmed
+    // one leads. This is the mechanism that keeps an object with a
+    // confirmed city ahead of an otherwise identical one whose city isn't
+    // confirmed — see src/shortlist/pilot-adapter.ts's matchesConfirmedScope
+    // and src/geography — without this policy ever mentioning city.
+    const betterConfirmed = withScore(
+      {
+        ...base,
+        property: {
+          ...base.property,
+          identity: { ...base.property.identity, property_id: "prop_a" },
+        },
+      },
+      100,
+      80,
+    );
+    const lessConfirmed = withScore(
+      {
+        ...base,
+        property: {
+          ...base.property,
+          identity: { ...base.property.identity, property_id: "prop_b" },
+        },
+      },
+      100,
+      20,
+    );
+    // Lower Match Score, even with perfect confidence, still sorts below
+    // both of the above — Match Score always wins first.
+    const lowerScore = withScore(
+      {
+        ...base,
+        property: {
+          ...base.property,
+          identity: { ...base.property.identity, property_id: "prop_c" },
+        },
+      },
+      50,
+      100,
+    );
+    const noConfidenceResult = withScore(
+      {
+        ...base,
+        property: {
+          ...base.property,
+          identity: { ...base.property.identity, property_id: "prop_d" },
+        },
+      },
+      100,
+      null,
+    );
+
+    expect(
+      applyShortlistPolicy(
+        [lowerScore, lessConfirmed, noConfidenceResult, betterConfirmed],
+        10,
+      ).map((item) => item.property.identity.property_id),
+    ).toEqual(["prop_a", "prop_b", "prop_d", "prop_c"]);
+    expect(SHORTLIST_POLICY_V1.ordering).toBe(
+      "match_score_desc_then_data_confidence_desc",
+    );
   });
 
   it("respects the user's five-result limit without padding failures", () => {
@@ -65,11 +151,11 @@ describe("TASK-009 shortlist policy", () => {
     );
     expect(selected).toHaveLength(5);
     expect(selected.map((item) => item.property.identity.property_id)).toEqual([
-      "prop_nb_001",
-      "prop_nb_002",
-      "prop_nb_003",
-      "prop_nb_004",
       "prop_sec_001",
+      "prop_nb_001",
+      "prop_nb_003",
+      "prop_sec_002",
+      "prop_nb_004",
     ]);
   });
 });

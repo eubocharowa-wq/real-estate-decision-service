@@ -159,6 +159,8 @@ const unknownText: ExplanationFormatter = ({ explanation, criterion }) => {
     return "Применимость программы нужно подтвердить";
   if (field.includes("listing_price"))
     return "Актуальную цену нужно подтвердить";
+  if (field.includes("city") || field.includes("cities"))
+    return "Город не подтверждён";
   return `Нужно подтвердить: ${fieldLabel(field)}`;
 };
 
@@ -231,6 +233,8 @@ export const formatFieldUnknown = (field: string): string => {
     return "Первоначальный взнос пока не подтверждён";
   if (field.includes("financing"))
     return "Условия финансирования нужно подтвердить";
+  if (field.includes("city") || field.includes("cities"))
+    return "Город не подтверждён";
   return `Нужно подтвердить: ${fieldLabel(field)}`;
 };
 

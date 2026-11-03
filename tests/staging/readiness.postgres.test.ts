@@ -1,9 +1,11 @@
 import { afterAll, describe, expect, it } from "vitest";
 
 import {
+  defaultMigrationsDirectory,
   inspectDatabaseMigrationReadiness,
   migrateDown,
   migrateUp,
+  readMigrations,
 } from "../../src/persistence";
 import {
   createTestDatabase,
@@ -11,6 +13,11 @@ import {
   isDatabaseAvailable,
   type TestDatabase,
 } from "../persistence/helpers";
+
+// Read from migrations/ on disk rather than hardcoding a count or a "last
+// version" — both go stale the moment a new migration lands otherwise.
+const migrations = readMigrations(defaultMigrationsDirectory());
+const latestMigrationVersion = migrations.at(-1)!.version;
 
 describe.skipIf(!isDatabaseAvailable)(
   "TASK-025 readiness against PostgreSQL",
@@ -36,14 +43,14 @@ describe.skipIf(!isDatabaseAvailable)(
       expect(migrated).toMatchObject({
         reachable: true,
         schemaCompatible: true,
-        expectedMigrationCount: 4,
-        appliedMigrationCount: 4,
+        expectedMigrationCount: migrations.length,
+        appliedMigrationCount: migrations.length,
       });
 
       await migrateDown(database.pool, { steps: 1 });
       const rolledBack = await inspectDatabaseMigrationReadiness(database.pool);
       expect(rolledBack.schemaCompatible).toBe(false);
-      expect(rolledBack.pendingVersions).toEqual(["0004"]);
+      expect(rolledBack.pendingVersions).toEqual([latestMigrationVersion]);
     });
   },
 );

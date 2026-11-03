@@ -18,7 +18,7 @@ export const SHORTLIST_POLICY_V1 = Object.freeze({
   maxStrengths: 3,
   maxCompromises: 2,
   maxCriticalUnknowns: 3,
-  ordering: "provided_input_order",
+  ordering: "match_score_desc_then_data_confidence_desc",
 });
 
 const contains = <T extends string>(
@@ -37,8 +37,25 @@ export const resolveShortlistLimit = (requestedLimit: number): number => {
 };
 
 /**
- * The only primary-shortlist filter. It deliberately preserves provided order
- * and never pads the result with failed or unavailable candidates.
+ * Data Confidence as a tiebreaker: higher Match Score leads, and within an
+ * equal Match Score, higher Data Confidence leads. Match Score and Data
+ * Confidence stay two separate scores (AGENTS.md §13/§16) — this never
+ * folds one into the other — but confidence still has to decide who is
+ * shown first when two candidates fit equally well. An unconfirmed field
+ * (an unconfirmed city among them) lowers Data Confidence through the
+ * existing, generic confidence engine, so it is never named here: a
+ * candidate with more unknowns simply confirms less and sorts lower.
+ * A candidate with no confidence result at all (dataQuality === null)
+ * sorts as if its confidence were the lowest possible.
+ */
+const dataConfidenceScore = (candidate: ShortlistCandidateInput): number =>
+  candidate.dataQuality?.data_quality.data_confidence_score ?? -1;
+
+/**
+ * Never pads the result with failed or unavailable candidates. Beyond the
+ * Match Score / Data Confidence ordering above, two candidates that are
+ * equal on both keep the relative order they arrived in — this sort is
+ * stable (guaranteed by the language since ES2019).
  */
 export const applyShortlistPolicy = (
   candidates: readonly ShortlistCandidateInput[],
@@ -59,6 +76,12 @@ export const applyShortlistPolicy = (
           SHORTLIST_POLICY_V1.excludedAvailabilityStatuses,
           candidate.offer.availability,
         ),
+    )
+    .sort(
+      (left, right) =>
+        right.match.match_result.match_score -
+          left.match.match_result.match_score ||
+        dataConfidenceScore(right) - dataConfidenceScore(left),
     )
     .slice(0, limit);
 };

@@ -49,7 +49,7 @@ describe("UserRequest parser TASK-003 contract", () => {
     const result = await parseFixture("a-clear-apartment");
 
     expect(result.parsed_request.intent).toBe("find");
-    expect(result.parsed_request.location.cities).toEqual(["Туле"]);
+    expect(result.parsed_request.location.cities).toEqual(["Тула"]);
     expect(result.parsed_request.property.allowed_property_types).toEqual([
       "apartment",
     ]);

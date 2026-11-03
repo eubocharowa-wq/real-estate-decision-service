@@ -3,6 +3,7 @@ import {
   userRequestSchema,
   type UserRequest,
 } from "../domain/user-request/schema";
+import { resolveCityName } from "../geography";
 import {
   selectTopClarifications,
   type ClarificationCandidate,
@@ -197,8 +198,15 @@ const createDomainCriterion = (item: ConfirmationCriterion): Criterion => {
     applicable_property_types: applicableTypes(presentation),
     source_requirement: ["unknown"],
     freshness_requirement: null,
+    // "location.cities" is always flagged critical-if-unknown, regardless
+    // of priority: a city is now a mandatory field (isBudgetAndCityPresent
+    // above), and an object whose own city isn't confirmed should surface
+    // as an explicit "город не подтверждён" unknown — not only when the
+    // user happened to mark the city criterion itself as "must".
     critical_if_unknown:
-      item.priority === "must" || item.priority === "exclude",
+      item.field === "location.cities" ||
+      item.priority === "must" ||
+      item.priority === "exclude",
     user_expression: item.source_text,
   };
 };
@@ -486,10 +494,11 @@ const amountValue = (
 ): number | null => (value ? Number(value.amount) : null);
 
 /**
- * A purchase-price ceiling and a target city (or an explicit statement that
- * the city doesn't matter) are the two fields the matcher cannot run
- * without — see the same gate in
- * src/user-request-parser/extraction.ts. Exported so
+ * A purchase-price ceiling and a real target city are the two fields the
+ * matcher cannot run without — see the same gate in
+ * src/user-request-parser/extraction.ts. There is no location_flexible
+ * escape hatch: a city is always required now, even when the request only
+ * said it doesn't know one yet. Exported so
  * src/buyer-journey/application.ts can re-check it server-side: the
  * confirmation screen blocking the button is not itself a guarantee, since
  * confirmBuyerRequest takes a client-supplied RequestConfirmationResult
@@ -499,9 +508,7 @@ export const isBudgetAndCityPresent = (request: UserRequest): boolean => {
   const hasBudget =
     request.budget.purchase_price.maximum !== null ||
     request.budget.total_budget !== null;
-  const hasCity =
-    request.location.cities.length > 0 ||
-    request.location.location_flexible === true;
+  const hasCity = request.location.cities.length > 0;
   return hasBudget && hasCity;
 };
 
@@ -622,7 +629,7 @@ export const validateConfirmationSession = (
     errors.push({
       field: "required_fields",
       message:
-        "Укажите максимальный бюджет и город (или отметьте, что город не важен) — без них подбор не может начаться.",
+        "Укажите максимальный бюджет и город — без них подбор не может начаться.",
     });
   }
   if (contradictions.some((contradiction) => contradiction.blocking)) {
@@ -920,7 +927,7 @@ export const answerClarification = (
       transition_error: "Уточнение уже закрыто.",
     };
   }
-  const request = structuredClone(session.draft_request);
+  let request = structuredClone(session.draft_request);
   let criteria = [...session.criteria];
   let unknowns = session.unknowns.filter(
     (unknown) => unknown.field !== clarification.field,
@@ -952,14 +959,76 @@ export const answerClarification = (
       request.location.location_flexible = true;
       unknowns = session.unknowns;
     } else if (typeof answer === "string" && answer !== "provide_city") {
-      request.location.cities = [answer];
+      const city = resolveCityName(answer);
+      request.location.cities = [city];
       request.location.location_flexible = false;
+      // A city answered through a clarification must become a real
+      // "location.cities" criterion, not just the plain request field —
+      // otherwise matching never evaluates it (no criteria_results entry)
+      // and an unconfirmed-city object is never flagged, defeating the
+      // "город не подтверждён" marking this is meant to feed.
+      const existingCity = criteria.find(
+        (item) => item.field === "location.cities",
+      );
+      if (existingCity) {
+        criteria = criteria.map((item) =>
+          item.criterion_id === existingCity.criterion_id
+            ? { ...item, value: [city] }
+            : item,
+        );
+        updateDomainCriterion(
+          request,
+          existingCity.criterion_id,
+          (criterion) => ({ ...criterion, target: [city] }),
+        );
+      } else {
+        const item: ConfirmationCriterion = {
+          criterion_id: `criterion_added_location_cities_${criteria.length + 1}`,
+          field: "location.cities",
+          label: getCriterionPresentation("location.cities").label,
+          value: [city],
+          priority: "preferred",
+          source_text: null,
+          editable: { value: true, priority: true, removable: true },
+        };
+        request = materializeConfirmationCriteria(request, [item]);
+        criteria = [...criteria, item];
+      }
     }
   } else if (
     clarification.field === "budget.amount" &&
     typeof answer === "number"
   ) {
     request.budget.purchase_price.maximum = money(answer);
+    // Same reasoning as the city branch above: without a real criterion,
+    // the price ceiling never reaches the matcher.
+    const existingBudget = criteria.find(
+      (item) => item.field === "budget.purchase_price.maximum",
+    );
+    if (existingBudget) {
+      criteria = criteria.map((item) =>
+        item.criterion_id === existingBudget.criterion_id
+          ? { ...item, value: answer }
+          : item,
+      );
+      updateDomainCriterion(
+        request,
+        existingBudget.criterion_id,
+        (criterion) => ({ ...criterion, target: money(answer) }),
+      );
+    } else {
+      const item: ConfirmationCriterion = {
+        criterion_id: `criterion_added_budget_purchase_price_maximum_${criteria.length + 1}`,
+        field: "budget.purchase_price.maximum",
+        label: getCriterionPresentation("budget.purchase_price.maximum").label,
+        value: answer,
+        priority: "must",
+        source_text: null,
+        editable: { value: true, priority: true, removable: true },
+      };
+      request = materializeConfirmationCriteria(request, [item]);
+      criteria = [...criteria, item];
+    }
   } else if (
     clarification.field === "location.travel_destination" &&
     typeof answer === "string"

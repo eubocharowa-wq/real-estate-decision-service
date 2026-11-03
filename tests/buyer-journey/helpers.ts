@@ -9,18 +9,18 @@ import {
   type RequestConfirmationResult,
 } from "../../src/request-confirmation";
 
-// "Город пока не выбрали" is the parser's existing explicit-flexible-city
-// phrase (src/user-request-parser/extraction.ts): it sets location_flexible
-// so this stays confirmable under the new required-city/budget gate
-// (src/user-request-parser/extraction.ts, src/request-confirmation/state.ts)
-// without naming a real city — which would otherwise change matching
-// results for every test built on this fixture, far outside this fix's
-// scope.
-export const GOLDEN_RAW_REQUEST = `Найди 5 квартир до 5 млн.
+// A city is required for every confirmed request now (no
+// location_flexible escape hatch — src/request-confirmation/state.ts's
+// isBudgetAndCityPresent), so this fixture must name one. "Пилотск" is the
+// synthetic demo dataset's own placeholder city
+// (data/examples/pilot/properties.json) — not a real city, so it stays out
+// of src/geography/city-directory-data.ts's seed list, but matching it
+// exactly (nominative, via "в городе <City>") keeps every test built on
+// this fixture matching the same synthetic properties it always has.
+export const GOLDEN_RAW_REQUEST = `Найди 5 квартир в городе Пилотск до 5 млн.
 Семейная ипотека обязательна.
 Желательно без первоначального взноса.
-Первый этаж не рассматриваю.
-Город пока не выбрали.`;
+Первый этаж не рассматриваю.`;
 
 export class MutableJourneyClock {
   value = "2026-08-15T00:00:00.000Z";
