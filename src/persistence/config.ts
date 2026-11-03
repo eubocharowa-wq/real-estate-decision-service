@@ -46,6 +46,39 @@ const configSchema = z.object({
  */
 export type EnvironmentSource = Readonly<Record<string, string | undefined>>;
 
+export type DatabaseUrlVariable = "REDS_DATABASE_URL" | "DATABASE_URL";
+
+export interface DatabaseUrlSource {
+  /** The raw string from whichever variable won, exactly as set. */
+  readonly value: string | undefined;
+  /** Which variable it came from, or null when neither is set. */
+  readonly variable: DatabaseUrlVariable | null;
+}
+
+const isSetVariable = (value: string | undefined): value is string =>
+  value !== undefined && value.trim() !== "";
+
+/**
+ * Picks which environment variable supplies the database connection string.
+ * REDS_DATABASE_URL wins when set; DATABASE_URL is used otherwise; neither
+ * set means no database is configured. An empty or whitespace-only value
+ * counts the same as unset, matching the previous DATABASE_URL-only check.
+ *
+ * REDS_DATABASE_URL exists because DATABASE_URL is the name Vercel's own
+ * first-party Postgres/Neon integration sets automatically on every
+ * environment it's attached to (including preview) — this app needs its own
+ * variable to opt in explicitly rather than inherit that wiring by accident.
+ */
+export const resolveDatabaseUrlSource = (
+  env: EnvironmentSource = process.env,
+): DatabaseUrlSource => {
+  if (isSetVariable(env.REDS_DATABASE_URL))
+    return { value: env.REDS_DATABASE_URL, variable: "REDS_DATABASE_URL" };
+  if (isSetVariable(env.DATABASE_URL))
+    return { value: env.DATABASE_URL, variable: "DATABASE_URL" };
+  return { value: undefined, variable: null };
+};
+
 export type DatabaseConfigResult =
   | { readonly success: true; readonly config: DatabaseConfig }
   | { readonly success: false; readonly errors: readonly string[] };
@@ -61,7 +94,7 @@ export const readDatabaseConfig = (
   env: EnvironmentSource = process.env,
 ): DatabaseConfigResult => {
   const parsed = configSchema.safeParse({
-    connectionString: env.DATABASE_URL ?? "",
+    connectionString: resolveDatabaseUrlSource(env).value ?? "",
     // Serverless runtimes open many short-lived pools, so the per-instance
     // ceiling stays low and an external pooler does the real multiplexing.
     maxConnections: env.DATABASE_POOL_MAX ?? 10,

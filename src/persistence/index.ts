@@ -34,10 +34,14 @@ export const runInMemoryTransaction = async <T>(
 export {
   readDatabaseConfig,
   requireDatabaseConfig,
+  resolveDatabaseUrlSource,
   type DatabaseConfig,
   type DatabaseConfigResult,
+  type DatabaseUrlSource,
+  type DatabaseUrlVariable,
   type EnvironmentSource,
 } from "./config";
+export { shouldRunMigrationsBeforeBuild } from "./vercel-build";
 export { closeDatabasePool, getDatabasePool } from "./pool";
 export {
   inspectDatabaseMigrationReadiness,
