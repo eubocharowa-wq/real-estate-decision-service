@@ -9,7 +9,15 @@ import {
   type RequestConfirmationResult,
 } from "../../src/request-confirmation";
 
-export const GOLDEN_RAW_REQUEST = `Найди 5 квартир до 5 млн.
+// A city is required for every confirmed request now (no
+// location_flexible escape hatch — src/request-confirmation/state.ts's
+// isBudgetAndCityPresent), so this fixture must name one. "Пилотск" is the
+// synthetic demo dataset's own placeholder city
+// (data/examples/pilot/properties.json) — not a real city, so it stays out
+// of src/geography/city-directory-data.ts's seed list, but matching it
+// exactly (nominative, via "в городе <City>") keeps every test built on
+// this fixture matching the same synthetic properties it always has.
+export const GOLDEN_RAW_REQUEST = `Найди 5 квартир в городе Пилотск до 5 млн.
 Семейная ипотека обязательна.
 Желательно без первоначального взноса.
 Первый этаж не рассматриваю.`;

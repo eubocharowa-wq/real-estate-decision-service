@@ -1,5 +1,7 @@
 import Link from "next/link";
 
+import { resolvePilotRuntimeConfig } from "../../src/pilot-hardening/config";
+
 type NavigationItem = Readonly<{
   href: string;
   label: string;
@@ -30,6 +32,20 @@ const navigation: readonly NavigationItem[] = [
 );
 
 const aboutLink: NavigationItem = { href: "/about", label: "Об эксперте" };
+
+/**
+ * A pilot/demo deployment must say so, visibly, on every public page — not
+ * just via robots/noindex — so nobody mistakes it for the live product.
+ * REDS_APPLICATION_MODE (src/pilot-hardening/config.ts) is the only switch.
+ */
+export function PilotModeBanner() {
+  if (resolvePilotRuntimeConfig().mode === "production") return null;
+  return (
+    <p className="pilot-mode-banner" role="note">
+      Пилот. Данные ограничены.
+    </p>
+  );
+}
 
 export function SiteHeader() {
   return (

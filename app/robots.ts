@@ -1,9 +1,19 @@
 import type { MetadataRoute } from "next";
 
 import { INTERNAL_ROUTE_PREFIXES, resolveSiteUrl } from "../src/public-site";
+import { resolvePilotRuntimeConfig } from "../src/pilot-hardening/config";
 
 export default function robots(): MetadataRoute.Robots {
   const siteUrl = resolveSiteUrl();
+
+  // A pilot/demo deployment is not the real product: it must be fully
+  // closed to crawlers, never partially indexed, so it can never be cited
+  // as evidence that production is live. REDS_APPLICATION_MODE
+  // (src/pilot-hardening/config.ts) is the only switch — never the
+  // hostname.
+  if (resolvePilotRuntimeConfig().mode !== "production") {
+    return { rules: { userAgent: "*", disallow: "/" } };
+  }
 
   return {
     rules: {

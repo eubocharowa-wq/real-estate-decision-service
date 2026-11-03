@@ -6,6 +6,7 @@ interface UnknownsSectionProps {
 
 const unknownLabels: Record<string, string> = {
   "location.city": "Город пока не выбран",
+  "budget.amount": "Бюджет покупки пока не указан",
   "location.travel_destination":
     "Не указан адрес, относительно которого считать время в пути",
   "budget.context": "Неясно, что входит в общий бюджет",

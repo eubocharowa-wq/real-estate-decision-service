@@ -13,6 +13,7 @@ interface ClarificationCardProps {
 
 const inputTokens = new Set([
   "provide_city",
+  "provide_budget",
   "provide_destination",
   "provide_links",
   "provide_value",
@@ -21,6 +22,13 @@ const inputTokens = new Set([
 const inputConfig = (field: string) => {
   if (field === "location.city")
     return { label: "Город", type: "text", placeholder: "Например, Тула" };
+  if (field === "budget.amount") {
+    return {
+      label: "Максимальный бюджет, ₽",
+      type: "number",
+      placeholder: "Например, 6000000",
+    };
+  }
   if (field === "location.travel_destination") {
     return {
       label: "Адрес или район работы",

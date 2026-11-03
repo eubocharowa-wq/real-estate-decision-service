@@ -43,6 +43,13 @@ const questionForUnknown = (
           { label: "Сначала выбрать город", value: "location_discovery" },
         ],
       };
+    case "budget.amount":
+      return {
+        ...shared,
+        impact: "finance_impact",
+        proposed_question: "Какой у вас максимальный бюджет на покупку?",
+        options: [{ label: "Указать бюджет", value: "provide_budget" }],
+      };
     case "location.travel_destination":
       return {
         ...shared,

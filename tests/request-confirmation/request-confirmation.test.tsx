@@ -177,8 +177,14 @@ describe("RequestConfirmation", () => {
     const user = userEvent.setup();
     render(<RequestConfirmation parserResult={fuzzySchool} />);
 
-    await user.type(screen.getByLabelText("Максимум минут"), "15");
-    await user.click(screen.getByRole("button", { name: "Ответить" }));
+    const minutesInput = screen.getByLabelText("Максимум минут");
+    await user.type(minutesInput, "15");
+    await user.click(
+      within(minutesInput.closest("article") as HTMLElement).getByRole(
+        "button",
+        { name: "Ответить" },
+      ),
+    );
 
     expect(screen.queryByLabelText("Максимум минут")).toBeNull();
     expect(screen.getByText(/до 15 минут/)).toBeTruthy();
@@ -201,6 +207,58 @@ describe("RequestConfirmation", () => {
       name: "Подтвердить и подобрать варианты",
     }) as HTMLButtonElement;
     expect(confirm.disabled).toBe(false);
+  });
+
+  it("blocks confirmation when city and budget are both missing, then unblocks once both are answered (хочу однушку в новостройке)", async () => {
+    const user = userEvent.setup();
+    const outcome = await parseUserRequest({
+      schema_version: "1.0",
+      raw_text: "Хочу однушку в новостройке",
+      locale: "ru-RU",
+    });
+    if (!outcome.success) throw new Error(outcome.error.message);
+    const onConfirmed = vi.fn();
+    render(
+      <RequestConfirmation
+        parserResult={outcome.result}
+        onConfirmed={onConfirmed}
+      />,
+    );
+
+    const confirm = screen.getByRole("button", {
+      name: "Подтвердить и подобрать варианты",
+    }) as HTMLButtonElement;
+    expect(confirm.disabled).toBe(true);
+
+    const budgetInput = screen.getByLabelText("Максимальный бюджет, ₽");
+    await user.type(budgetInput, "6000000");
+    await user.click(
+      within(budgetInput.closest("article") as HTMLElement).getByRole(
+        "button",
+        { name: "Ответить" },
+      ),
+    );
+    expect(confirm.disabled).toBe(true);
+
+    const cityInput = screen.getByLabelText("Город");
+    await user.type(cityInput, "Тула");
+    await user.click(
+      within(cityInput.closest("article") as HTMLElement).getByRole("button", {
+        name: "Ответить",
+      }),
+    );
+    expect(confirm.disabled).toBe(false);
+
+    await user.click(confirm);
+
+    expect(onConfirmed).toHaveBeenCalledTimes(1);
+    const result = requestConfirmationResultSchema.parse(
+      onConfirmed.mock.calls[0]?.[0],
+    );
+    expect(result.confirmed_request.budget.purchase_price.maximum?.amount).toBe(
+      "6000000.00",
+    );
+    expect(result.confirmed_request.location.cities).toEqual(["Тула"]);
   });
 
   it("shows a human validation error for an invalid range", async () => {

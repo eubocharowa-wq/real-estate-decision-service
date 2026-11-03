@@ -49,7 +49,7 @@ describe("UserRequest parser TASK-003 contract", () => {
     const result = await parseFixture("a-clear-apartment");
 
     expect(result.parsed_request.intent).toBe("find");
-    expect(result.parsed_request.location.cities).toEqual(["Туле"]);
+    expect(result.parsed_request.location.cities).toEqual(["Тула"]);
     expect(result.parsed_request.property.allowed_property_types).toEqual([
       "apartment",
     ]);
@@ -121,6 +121,24 @@ describe("UserRequest parser TASK-003 contract", () => {
     );
   });
 
+  it("does not mistake the word after 'город' for a city name (case-insensitive capture bug)", async () => {
+    const outcome = await parseUserRequest({
+      schema_version: "1.0",
+      raw_text: "Город пока не выбрали.",
+      locale: "ru-RU",
+    });
+    expect(outcome.success).toBe(true);
+    if (!outcome.success) throw new Error(outcome.error.message);
+
+    expect(outcome.result.parsed_request.location.cities).toEqual([]);
+    expect(outcome.result.parsed_request.location.location_flexible).toBe(true);
+    expect(
+      outcome.result.extracted_facts.some(
+        (fact) => fact.field === "location.cities",
+      ),
+    ).toBe(false);
+  });
+
   it("preserves a cross-type request", async () => {
     const result = await parseFixture("c-cross-type");
 
@@ -175,6 +193,59 @@ describe("UserRequest parser TASK-003 contract", () => {
     expect(
       criterionFor(outcome.result, "financing.zero_initial_payment")?.priority,
     ).toBe("must");
+  });
+
+  it("flags a missing city and budget as critical and blocks confirmation (хочу однушку в новостройке)", async () => {
+    const outcome = await parseUserRequest({
+      schema_version: "1.0",
+      raw_text: "Хочу однушку в новостройке",
+      locale: "ru-RU",
+    });
+    expect(outcome.success).toBe(true);
+    if (!outcome.success) throw new Error(outcome.error.message);
+    const result = outcome.result;
+
+    expect(result.parsed_request.location.cities).toEqual([]);
+    expect(result.parsed_request.budget.purchase_price.maximum).toBeNull();
+    expect(result.parsed_request.budget.total_budget).toBeNull();
+    expect(result.unknowns).toContainEqual(
+      expect.objectContaining({
+        field: "budget.amount",
+        materiality: "critical",
+      }),
+    );
+    expect(result.unknowns).toContainEqual(
+      expect.objectContaining({
+        field: "location.city",
+        materiality: "critical",
+      }),
+    );
+    expect(result.clarification_candidates).toContainEqual(
+      expect.objectContaining({ field: "budget.amount", priority: "critical" }),
+    );
+    expect(result.clarification_candidates).toContainEqual(
+      expect.objectContaining({
+        field: "location.city",
+        priority: "critical",
+      }),
+    );
+    expect(result.confirmation_view.can_confirm).toBe(false);
+  });
+
+  it("does not flag budget or city as missing once both are stated (a-clear-apartment)", async () => {
+    const result = await parseFixture("a-clear-apartment");
+
+    expect(
+      result.unknowns.some((unknown) => unknown.field === "budget.amount"),
+    ).toBe(false);
+    expect(
+      result.unknowns.some(
+        (unknown) =>
+          unknown.field === "location.city" &&
+          unknown.materiality === "critical",
+      ),
+    ).toBe(false);
+    expect(result.confirmation_view.can_confirm).toBe(true);
   });
 
   it("keeps fuzzy school proximity without an invented threshold", async () => {

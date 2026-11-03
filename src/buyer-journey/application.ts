@@ -1,5 +1,8 @@
 import { fieldEvidenceSchema, type FieldEvidence } from "../domain";
-import { requestConfirmationResultSchema } from "../request-confirmation";
+import {
+  isBudgetAndCityPresent,
+  requestConfirmationResultSchema,
+} from "../request-confirmation";
 import {
   ExpertCompletionService,
   ExpertRequestService,
@@ -486,6 +489,17 @@ export class BuyerJourneyApplication {
       throw new BuyerJourneyError(
         "STALE_REQUEST_VERSION",
         "Confirmation belongs to another raw request",
+        true,
+      );
+    // The confirmation screen disabling its button is a UI convenience, not
+    // a guarantee: this handler takes a client-supplied
+    // RequestConfirmationResult directly, so the server re-checks the same
+    // rule it's built on (src/request-confirmation/state.ts) before letting
+    // a request reach matching.
+    if (!isBudgetAndCityPresent(confirmation.data.confirmed_request))
+      throw new BuyerJourneyError(
+        "INVALID_TRANSITION",
+        "Confirmation is missing a required purchase-price ceiling or target city",
         true,
       );
     const version = (journey.confirmed_user_request_version ?? 0) + 1;

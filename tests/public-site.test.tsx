@@ -26,7 +26,11 @@ import PrivacyPage, {
   metadata as privacyMetadata,
 } from "../app/(public)/privacy/page";
 import SelectionPage from "../app/(public)/selection/page";
-import { SiteFooter, SiteHeader } from "../app/(public)/site-chrome";
+import {
+  PilotModeBanner,
+  SiteFooter,
+  SiteHeader,
+} from "../app/(public)/site-chrome";
 import TermsPage, {
   metadata as termsMetadata,
 } from "../app/(public)/terms/page";
@@ -139,6 +143,19 @@ describe("public site chrome", () => {
         .getByRole("link", { name: "Пользовательское соглашение" })
         .getAttribute("href"),
     ).toBe("/terms");
+  });
+
+  it("shows the pilot banner outside production, and nothing in production", () => {
+    vi.stubEnv("REDS_APPLICATION_MODE", "pilot");
+    const { unmount } = render(<PilotModeBanner />);
+    expect(screen.getByRole("note").textContent).toBe(
+      "Пилот. Данные ограничены.",
+    );
+    unmount();
+
+    vi.stubEnv("REDS_APPLICATION_MODE", "production");
+    const { container } = render(<PilotModeBanner />);
+    expect(container.textContent).toBe("");
   });
 
   it("points every navigation link at a route that exists", () => {
@@ -412,8 +429,9 @@ describe("sitemap", () => {
 });
 
 describe("robots", () => {
-  it("disallows the internal screens and points at the sitemap", () => {
+  it("disallows the internal screens and points at the sitemap in production", () => {
     vi.stubEnv("NEXT_PUBLIC_SITE_URL", "https://example.com");
+    vi.stubEnv("REDS_APPLICATION_MODE", "production");
 
     const result = robots();
 
@@ -434,8 +452,9 @@ describe("robots", () => {
     });
   });
 
-  it("keeps the disallow rules but omits the sitemap without an origin", () => {
+  it("keeps the disallow rules but omits the sitemap without an origin, in production", () => {
     vi.stubEnv("NEXT_PUBLIC_SITE_URL", "");
+    vi.stubEnv("REDS_APPLICATION_MODE", "production");
 
     const result = robots();
 
@@ -444,5 +463,29 @@ describe("robots", () => {
     expect(
       Array.isArray(result.rules) ? [] : (result.rules.disallow ?? []),
     ).toContain("/expert/");
+  });
+
+  // A pilot/demo deployment is not the real product and must never be
+  // partially indexed — only REDS_APPLICATION_MODE decides this, never the
+  // hostname, so an origin being configured must not change the outcome.
+  for (const mode of ["demo", "pilot"] as const) {
+    it(`fully disallows crawling in ${mode} mode, even with an origin configured`, () => {
+      vi.stubEnv("NEXT_PUBLIC_SITE_URL", "https://example.com");
+      vi.stubEnv("REDS_APPLICATION_MODE", mode);
+
+      const result = robots();
+
+      expect(result.sitemap).toBeUndefined();
+      expect(result.rules).toEqual({ userAgent: "*", disallow: "/" });
+    });
+  }
+
+  it("fully disallows crawling by default, when REDS_APPLICATION_MODE is unset", () => {
+    expect(process.env.REDS_APPLICATION_MODE).toBeUndefined();
+    vi.stubEnv("NEXT_PUBLIC_SITE_URL", "https://example.com");
+
+    const result = robots();
+
+    expect(result.rules).toEqual({ userAgent: "*", disallow: "/" });
   });
 });

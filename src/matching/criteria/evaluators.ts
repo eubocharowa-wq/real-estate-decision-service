@@ -3,6 +3,7 @@ import {
   type Criterion,
   type CriterionEvaluationResult,
 } from "../../domain";
+import { cityKeysMatch } from "../../geography";
 import { CRITERIA_SOFT_CURVE_CONFIG } from "./config";
 import type {
   ComparisonResult,
@@ -152,11 +153,13 @@ const exactComparison = (
 const setComparison = (
   criterion: Criterion,
   actual: JsonValue,
+  equals: (target: JsonValue, actual: JsonValue) => boolean = (target, value) =>
+    target === value,
 ): ComparisonResult => {
   const targetValues = Array.isArray(criterion.target)
     ? criterion.target
     : [criterion.target];
-  const contains = targetValues.some((target) => target === actual);
+  const contains = targetValues.some((target) => equals(target, actual));
   const matched = ["not_in", "neq"].includes(criterion.operator)
     ? !contains
     : contains;
@@ -168,6 +171,17 @@ const setComparison = (
     explanationParams: { actual, target_values: targetValues },
   };
 };
+
+/**
+ * City names are free Russian text in different cases ("Тула" in the
+ * target vs. a source that happens to store "Туле"), not an interned
+ * enum like property/market type — see src/geography/city-directory.ts,
+ * the single place that knows how to normalize one.
+ */
+const cityEquals = (target: JsonValue, actual: JsonValue): boolean =>
+  typeof target === "string" && typeof actual === "string"
+    ? cityKeysMatch(target, actual)
+    : target === actual;
 
 const numberRange = (
   target: JsonValue,
@@ -336,7 +350,11 @@ export const compareCriterion = (
     definition.evaluatorType === "set" ||
     ["in", "not_in", "one_of"].includes(criterion.operator)
   ) {
-    return setComparison(criterion, actual.value);
+    return setComparison(
+      criterion,
+      actual.value,
+      definition.key === "city" ? cityEquals : undefined,
+    );
   }
   return exactComparison(criterion, definition, actual.value);
 };
