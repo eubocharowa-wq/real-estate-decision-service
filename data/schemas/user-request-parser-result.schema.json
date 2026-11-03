@@ -155,9 +155,7 @@
               "type": "array",
               "items": { "type": "string", "minLength": 1 }
             },
-            "location_flexible": {
-              "anyOf": [{ "type": "boolean" }, { "type": "null" }]
-            }
+            "location_flexible": { "type": ["boolean", "null"] }
           },
           "required": [
             "country_codes",
@@ -225,9 +223,7 @@
                 ]
               }
             },
-            "property_type_flexible": {
-              "anyOf": [{ "type": "boolean" }, { "type": "null" }]
-            }
+            "property_type_flexible": { "type": ["boolean", "null"] }
           },
           "required": [
             "allowed_property_types",
@@ -367,9 +363,7 @@
                 { "type": "null" }
               ]
             },
-            "budget_flexible": {
-              "anyOf": [{ "type": "boolean" }, { "type": "null" }]
-            },
+            "budget_flexible": { "type": ["boolean", "null"] },
             "budget_context": {
               "type": "string",
               "enum": ["property_price", "total_entry", "ambiguous", "unknown"]
@@ -462,9 +456,7 @@
               "type": "array",
               "items": { "type": "string", "minLength": 1 }
             },
-            "financing_flexible": {
-              "anyOf": [{ "type": "boolean" }, { "type": "null" }]
-            }
+            "financing_flexible": { "type": ["boolean", "null"] }
           },
           "required": [
             "purchase_methods",
@@ -498,9 +490,7 @@
                 { "type": "null" }
               ]
             },
-            "ready_now_required": {
-              "anyOf": [{ "type": "boolean" }, { "type": "null" }]
-            },
+            "ready_now_required": { "type": ["boolean", "null"] },
             "construction_completion_by": {
               "anyOf": [
                 {
@@ -511,9 +501,7 @@
                 { "type": "null" }
               ]
             },
-            "willing_to_wait": {
-              "anyOf": [{ "type": "boolean" }, { "type": "null" }]
-            }
+            "willing_to_wait": { "type": ["boolean", "null"] }
           },
           "required": ["purchase_by", "move_in_by", "ready_now_required"],
           "additionalProperties": false
@@ -597,9 +585,7 @@
               "type": "array",
               "items": { "type": "string", "minLength": 1 }
             },
-            "remote_work": {
-              "anyOf": [{ "type": "boolean" }, { "type": "null" }]
-            },
+            "remote_work": { "type": ["boolean", "null"] },
             "car_count": {
               "anyOf": [
                 {
