@@ -28,7 +28,11 @@ import {
   InMemoryFeedbackRepository,
   type FeedbackRepository,
 } from "../pilot-hardening/feedback";
-import { readDatabaseConfig, type EnvironmentSource } from "./config";
+import {
+  readDatabaseConfig,
+  resolveDatabaseUrlSource,
+  type EnvironmentSource,
+} from "./config";
 import { getDatabasePool } from "./pool";
 import { createPostgresRepositories } from "./postgres";
 
@@ -67,14 +71,16 @@ export const createInMemoryRepositorySet = (): RepositorySet => ({
 /**
  * Chooses a backend from the environment.
  *
- * A malformed DATABASE_URL is not silently ignored: falling back to memory
- * because a URL had a typo would look like the pilot is working while nothing
- * is being persisted, so the misconfiguration is thrown instead.
+ * A malformed connection string is not silently ignored: falling back to
+ * memory because a URL had a typo would look like the pilot is working while
+ * nothing is being persisted, so the misconfiguration is thrown instead.
+ * REDS_DATABASE_URL takes priority over DATABASE_URL — see
+ * resolveDatabaseUrlSource.
  */
 export const createRepositorySet = (
   env: EnvironmentSource = process.env,
 ): RepositorySet => {
-  if (env.DATABASE_URL === undefined || env.DATABASE_URL.trim() === "")
+  if (resolveDatabaseUrlSource(env).value === undefined)
     return createInMemoryRepositorySet();
 
   const config = readDatabaseConfig(env);

@@ -4,6 +4,8 @@ import {
   getDatabasePool,
   inspectDatabaseMigrationReadiness,
   readDatabaseConfig,
+  resolveDatabaseUrlSource,
+  type DatabaseUrlVariable,
   type EnvironmentSource,
 } from "../persistence";
 import {
@@ -39,6 +41,8 @@ export interface StagingReadiness {
     };
     readonly database: {
       readonly configured: boolean;
+      /** Which variable the connection string came from — never its value. */
+      readonly source_variable: DatabaseUrlVariable | null;
       readonly configuration_valid: boolean;
       readonly reachable: boolean;
       readonly schema_compatible: boolean;
@@ -130,7 +134,8 @@ export const evaluateStagingReadiness = async (
   dependencies: StagingReadinessDependencies,
 ): Promise<StagingReadiness> => {
   const environment = dependencies.environment ?? process.env;
-  const configured = Boolean(environment.DATABASE_URL?.trim());
+  const databaseUrlSource = resolveDatabaseUrlSource(environment);
+  const configured = databaseUrlSource.value !== undefined;
   const databaseConfig = readDatabaseConfig(environment);
 
   let mode: PilotApplicationMode | "invalid" = "invalid";
@@ -175,6 +180,7 @@ export const evaluateStagingReadiness = async (
     dataset,
     database: {
       configured,
+      source_variable: databaseUrlSource.variable,
       configuration_valid: databaseConfig.success,
       reachable: migrationReadiness.reachable,
       schema_compatible: migrationReadiness.schemaCompatible,
