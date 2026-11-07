@@ -1,6 +1,14 @@
-import { spawnSync } from "node:child_process";
+import { Pool } from "pg";
 
-import { shouldRunMigrationsBeforeBuild } from "../src/persistence";
+import {
+  diagnoseMigrationFailure,
+  formatMigrationFailureReport,
+  migrateUp,
+  queryParameterNames,
+  requireDatabaseConfig,
+  resolveDatabaseUrlSource,
+  shouldRunMigrationsBeforeBuild,
+} from "../src/persistence";
 
 /**
  * Runs before `next build` on every build (see package.json's "build"
@@ -10,9 +18,11 @@ import { shouldRunMigrationsBeforeBuild } from "../src/persistence";
  *
  * A failed migration fails this script, which fails the `&&`-chained
  * `next build` after it: the old schema is never published alongside new
- * code. The migration child's stderr is discarded rather than printed — a
- * connection failure here routinely names the database host, and this
- * script's output lands in Vercel's public build log.
+ * code. On failure, only a safe, categorized diagnosis is printed — never
+ * the connection string, host, user, password, database name, or the raw
+ * error text, all of which routinely appear in a pg connection error and
+ * would otherwise land in Vercel's public build log — see
+ * src/persistence/migration-diagnostics.ts.
  */
 const write = (line: string): void => {
   process.stdout.write(`${line}\n`);
@@ -31,15 +41,30 @@ write(
   "vercel-prebuild: production build with a database configured — applying pending migrations.",
 );
 
-const result = spawnSync("npm", ["run", "db:migrate"], {
-  stdio: ["ignore", "inherit", "ignore"],
-});
-
-if (result.error || result.status !== 0) {
-  process.stderr.write(
-    "vercel-prebuild: migration failed; aborting the build so the old schema is never published with new code.\n",
+const source = resolveDatabaseUrlSource();
+let pool: Pool | undefined;
+try {
+  const config = requireDatabaseConfig();
+  // A dedicated, single-connection pool, the same way scripts/migrate.ts
+  // uses one: this runs once and exits, rather than sharing the
+  // process-wide pool getDatabasePool pins to globalThis.
+  pool = new Pool({
+    connectionString: config.connectionString,
+    max: 1,
+    connectionTimeoutMillis: config.connectionTimeoutMs,
+  });
+  await migrateUp(pool);
+  write("vercel-prebuild: migrations applied — continuing to next build.");
+  await pool.end();
+} catch (error) {
+  const diagnosis = diagnoseMigrationFailure(error);
+  const queryParams = source.value ? queryParameterNames(source.value) : [];
+  const lines = formatMigrationFailureReport(
+    diagnosis,
+    source.variable,
+    queryParams,
   );
-  process.exit(result.status ?? 1);
+  process.stderr.write(lines.map((line) => `${line}\n`).join(""));
+  await pool?.end();
+  process.exit(1);
 }
-
-write("vercel-prebuild: migrations applied — continuing to next build.");

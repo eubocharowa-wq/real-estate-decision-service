@@ -135,6 +135,15 @@ export const migrateUp = async (
       executed.push(migration);
     } catch (error) {
       await client.query("ROLLBACK");
+      // Lets a caller (scripts/vercel-prebuild.ts's diagnosis) report which
+      // migration failed without parsing the error message — see
+      // ./migration-diagnostics's MIGRATION_SQL category.
+      if (error instanceof Error) {
+        Object.assign(error, {
+          migrationVersion: migration.version,
+          migrationName: migration.name,
+        });
+      }
       throw error;
     } finally {
       client.release();
