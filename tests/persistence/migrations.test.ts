@@ -1,3 +1,7 @@
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import path from "node:path";
+
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import {
@@ -168,3 +172,43 @@ describe.skipIf(!isDatabaseAvailable)("schema migrations", () => {
     expect(await listTables(database)).toContain("buyer_journeys");
   });
 });
+
+describe.skipIf(!isDatabaseAvailable)(
+  "migrateUp attaches migration context to a failing migration's error",
+  () => {
+    let database: TestDatabase;
+    let brokenMigrationsDirectory: string;
+
+    beforeAll(async () => {
+      database = await createTestDatabase("test_migrations_broken");
+      brokenMigrationsDirectory = mkdtempSync(
+        path.join(tmpdir(), "broken-migration-"),
+      );
+      writeFileSync(
+        path.join(brokenMigrationsDirectory, "0001_broken.up.sql"),
+        "THIS IS NOT VALID SQL;",
+        "utf8",
+      );
+      writeFileSync(
+        path.join(brokenMigrationsDirectory, "0001_broken.down.sql"),
+        "-- nothing to roll back",
+        "utf8",
+      );
+    });
+
+    afterAll(async () => {
+      await dropTestDatabase(database);
+      rmSync(brokenMigrationsDirectory, { recursive: true, force: true });
+    });
+
+    it("surfaces the failing migration's version and name on the thrown error — see src/persistence/migration-diagnostics.ts's MIGRATION_SQL category", async () => {
+      await expect(
+        migrateUp(database.pool, brokenMigrationsDirectory),
+      ).rejects.toMatchObject({
+        migrationVersion: "0001",
+        migrationName: "broken",
+        code: expect.any(String),
+      });
+    });
+  },
+);

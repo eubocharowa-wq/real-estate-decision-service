@@ -42,6 +42,13 @@ export {
   type EnvironmentSource,
 } from "./config";
 export { shouldRunMigrationsBeforeBuild } from "./vercel-build";
+export {
+  diagnoseMigrationFailure,
+  formatMigrationFailureReport,
+  queryParameterNames,
+  type MigrationFailureCategory,
+  type MigrationFailureDiagnosis,
+} from "./migration-diagnostics";
 export { closeDatabasePool, getDatabasePool } from "./pool";
 export {
   inspectDatabaseMigrationReadiness,
