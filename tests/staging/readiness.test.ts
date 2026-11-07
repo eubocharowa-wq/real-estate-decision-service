@@ -133,6 +133,7 @@ describe("TASK-025 staging readiness", () => {
         },
         database: {
           configured: true,
+          source_variable: "DATABASE_URL",
           configuration_valid: true,
           reachable: true,
           schema_compatible: true,
@@ -145,10 +146,37 @@ describe("TASK-025 staging readiness", () => {
         },
       },
     });
+    // The variable's NAME is reported (checks.database.source_variable,
+    // asserted above) — its VALUE never is.
     const serialized = JSON.stringify(result);
     expect(serialized).not.toContain("secret");
     expect(serialized).not.toContain("db.invalid");
-    expect(serialized).not.toContain("DATABASE_URL");
+  });
+
+  it("prefers REDS_DATABASE_URL over DATABASE_URL and still never leaks the value", async () => {
+    const curatedPilotDirectory = writeCuratedFixture();
+    temporaryDirectories.push(curatedPilotDirectory);
+    const result = await evaluateStagingReadiness({
+      environment: {
+        ...pilotEnvironment(
+          "postgres://user:other-secret@fallback.invalid/reds",
+        ),
+        REDS_DATABASE_URL: "postgres://user:secret@db.invalid/reds",
+      },
+      requestUrl: "https://staging.example/api/readiness",
+      database: database(),
+      curatedPilotDirectory,
+      now: () => NOW,
+    });
+
+    expect(result.checks.database).toMatchObject({
+      configured: true,
+      source_variable: "REDS_DATABASE_URL",
+    });
+    const serialized = JSON.stringify(result);
+    expect(serialized).not.toContain("secret");
+    expect(serialized).not.toContain("db.invalid");
+    expect(serialized).not.toContain("fallback.invalid");
   });
 
   it("keeps the unset mode on demo/synthetic and not staging-ready", async () => {

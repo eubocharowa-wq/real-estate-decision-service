@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   readDatabaseConfig,
   requireDatabaseConfig,
+  resolveDatabaseUrlSource,
 } from "../../src/persistence";
 
 const base = { DATABASE_URL: "postgres://user:pass@localhost:5432/reds" };
@@ -58,5 +59,57 @@ describe("database configuration", () => {
     expect(() => requireDatabaseConfig({})).toThrowError(
       /INVALID_DATABASE_CONFIG/,
     );
+  });
+});
+
+describe("resolveDatabaseUrlSource", () => {
+  const redsUrl = "postgres://user:pass@reds-host/reds";
+  const plainUrl = "postgres://user:pass@plain-host/reds";
+
+  it("prefers REDS_DATABASE_URL over DATABASE_URL when both are set", () => {
+    expect(
+      resolveDatabaseUrlSource({
+        REDS_DATABASE_URL: redsUrl,
+        DATABASE_URL: plainUrl,
+      }),
+    ).toEqual({ value: redsUrl, variable: "REDS_DATABASE_URL" });
+  });
+
+  it("falls back to DATABASE_URL, unchanged, when REDS_DATABASE_URL is unset", () => {
+    expect(resolveDatabaseUrlSource({ DATABASE_URL: plainUrl })).toEqual({
+      value: plainUrl,
+      variable: "DATABASE_URL",
+    });
+  });
+
+  it.each([
+    ["missing", undefined],
+    ["empty", ""],
+    ["whitespace", "   "],
+  ])(
+    "treats a %s REDS_DATABASE_URL as unset and falls back to DATABASE_URL",
+    (_label, value) => {
+      expect(
+        resolveDatabaseUrlSource({
+          REDS_DATABASE_URL: value,
+          DATABASE_URL: plainUrl,
+        }),
+      ).toEqual({ value: plainUrl, variable: "DATABASE_URL" });
+    },
+  );
+
+  it("reports no source when neither variable is set", () => {
+    expect(resolveDatabaseUrlSource({})).toEqual({
+      value: undefined,
+      variable: null,
+    });
+  });
+
+  it("still reads a malformed REDS_DATABASE_URL — a typo must fail loudly, not fall back", () => {
+    const result = readDatabaseConfig({
+      REDS_DATABASE_URL: "not-a-url",
+      DATABASE_URL: plainUrl,
+    });
+    expect(result.success).toBe(false);
   });
 });
