@@ -1,10 +1,13 @@
 /**
  * Turns a migration failure into a safe, categorized diagnosis for build
- * logs (see scripts/vercel-prebuild.ts). The raw error — its message,
- * stack, and any property not explicitly read below — is never surfaced:
- * a pg connection or auth error routinely carries the host, user,
- * password, or database name in exactly those places, and this runs in a
- * build whose log is not a secret.
+ * and CI logs — scripts/vercel-prebuild.ts (which applies migrations) and
+ * scripts/production-db-check.ts (a read-only status check) both share it,
+ * so both report the same vocabulary. The raw error — its message, stack,
+ * and any property not explicitly read below — is never surfaced: a pg
+ * connection or auth error routinely carries the host, user, password, or
+ * database name in exactly those places, and both scripts' logs are not a
+ * secret (a GitHub Actions log in particular is visible to anyone with
+ * read access to the repository).
  */
 
 export type MigrationFailureCategory =
@@ -140,6 +143,32 @@ const FIELD_ENV_VARS: Readonly<Record<string, string>> = {
 };
 
 /**
+ * One "invalid field: ..." line per INVALID_CONFIG field — shared by every
+ * caller that reports this diagnosis, so the field→environment-variable
+ * mapping and the connectionString protocol-only rule live in exactly one
+ * place.
+ */
+const invalidFieldLines = (
+  diagnosis: MigrationFailureDiagnosis,
+  sourceVariable: "REDS_DATABASE_URL" | "DATABASE_URL" | null,
+  connectionStringProtocolValue: string | null,
+  prefix: string,
+): readonly string[] =>
+  diagnosis.category === "INVALID_CONFIG"
+    ? diagnosis.invalidFields.map((field) => {
+        const envVar =
+          field === "connectionString"
+            ? (sourceVariable ?? "none")
+            : (FIELD_ENV_VARS[field] ?? "unknown");
+        const protocolSuffix =
+          field === "connectionString" && connectionStringProtocolValue
+            ? `, protocol: ${connectionStringProtocolValue}`
+            : "";
+        return `${prefix}: invalid field: ${field} (env: ${envVar}${protocolSuffix})`;
+      })
+    : [];
+
+/**
  * The exact lines scripts/vercel-prebuild.ts prints on a migration failure.
  * A pure function so the no-leak guarantee is testable directly, without
  * running the script or a real database connection.
@@ -151,19 +180,12 @@ export const formatMigrationFailureReport = (
   connectionStringProtocolValue: string | null = null,
 ): readonly string[] => [
   `vercel-prebuild: migration failed (category=${diagnosis.category})`,
-  ...(diagnosis.category === "INVALID_CONFIG"
-    ? diagnosis.invalidFields.map((field) => {
-        const envVar =
-          field === "connectionString"
-            ? (sourceVariable ?? "none")
-            : (FIELD_ENV_VARS[field] ?? "unknown");
-        const protocolSuffix =
-          field === "connectionString" && connectionStringProtocolValue
-            ? `, protocol: ${connectionStringProtocolValue}`
-            : "";
-        return `vercel-prebuild: invalid field: ${field} (env: ${envVar}${protocolSuffix})`;
-      })
-    : []),
+  ...invalidFieldLines(
+    diagnosis,
+    sourceVariable,
+    connectionStringProtocolValue,
+    "vercel-prebuild",
+  ),
   ...(diagnosis.category === "MIGRATION_SQL"
     ? [
         `vercel-prebuild: failing migration: ${diagnosis.migrationVersion}_${diagnosis.migrationName}`,
@@ -179,3 +201,59 @@ export const formatMigrationFailureReport = (
   }`,
   "vercel-prebuild: aborting the build so the old schema is never published with new code.",
 ];
+
+/**
+ * The exact lines scripts/production-db-check.ts prints when it cannot even
+ * connect. Unlike formatMigrationFailureReport, this never applies a
+ * migration and never claims to be aborting a build — it's a read-only
+ * status check (see production-db-check.yml's own comment on why running
+ * migrations from two places at once is avoided).
+ */
+export const formatProductionDbCheckFailure = (
+  diagnosis: MigrationFailureDiagnosis,
+  sourceVariable: "REDS_DATABASE_URL" | "DATABASE_URL" | null,
+  queryParamNames: readonly string[],
+  connectionStringProtocolValue: string | null = null,
+): readonly string[] => [
+  `production-db-check: connection failed (category=${diagnosis.category})`,
+  ...invalidFieldLines(
+    diagnosis,
+    sourceVariable,
+    connectionStringProtocolValue,
+    "production-db-check",
+  ),
+  ...(diagnosis.category === "UNKNOWN" && diagnosis.errorCode
+    ? [`production-db-check: error code: ${diagnosis.errorCode}`]
+    : []),
+  `production-db-check: connection string source: ${sourceVariable ?? "none"}`,
+  `production-db-check: connection string query parameters: ${
+    queryParamNames.length > 0 ? queryParamNames.join(", ") : "none"
+  }`,
+];
+
+/**
+ * The status report scripts/production-db-check.ts prints once it can
+ * connect — migration counts and versions only, which identify schema
+ * drift without naming any data the database holds.
+ */
+export const formatProductionDbCheckStatus = (readiness: {
+  readonly reachable: boolean;
+  readonly schemaCompatible: boolean;
+  readonly expectedMigrationCount: number;
+  readonly appliedMigrationCount: number;
+  readonly pendingVersions: readonly string[];
+  readonly unexpectedVersions: readonly string[];
+  readonly mismatchedVersions: readonly string[];
+}): readonly string[] => {
+  const versions = (label: string, values: readonly string[]): string =>
+    `production-db-check: ${label}=${values.length > 0 ? values.join(", ") : "none"}`;
+  return [
+    `production-db-check: reachable=${readiness.reachable}`,
+    `production-db-check: schema_compatible=${readiness.schemaCompatible}`,
+    `production-db-check: expected_migrations=${readiness.expectedMigrationCount}`,
+    `production-db-check: applied_migrations=${readiness.appliedMigrationCount}`,
+    versions("pending_versions", readiness.pendingVersions),
+    versions("unexpected_versions", readiness.unexpectedVersions),
+    versions("mismatched_versions", readiness.mismatchedVersions),
+  ];
+};
