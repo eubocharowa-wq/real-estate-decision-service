@@ -47,6 +47,8 @@ export {
   connectionStringProtocol,
   diagnoseMigrationFailure,
   formatMigrationFailureReport,
+  formatProductionDbCheckFailure,
+  formatProductionDbCheckStatus,
   queryParameterNames,
   type MigrationFailureCategory,
   type MigrationFailureDiagnosis,

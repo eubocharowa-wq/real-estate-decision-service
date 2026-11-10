@@ -1,0 +1,39 @@
+name: Production database check
+
+# Read-only: never applies a migration. Vercel's own production build
+# already owns that (see src/persistence/vercel-build.ts and
+# scripts/vercel-prebuild.ts); running the migrator from two places at once
+# could race on the same schema change. This workflow only reports what it
+# finds — reachability and migration status — so the production database's
+# state is visible here in GitHub without a manual login to Vercel or Neon.
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # The connection string comes only from this repository secret — the
+      # script never reads DATABASE_URL, so a Vercel/Neon integration
+      # variable set elsewhere can't be picked up here by accident. When the
+      # secret isn't configured, the script itself reports that and exits
+      # successfully rather than failing a workflow nothing has set up yet.
+      - name: Check production database status
+        env:
+          REDS_DATABASE_URL: ${{ secrets.REDS_DATABASE_URL }}
+        run: node --import tsx scripts/production-db-check.ts
