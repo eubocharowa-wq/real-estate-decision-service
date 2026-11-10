@@ -226,13 +226,21 @@ const extractLocation = (draft: ParserDraft, rawText: string): void => {
       draft.request.location.location_flexible = /только/iu.test(match[0])
         ? false
         : null;
+      // Always "must", not just when the user said "только": a city is a
+      // mandatory field for every confirmed request (see
+      // isBudgetAndCityPresent in src/request-confirmation/state.ts), so an
+      // ordinary mention is exactly as non-negotiable as an explicit
+      // "только" — the confirmation screen's "Обязательно" group, its
+      // priority badge and its priority selector all read this same value,
+      // so a lower priority here would show the city as merely "желательно"
+      // while treating it as mandatory everywhere else.
       recordScalar(
         draft,
         rawText,
         match as RegExpExecArray,
         "location.cities",
         city,
-        /только/iu.test(match[0]) ? "must" : "preferred",
+        "must",
       );
     }
   }

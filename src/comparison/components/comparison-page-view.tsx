@@ -26,7 +26,7 @@ export function ComparisonPageView({
       <header className="comparison-header">
         <nav className="comparison-navigation" aria-label="Навигация сравнения">
           <Link href="/" className="brand-mark" aria-label="На главную">
-            Основание <span> / 11</span>
+            Основание
           </Link>
           <div>
             <Link

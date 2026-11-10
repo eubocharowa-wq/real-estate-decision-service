@@ -27,6 +27,13 @@ describe("TASK-011 comparison components", () => {
     expect(screen.getByLabelText("Обязательные условия запроса")).toBeTruthy();
   });
 
+  it("has one clear step number, not a brand-mark page index alongside it", () => {
+    render(<ComparisonPageView view={uncertainComparisonView} />);
+    expect(screen.getByText("Основание")).toBeTruthy();
+    expect(screen.queryByText(/\/\s*11/)).toBeNull();
+    expect(screen.getByText("Шаг 5 · Сравнение финалистов")).toBeTruthy();
+  });
+
   it("renders exactly two finalist columns for a two-item view", () => {
     render(<ComparisonPageView view={uncertainComparisonView} />);
     const table = screen.getByRole("table");

@@ -411,8 +411,21 @@ export const buildShortlistItemView = (
     secondaryFacts: propertyFacts(property),
     price: buildPrice(candidate),
     matchScore: match.match_score,
-    matchLabel: `${Math.round(match.match_score)}% подходит`,
-    matchContext: "Именно под ваши условия",
+    // "100% подходит" / "Именно под ваши условия" claim full certainty —
+    // match.eligibility_status is "eligible" only when every hard (must)
+    // criterion has a confirmed, matching value (see match-property.ts).
+    // Any other status means at least one of them is unknown there, so
+    // unknown != confirmed (AGENTS.md §11): the label must say so instead
+    // of implying the match is exact. matchScore itself is never changed —
+    // only this presentation.
+    matchLabel:
+      match.eligibility_status === "eligible"
+        ? `${Math.round(match.match_score)}% подходит`
+        : "Подходит по известным данным",
+    matchContext:
+      match.eligibility_status === "eligible"
+        ? "Именно под ваши условия"
+        : "Не все обязательные условия подтверждены — см. «Что важно проверить»",
     eligibilityStatus:
       match.eligibility_status as ShortlistCardView["eligibilityStatus"],
     eligibilityLabel:
