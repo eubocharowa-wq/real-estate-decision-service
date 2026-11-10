@@ -116,10 +116,15 @@ describe("dataset type for a curated pilot set", () => {
       ),
     ).toBe(true);
     const notice = matching.shortlist.datasetNotice ?? "";
-    expect(notice).toContain("manual_curated_pilot");
+    expect(notice).toContain("официального источника");
     expect(notice).not.toContain("Демонстрационные данные");
     // The buyer is told which decisions this set cannot support.
-    expect(notice).toContain("цена");
+    expect(notice).toContain("цену");
+    // No internal identifiers in buyer-facing text — see
+    // src/buyer-journey/matching.ts's datasetNotice builder.
+    expect(notice).not.toContain("dataset_type");
+    expect(notice).not.toContain("origins=");
+    expect(notice).not.toContain("manual_curated_pilot");
     // The production default is still the real, checked-in dataset — only
     // this suite's own runs are redirected away from it.
     expect(CURATED_PILOT_DIRECTORY).toContain("real-pilot");

@@ -245,7 +245,7 @@ export function PropertyDetailPageView({
                   : "match-score-block"
               }
             >
-              <span>Match Score</span>
+              <span>Оценка соответствия</span>
               <strong>{view.matchSummary.label}</strong>
               <small>{view.matchSummary.eligibility}</small>
             </div>
@@ -266,7 +266,7 @@ export function PropertyDetailPageView({
           <div
             className={`confidence-block confidence-${view.dataQuality.confidenceBand}`}
           >
-            <span>Data Confidence · отдельно от Match Score</span>
+            <span>Надёжность данных · отдельно от оценки соответствия</span>
             <strong>{view.dataQuality.confidenceLabel}</strong>
           </div>
         </aside>

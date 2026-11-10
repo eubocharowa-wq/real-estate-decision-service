@@ -478,7 +478,7 @@ export const buildShortlistView = (
       requestId: input.userRequest.user_request_id,
       heading: "Подобрали варианты под ваши условия",
       description:
-        "Показаны объекты, которые соответствуют подтверждённым критериям. Match Score персонален, а надёжность данных показана отдельно.",
+        "Показаны объекты, которые не противоречат вашим условиям. Насколько объект подходит и насколько надёжны данные о нём — оценивается отдельно.",
       requestSummary: requestSummary(input.userRequest),
       cards: selected.map((candidate) =>
         buildShortlistItemView(input.userRequest, candidate),

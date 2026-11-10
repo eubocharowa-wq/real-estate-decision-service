@@ -2,11 +2,28 @@ import Link from "next/link";
 
 import type { BuyerJourney, DecisionUpdate } from "../contracts";
 import { PilotFeedbackForm } from "../../pilot-hardening/components";
+import { ELIGIBILITY_PRESENTATION } from "../../shortlist";
 
 const delta = (before: number, after: number): string => {
   const change = after - before;
   return change === 0 ? "без изменения" : `${change > 0 ? "+" : ""}${change}`;
 };
+
+/**
+ * ELIGIBILITY_PRESENTATION only names the three statuses a shortlist card
+ * can carry — a decision update's own before/after snapshot can carry any
+ * of the matching engine's six (DecisionMetricSnapshot's eligibility_status
+ * in ../contracts), so the other three get a label here instead of ever
+ * printing the raw status string to the buyer.
+ */
+const eligibilityLabel = (status: string): string =>
+  (ELIGIBILITY_PRESENTATION as Readonly<Record<string, string>>)[status] ??
+  {
+    hard_fail: "Не подходит по обязательному условию",
+    insufficient_data: "Недостаточно данных для сценария покупки",
+    unavailable: "Объект недоступен",
+  }[status] ??
+  "Статус не определён";
 
 export function JourneyDecisionUpdateView({
   journey,
@@ -26,7 +43,8 @@ export function JourneyDecisionUpdateView({
         <h1>Что изменилось после проверки</h1>
         <p>
           Показаны только реально существующие версии до и после пересчёта.
-          Match Score и надёжность данных остаются отдельными показателями.
+          Оценка соответствия и надёжность данных остаются отдельными
+          показателями.
         </p>
       </header>
 
@@ -52,7 +70,7 @@ export function JourneyDecisionUpdateView({
                 <h2>Пересчитан только затронутый вариант</h2>
                 <dl>
                   <div>
-                    <dt>Match Score</dt>
+                    <dt>Оценка соответствия</dt>
                     <dd>
                       {previous.match_score} → {current.match_score} (
                       {delta(previous.match_score, current.match_score)})
@@ -75,8 +93,8 @@ export function JourneyDecisionUpdateView({
                   <div>
                     <dt>Статус применимости</dt>
                     <dd>
-                      {previous.eligibility_status} →{" "}
-                      {current.eligibility_status}
+                      {eligibilityLabel(previous.eligibility_status)} →{" "}
+                      {eligibilityLabel(current.eligibility_status)}
                     </dd>
                   </div>
                 </dl>
@@ -117,8 +135,9 @@ export function JourneyDecisionUpdateView({
       </nav>
       <PilotFeedbackForm journeyId={journey.journey_id} stage="journey_end" />
       <p className="dataset-notice">
-        Происхождение каждого варианта сохранено отдельно; synthetic и
-        user-supplied данные не выдаются за live-market coverage.
+        Происхождение каждого варианта сохранено отдельно; демонстрационные
+        данные и данные, добавленные пользователем, не выдаются за реальный
+        рынок.
       </p>
     </main>
   );

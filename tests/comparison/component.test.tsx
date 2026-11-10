@@ -34,6 +34,24 @@ describe("TASK-011 comparison components", () => {
     expect(screen.getByText("Шаг 5 · Сравнение финалистов")).toBeTruthy();
   });
 
+  it("never shows internal identifiers or English jargon in the rendered page", () => {
+    render(<ComparisonPageView view={uncertainComparisonView} />);
+    const text = document.body.textContent ?? "";
+    for (const forbidden of [
+      "dataset_type",
+      "origin=",
+      "origins=",
+      "Match Score",
+      "Data Confidence",
+      "matching layer",
+      "live-market",
+      "trade-off",
+      "UserRequest",
+    ]) {
+      expect(text).not.toContain(forbidden);
+    }
+  });
+
   it("renders exactly two finalist columns for a two-item view", () => {
     render(<ComparisonPageView view={uncertainComparisonView} />);
     const table = screen.getByRole("table");

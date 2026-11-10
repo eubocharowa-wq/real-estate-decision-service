@@ -220,7 +220,7 @@ export function ComparisonClient({
     return (
       <ComparisonGuard
         title="Сначала подтвердите условия"
-        message="Без одного подтверждённого UserRequest нельзя корректно сравнить Match Score."
+        message="Без одного подтверждённого запроса нельзя корректно сравнить оценку соответствия."
       />
     );
   if (!journeyId)

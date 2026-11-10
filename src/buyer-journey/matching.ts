@@ -608,8 +608,7 @@ export const resolveBundlePropertyDetail = async (input: {
     sourceConflicts: dataset.sourceConflicts,
     generatedAt: input.bundle.generated_at,
     partial: entry.data_quality === null,
-    contextNotice:
-      "Демонстрационные данные synthetic_pilot; это не полное покрытие рынка.",
+    contextNotice: "Демонстрационные данные. Это не полное покрытие рынка.",
   };
 };
 
@@ -620,11 +619,6 @@ export const buildShortlistFromMatchingBundle = async (input: {
   /** See `runMatchingForConfirmedRequest`'s field of the same name. */
   readonly curatedPilotDirectory?: string;
 }): Promise<ShortlistView> => {
-  const origins = [
-    ...new Set(input.bundle.entries.map((entry) => entry.origin)),
-  ]
-    .sort()
-    .join(",");
   const candidates: ShortlistCandidateInput[] = await Promise.all(
     input.bundle.entries.map(async (entry) => {
       const detail = await resolveBundlePropertyDetail({
@@ -655,15 +649,15 @@ export const buildShortlistFromMatchingBundle = async (input: {
     datasetNotice: (() => {
       switch (input.bundle.dataset_snapshot.dataset_type) {
         case "synthetic_pilot":
-          return "Демонстрационные данные · origin=synthetic · dataset_type=synthetic_pilot. Это не полное покрытие рынка.";
+          return "Демонстрационные данные. Это не полное покрытие рынка.";
         case "manual_curated_pilot":
-          return `Реальные объекты, внесённые вручную из официального источника · dataset_type=manual_curated_pilot · origins=${origins}. Это выборка, а не полное покрытие рынка; цена, доступность и условия финансирования в источнике не публикуются.`;
+          return "Реальные объекты из официального источника (ЕИСЖС). Это выборка, а не весь рынок; цену, доступность и условия финансирования источник не публикует.";
         case "mixed_explicit":
-          return `Смешанный явный набор · dataset_type=mixed_explicit · origins=${origins}. Synthetic и пользовательские данные не считаются live-market coverage.`;
+          return "Смешанный набор: часть объектов демонстрационные, часть добавлена вами по ссылке. Это не полное покрытие рынка.";
         case "user_supplied_only":
-          return "Только явно добавленные пользователем варианты · origin=user_supplied. Это не полное покрытие рынка.";
+          return "Только варианты, которые вы добавили сами по ссылке. Это не полное покрытие рынка.";
         case "empty_pilot":
-          return "Pilot dataset не подключён. Данных недостаточно для вывода о наличии вариантов на рынке.";
+          return "Источник данных пока не подключён. Недостаточно данных, чтобы судить о наличии вариантов на рынке.";
       }
     })(),
   };
