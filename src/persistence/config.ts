@@ -40,6 +40,20 @@ const configSchema = z.object({
 });
 
 /**
+ * An empty or whitespace-only pool/timeout variable counts as unset and
+ * falls back to its default, the same way resolveDatabaseUrlSource treats
+ * an empty connection string as unset — a platform (Vercel among them) can
+ * set a variable to an empty string rather than omitting it, and that must
+ * not read as an explicit, invalid "0". A present, non-empty, invalid value
+ * (e.g. "abc" or "0") still fails validation.
+ */
+const orDefault = (
+  value: string | undefined,
+  fallback: number,
+): string | number =>
+  value === undefined || value.trim() === "" ? fallback : value;
+
+/**
  * Only the variables below are read, so a plain record is enough. Typing this
  * as NodeJS.ProcessEnv would drag in Next's required NODE_ENV and force test
  * fixtures to carry unrelated values.
@@ -81,7 +95,12 @@ export const resolveDatabaseUrlSource = (
 
 export type DatabaseConfigResult =
   | { readonly success: true; readonly config: DatabaseConfig }
-  | { readonly success: false; readonly errors: readonly string[] };
+  | {
+      readonly success: false;
+      readonly errors: readonly string[];
+      /** The config field names (connectionString, maxConnections, …) that failed validation. */
+      readonly invalidFields: readonly string[];
+    };
 
 /**
  * Reads the database configuration from the environment.
@@ -97,9 +116,9 @@ export const readDatabaseConfig = (
     connectionString: resolveDatabaseUrlSource(env).value ?? "",
     // Serverless runtimes open many short-lived pools, so the per-instance
     // ceiling stays low and an external pooler does the real multiplexing.
-    maxConnections: env.DATABASE_POOL_MAX ?? 10,
-    connectionTimeoutMs: env.DATABASE_CONNECTION_TIMEOUT_MS ?? 10_000,
-    idleTimeoutMs: env.DATABASE_IDLE_TIMEOUT_MS ?? 30_000,
+    maxConnections: orDefault(env.DATABASE_POOL_MAX, 10),
+    connectionTimeoutMs: orDefault(env.DATABASE_CONNECTION_TIMEOUT_MS, 10_000),
+    idleTimeoutMs: orDefault(env.DATABASE_IDLE_TIMEOUT_MS, 30_000),
   });
   if (parsed.success) return { success: true, config: parsed.data };
   return {
@@ -107,15 +126,33 @@ export const readDatabaseConfig = (
     errors: parsed.error.issues.map(
       (issue) => `${issue.path.join(".") || "config"}: ${issue.message}`,
     ),
+    invalidFields: [
+      ...new Set(
+        parsed.error.issues.map((issue) => issue.path.join(".") || "config"),
+      ),
+    ],
   };
 };
+
+/**
+ * Builds the error requireDatabaseConfig/createRepositorySet throw for an
+ * invalid config, with the failing field names attached as `invalidFields`
+ * — read by scripts/vercel-prebuild.ts's diagnosis (INVALID_CONFIG) without
+ * parsing the message text.
+ */
+export const invalidDatabaseConfigError = (
+  result: Extract<DatabaseConfigResult, { success: false }>,
+): Error =>
+  Object.assign(
+    new Error(`INVALID_DATABASE_CONFIG: ${result.errors.join("; ")}`),
+    { invalidFields: result.invalidFields },
+  );
 
 /** Reads the configuration, throwing when it is absent or malformed. */
 export const requireDatabaseConfig = (
   env: EnvironmentSource = process.env,
 ): DatabaseConfig => {
   const result = readDatabaseConfig(env);
-  if (!result.success)
-    throw new Error(`INVALID_DATABASE_CONFIG: ${result.errors.join("; ")}`);
+  if (!result.success) throw invalidDatabaseConfigError(result);
   return result.config;
 };

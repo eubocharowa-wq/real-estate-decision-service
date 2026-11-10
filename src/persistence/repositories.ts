@@ -29,6 +29,7 @@ import {
   type FeedbackRepository,
 } from "../pilot-hardening/feedback";
 import {
+  invalidDatabaseConfigError,
   readDatabaseConfig,
   resolveDatabaseUrlSource,
   type EnvironmentSource,
@@ -84,8 +85,7 @@ export const createRepositorySet = (
     return createInMemoryRepositorySet();
 
   const config = readDatabaseConfig(env);
-  if (!config.success)
-    throw new Error(`INVALID_DATABASE_CONFIG: ${config.errors.join("; ")}`);
+  if (!config.success) throw invalidDatabaseConfigError(config);
 
   const postgres = createPostgresRepositories(getDatabasePool(config.config));
   return {

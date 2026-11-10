@@ -24,6 +24,8 @@ export interface MigrationFailureDiagnosis {
   /** Set only for MIGRATION_SQL — see migrateUp in ./migrator. */
   readonly migrationVersion: string | null;
   readonly migrationName: string | null;
+  /** Set only for INVALID_CONFIG — see invalidDatabaseConfigError in ./config. */
+  readonly invalidFields: readonly string[];
 }
 
 const DNS_CODES = new Set(["ENOTFOUND", "EAI_AGAIN"]);
@@ -46,6 +48,18 @@ const readStringProp = (error: unknown, key: string): string | null => {
   return typeof value === "string" ? value : null;
 };
 
+const readStringArrayProp = (
+  error: unknown,
+  key: string,
+): readonly string[] => {
+  if (typeof error !== "object" || error === null) return [];
+  const value = (error as Record<string, unknown>)[key];
+  return Array.isArray(value) &&
+    value.every((item): item is string => typeof item === "string")
+    ? value
+    : [];
+};
+
 /**
  * Only used internally to recognize a TLS failure that pg or Node's tls
  * module reports without one of the known TLS error codes (e.g. a plain
@@ -61,10 +75,20 @@ export const diagnoseMigrationFailure = (
   const code = readStringProp(error, "code");
   const migrationVersion = readStringProp(error, "migrationVersion");
   const migrationName = readStringProp(error, "migrationName");
-  const none = { migrationVersion: null, migrationName: null };
+  const none = {
+    migrationVersion: null,
+    migrationName: null,
+    invalidFields: [],
+  };
 
   if (message.startsWith("INVALID_DATABASE_CONFIG"))
-    return { category: "INVALID_CONFIG", errorCode: code, ...none };
+    return {
+      category: "INVALID_CONFIG",
+      errorCode: code,
+      migrationVersion: null,
+      migrationName: null,
+      invalidFields: readStringArrayProp(error, "invalidFields"),
+    };
   if (code !== null && DNS_CODES.has(code))
     return { category: "DNS", errorCode: code, ...none };
   if (code !== null && CONNECTION_CODES.has(code))
@@ -81,6 +105,7 @@ export const diagnoseMigrationFailure = (
       errorCode: code,
       migrationVersion,
       migrationName,
+      invalidFields: [],
     };
   return { category: "UNKNOWN", errorCode: code, ...none };
 };
@@ -96,6 +121,24 @@ export const queryParameterNames = (
   }
 };
 
+/** The connection string's protocol only (e.g. "postgresql:") — never its host or anything else. */
+export const connectionStringProtocol = (
+  connectionString: string,
+): string | null => {
+  try {
+    return new URL(connectionString).protocol;
+  } catch {
+    return null;
+  }
+};
+
+/** Which environment variable a config field (other than connectionString) is read from. */
+const FIELD_ENV_VARS: Readonly<Record<string, string>> = {
+  maxConnections: "DATABASE_POOL_MAX",
+  connectionTimeoutMs: "DATABASE_CONNECTION_TIMEOUT_MS",
+  idleTimeoutMs: "DATABASE_IDLE_TIMEOUT_MS",
+};
+
 /**
  * The exact lines scripts/vercel-prebuild.ts prints on a migration failure.
  * A pure function so the no-leak guarantee is testable directly, without
@@ -105,8 +148,22 @@ export const formatMigrationFailureReport = (
   diagnosis: MigrationFailureDiagnosis,
   sourceVariable: "REDS_DATABASE_URL" | "DATABASE_URL" | null,
   queryParamNames: readonly string[],
+  connectionStringProtocolValue: string | null = null,
 ): readonly string[] => [
   `vercel-prebuild: migration failed (category=${diagnosis.category})`,
+  ...(diagnosis.category === "INVALID_CONFIG"
+    ? diagnosis.invalidFields.map((field) => {
+        const envVar =
+          field === "connectionString"
+            ? (sourceVariable ?? "none")
+            : (FIELD_ENV_VARS[field] ?? "unknown");
+        const protocolSuffix =
+          field === "connectionString" && connectionStringProtocolValue
+            ? `, protocol: ${connectionStringProtocolValue}`
+            : "";
+        return `vercel-prebuild: invalid field: ${field} (env: ${envVar}${protocolSuffix})`;
+      })
+    : []),
   ...(diagnosis.category === "MIGRATION_SQL"
     ? [
         `vercel-prebuild: failing migration: ${diagnosis.migrationVersion}_${diagnosis.migrationName}`,

@@ -32,4 +32,15 @@ describe("createRepositorySet backend selection", () => {
       createRepositorySet({ REDS_DATABASE_URL: "not-a-url" }),
     ).toThrowError(/INVALID_DATABASE_CONFIG/);
   });
+
+  it("attaches invalidFields to the thrown error here too", () => {
+    try {
+      createRepositorySet({ REDS_DATABASE_URL: "not-a-url" });
+      expect.unreachable("createRepositorySet should have thrown");
+    } catch (error) {
+      expect((error as { invalidFields?: unknown }).invalidFields).toEqual([
+        "connectionString",
+      ]);
+    }
+  });
 });

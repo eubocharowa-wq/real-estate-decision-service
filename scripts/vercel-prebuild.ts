@@ -1,6 +1,7 @@
 import { Pool } from "pg";
 
 import {
+  connectionStringProtocol,
   diagnoseMigrationFailure,
   formatMigrationFailureReport,
   migrateUp,
@@ -59,10 +60,12 @@ try {
 } catch (error) {
   const diagnosis = diagnoseMigrationFailure(error);
   const queryParams = source.value ? queryParameterNames(source.value) : [];
+  const protocol = source.value ? connectionStringProtocol(source.value) : null;
   const lines = formatMigrationFailureReport(
     diagnosis,
     source.variable,
     queryParams,
+    protocol,
   );
   process.stderr.write(lines.map((line) => `${line}\n`).join(""));
   await pool?.end();

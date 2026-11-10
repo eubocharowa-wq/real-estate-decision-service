@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  connectionStringProtocol,
   diagnoseMigrationFailure,
   formatMigrationFailureReport,
   queryParameterNames,
+  requireDatabaseConfig,
 } from "../../src/persistence";
 
 /**
@@ -30,6 +32,22 @@ describe("diagnoseMigrationFailure", () => {
     );
     expect(diagnoseMigrationFailure(error)).toMatchObject({
       category: "INVALID_CONFIG",
+    });
+  });
+
+  it("reads invalidFields off a real INVALID_DATABASE_CONFIG error from requireDatabaseConfig", () => {
+    let caught: unknown;
+    try {
+      requireDatabaseConfig({
+        DATABASE_URL: `postgres://${SECRET_USER}:${SECRET_PASSWORD}@${SECRET_HOST}/${SECRET_DATABASE}`,
+        DATABASE_POOL_MAX: "0",
+      });
+    } catch (error) {
+      caught = error;
+    }
+    expect(diagnoseMigrationFailure(caught)).toMatchObject({
+      category: "INVALID_CONFIG",
+      invalidFields: ["maxConnections"],
     });
   });
 
@@ -148,6 +166,103 @@ describe("queryParameterNames", () => {
   });
 });
 
+describe("connectionStringProtocol", () => {
+  it("returns only the protocol, with its trailing colon", () => {
+    expect(connectionStringProtocol(CONNECTION_STRING)).toBe("postgres:");
+    expect(
+      connectionStringProtocol(
+        `mysql://${SECRET_USER}:${SECRET_PASSWORD}@${SECRET_HOST}/${SECRET_DATABASE}`,
+      ),
+    ).toBe("mysql:");
+  });
+
+  it("returns null for an unparseable string", () => {
+    expect(connectionStringProtocol("not-a-url")).toBeNull();
+  });
+});
+
+describe("formatMigrationFailureReport — INVALID_CONFIG names the failing fields safely", () => {
+  it("names a single invalid non-connectionString field with its env var, no protocol line", () => {
+    const diagnosis = diagnoseMigrationFailure(
+      errorWith("INVALID_DATABASE_CONFIG: maxConnections: too small", {
+        invalidFields: ["maxConnections"],
+      }),
+    );
+    const lines = formatMigrationFailureReport(diagnosis, "DATABASE_URL", []);
+    expect(lines).toContain(
+      "vercel-prebuild: invalid field: maxConnections (env: DATABASE_POOL_MAX)",
+    );
+  });
+
+  it.each([
+    ["connectionTimeoutMs", "DATABASE_CONNECTION_TIMEOUT_MS"],
+    ["idleTimeoutMs", "DATABASE_IDLE_TIMEOUT_MS"],
+  ])("maps %s to %s", (field, envVar) => {
+    const diagnosis = diagnoseMigrationFailure(
+      errorWith("INVALID_DATABASE_CONFIG: x", { invalidFields: [field] }),
+    );
+    const lines = formatMigrationFailureReport(diagnosis, "DATABASE_URL", []);
+    expect(lines).toContain(
+      `vercel-prebuild: invalid field: ${field} (env: ${envVar})`,
+    );
+  });
+
+  it("names connectionString with the actual source variable and its protocol only — never the host, user, password or database", () => {
+    const badConnectionString = `mysql://${SECRET_USER}:${SECRET_PASSWORD}@${SECRET_HOST}/${SECRET_DATABASE}`;
+    const diagnosis = diagnoseMigrationFailure(
+      errorWith("INVALID_DATABASE_CONFIG: connectionString: must be postgres", {
+        invalidFields: ["connectionString"],
+      }),
+    );
+    const lines = formatMigrationFailureReport(
+      diagnosis,
+      "REDS_DATABASE_URL",
+      [],
+      connectionStringProtocol(badConnectionString),
+    );
+    expect(lines).toContain(
+      "vercel-prebuild: invalid field: connectionString (env: REDS_DATABASE_URL, protocol: mysql:)",
+    );
+    const output = lines.join("\n");
+    expect(output).not.toContain(SECRET_HOST);
+    expect(output).not.toContain(SECRET_USER);
+    expect(output).not.toContain(SECRET_PASSWORD);
+    expect(output).not.toContain(SECRET_DATABASE);
+  });
+
+  it("omits the protocol suffix for connectionString when the string doesn't even parse as a URL", () => {
+    const diagnosis = diagnoseMigrationFailure(
+      errorWith("INVALID_DATABASE_CONFIG: connectionString: must be postgres", {
+        invalidFields: ["connectionString"],
+      }),
+    );
+    const lines = formatMigrationFailureReport(
+      diagnosis,
+      "DATABASE_URL",
+      [],
+      connectionStringProtocol("not-a-url"),
+    );
+    expect(lines).toContain(
+      "vercel-prebuild: invalid field: connectionString (env: DATABASE_URL)",
+    );
+  });
+
+  it("names every invalid field when several fail at once", () => {
+    const diagnosis = diagnoseMigrationFailure(
+      errorWith("INVALID_DATABASE_CONFIG: x; y", {
+        invalidFields: ["connectionString", "maxConnections"],
+      }),
+    );
+    const lines = formatMigrationFailureReport(diagnosis, "DATABASE_URL", []);
+    expect(lines).toContain(
+      "vercel-prebuild: invalid field: connectionString (env: DATABASE_URL)",
+    );
+    expect(lines).toContain(
+      "vercel-prebuild: invalid field: maxConnections (env: DATABASE_POOL_MAX)",
+    );
+  });
+});
+
 describe("formatMigrationFailureReport — no secret ever leaks", () => {
   const assertNoSecrets = (lines: readonly string[]): void => {
     const output = lines.join("\n");
@@ -160,8 +275,9 @@ describe("formatMigrationFailureReport — no secret ever leaks", () => {
   const cases: ReadonlyArray<[string, Error]> = [
     [
       "INVALID_CONFIG",
-      new Error(
+      errorWith(
         `INVALID_DATABASE_CONFIG: connectionString: DATABASE_URL must be a postgres:// or postgresql:// URL (got ${CONNECTION_STRING})`,
+        { invalidFields: ["connectionString", "maxConnections"] },
       ),
     ],
     [
@@ -216,6 +332,7 @@ describe("formatMigrationFailureReport — no secret ever leaks", () => {
         diagnosis,
         "REDS_DATABASE_URL",
         queryParams,
+        connectionStringProtocol(CONNECTION_STRING),
       );
       assertNoSecrets(lines);
       // The source variable's name is reported deliberately; its value never is.
