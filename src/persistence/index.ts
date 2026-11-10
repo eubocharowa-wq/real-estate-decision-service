@@ -32,6 +32,7 @@ export const runInMemoryTransaction = async <T>(
 ): Promise<T> => work();
 
 export {
+  invalidDatabaseConfigError,
   readDatabaseConfig,
   requireDatabaseConfig,
   resolveDatabaseUrlSource,
@@ -43,6 +44,7 @@ export {
 } from "./config";
 export { shouldRunMigrationsBeforeBuild } from "./vercel-build";
 export {
+  connectionStringProtocol,
   diagnoseMigrationFailure,
   formatMigrationFailureReport,
   queryParameterNames,

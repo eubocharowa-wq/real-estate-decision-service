@@ -60,6 +60,84 @@ describe("database configuration", () => {
       /INVALID_DATABASE_CONFIG/,
     );
   });
+
+  it.each([
+    ["missing", undefined],
+    ["empty", ""],
+    ["whitespace", "   "],
+  ] as const)(
+    "treats %s DATABASE_POOL_MAX, DATABASE_CONNECTION_TIMEOUT_MS and DATABASE_IDLE_TIMEOUT_MS as unset and applies the defaults",
+    (_label, value) => {
+      const result = readDatabaseConfig({
+        ...base,
+        DATABASE_POOL_MAX: value,
+        DATABASE_CONNECTION_TIMEOUT_MS: value,
+        DATABASE_IDLE_TIMEOUT_MS: value,
+      });
+
+      expect(result.success).toBe(true);
+      if (!result.success) return;
+      expect(result.config.maxConnections).toBe(10);
+      expect(result.config.connectionTimeoutMs).toBe(10_000);
+      expect(result.config.idleTimeoutMs).toBe(30_000);
+    },
+  );
+
+  it.each([
+    [
+      "DATABASE_URL",
+      { ...base, DATABASE_URL: "not-a-url" },
+      "connectionString",
+    ],
+    [
+      "DATABASE_POOL_MAX",
+      { ...base, DATABASE_POOL_MAX: "0" },
+      "maxConnections",
+    ],
+    [
+      "DATABASE_CONNECTION_TIMEOUT_MS",
+      { ...base, DATABASE_CONNECTION_TIMEOUT_MS: "abc" },
+      "connectionTimeoutMs",
+    ],
+    [
+      "DATABASE_IDLE_TIMEOUT_MS",
+      { ...base, DATABASE_IDLE_TIMEOUT_MS: "-5" },
+      "idleTimeoutMs",
+    ],
+  ] as const)(
+    "names the failing field when %s is set but invalid",
+    (_variable, env, expectedField) => {
+      const result = readDatabaseConfig(env);
+
+      expect(result.success).toBe(false);
+      if (result.success) return;
+      expect(result.invalidFields).toEqual([expectedField]);
+    },
+  );
+
+  it("names every failing field when several are invalid at once", () => {
+    const result = readDatabaseConfig({
+      DATABASE_URL: "not-a-url",
+      DATABASE_POOL_MAX: "0",
+    });
+
+    expect(result.success).toBe(false);
+    if (result.success) return;
+    expect([...result.invalidFields].sort()).toEqual(
+      ["connectionString", "maxConnections"].sort(),
+    );
+  });
+
+  it("attaches invalidFields to the thrown error so a caller never has to parse the message", () => {
+    try {
+      requireDatabaseConfig({ ...base, DATABASE_POOL_MAX: "0" });
+      expect.unreachable("requireDatabaseConfig should have thrown");
+    } catch (error) {
+      expect((error as { invalidFields?: unknown }).invalidFields).toEqual([
+        "maxConnections",
+      ]);
+    }
+  });
 });
 
 describe("resolveDatabaseUrlSource", () => {
