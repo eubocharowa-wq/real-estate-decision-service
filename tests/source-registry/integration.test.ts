@@ -135,7 +135,7 @@ describe("source policy integration", () => {
     );
 
     const partnerOnly = sourcePolicyEngine.resolveCollectionPlan({
-      sourceId: "src_mkt_01",
+      sourceId: "src_mkt_03",
       operation: "scheduled_collect",
       environment: "test",
       targetField: "listing_price",

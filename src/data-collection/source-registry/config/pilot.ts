@@ -193,6 +193,8 @@ export const EISJS_SHARED_DOMAIN_RULE =
 
 export const EISJS_SOURCE_ID = "src_gov_01" as const;
 
+export const CIAN_SOURCE_ID = "src_mkt_01" as const;
+
 interface ExternalEntryInput {
   readonly sourceId: string;
   readonly name: string;
@@ -644,7 +646,7 @@ const partnerMethods = (
 
 const marketplaceEntries: SourceRegistryEntry[] = [
   externalEntry({
-    sourceId: "src_mkt_01",
+    sourceId: CIAN_SOURCE_ID,
     name: "ЦИАН",
     sourceType: "classified",
     domains: ["cian.ru"],
@@ -657,11 +659,73 @@ const marketplaceEntries: SourceRegistryEntry[] = [
     fieldAuthority: marketplaceAuthority,
     capabilities: marketplaceCapabilities,
     policyReasons: ["PARTNER_API_ONLY", "DO_NOT_AUTOCOLLECT"],
+    // The single switch for live collection. It stays denied until the owner
+    // decides otherwise; the card adapter only parses cards saved by hand.
+    automation: "denied",
     methods: partnerMethods("CIAN_PARTNER_ACCESS_KEY"),
     environmentMethods: ["api", "manual", "user_supplied"],
+    collectionScope: {
+      explicit_targets_only: true,
+      allowed_hosts: ["cian.ru", "www.cian.ru", "tula.cian.ru"],
+      allowed_path_patterns: [
+        "^/sale/flat/[0-9]+/$",
+        "^/sale/suburban/[0-9]+/$",
+      ],
+      maximum_target_urls: 1,
+      discovery_allowed: false,
+      follow_links_allowed: false,
+      pagination_allowed: false,
+      sitemap_allowed: false,
+      authentication_allowed: false,
+      challenge_action: "stop",
+    },
+    fieldPolicy: {
+      requested_fields_required: true,
+      allowed_fields: [
+        "identity.listing_id",
+        "identity.property_type",
+        "identity.market_type",
+        "identity.development_name",
+        "physical.rooms",
+        "physical.floor",
+        "physical.total_area_m2",
+        "building.floors_total",
+        "building.built_year",
+        "building.material_type",
+        "building.developer_name",
+        "land.area_sotka",
+        "location.address.region",
+        "location.address.city",
+        "location.address.street",
+        "location.address.house_number",
+        "location.geo_point",
+        "timeline.handover_quarter",
+        "listing_price",
+      ],
+      required_evidence_metadata: ["source_url", "observed_at"],
+      // A listing is the seller's own statement: nothing it says is confirmed.
+      verification_ceilings: [
+        { field_pattern: "identity.*", maximum_status: "claimed" },
+        { field_pattern: "physical.*", maximum_status: "claimed" },
+        { field_pattern: "building.*", maximum_status: "claimed" },
+        { field_pattern: "land.*", maximum_status: "claimed" },
+        { field_pattern: "location.*", maximum_status: "claimed" },
+        { field_pattern: "timeline.*", maximum_status: "claimed" },
+        { field_pattern: "listing_price", maximum_status: "claimed" },
+        { field_pattern: "financing.*", maximum_status: "claimed" },
+        { field_pattern: "promotion.*", maximum_status: "claimed" },
+      ],
+    },
+    retentionPolicy: {
+      normalized_facts: "transient_only",
+      evidence_metadata: "transient_only",
+      raw_content: "prohibited",
+      raw_snapshots: "prohibited",
+    },
     requiredConditions: ["PARTNER_CONTRACT_CONFIGURED"],
+    reviewedAt: "2026-11-11T00:00:00.000Z",
     notes:
-      "MKT-01: HTML automation is prohibited; only a separately configured partner channel or manual input is allowed.",
+      "MKT-01: automatic collection is denied. Single listing cards saved by hand are parsed offline into staging candidates as seller claims; enabling live collection is a separate owner decision recorded in policy.automation.",
   }),
   externalEntry({
     sourceId: "src_mkt_02",
