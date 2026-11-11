@@ -8,6 +8,7 @@ import {
   getRealExpertWorkbenchRuntime,
 } from "../../../../src/expert-workbench";
 import { requestOwnerSchema } from "../../../../src/expert";
+import { requirePublicDataWriteAccess } from "../../../../src/privacy";
 
 export const runtime = "nodejs";
 
@@ -53,6 +54,8 @@ export async function POST(
   request: Request,
   context: { readonly params: Promise<{ readonly requestId: string }> },
 ): Promise<Response> {
+  const denied = requirePublicDataWriteAccess("expert_workbench");
+  if (denied) return denied;
   const { requestId } = await context.params;
   let raw: unknown;
   try {

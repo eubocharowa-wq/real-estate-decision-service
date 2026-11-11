@@ -4,6 +4,7 @@ import {
   presentJourneyError,
   type CreateJourneyExpertRequestInput,
 } from "../../../src/buyer-journey";
+import { requirePublicDataWriteAccess } from "../../../src/privacy";
 
 export const runtime = "nodejs";
 
@@ -65,6 +66,8 @@ const requireOwnedJourney = async (
   return { journeyId, sessionId };
 };
 
+const readOnlyActions = new Set(["journey_state", "snapshot"]);
+
 export async function POST(request: Request): Promise<Response> {
   let body: unknown;
   try {
@@ -80,6 +83,11 @@ export async function POST(request: Request): Promise<Response> {
   }
   if (typeof body !== "object" || body === null) return failure(body);
   const action = stringValue(body, "action");
+  const readOnlyAction = action !== null && readOnlyActions.has(action);
+  if (!readOnlyAction) {
+    const denied = requirePublicDataWriteAccess("buyer_journey");
+    if (denied) return denied;
+  }
   const application = getBuyerJourneyRuntime();
   try {
     if (action === "start_and_parse") {
@@ -228,6 +236,9 @@ export async function POST(request: Request): Promise<Response> {
       true,
     );
   } catch (error) {
+    // A failed read must not turn a public read-only request into an error-row
+    // write. Mutating actions reached this point only after the write guard.
+    if (readOnlyAction) return failure(error);
     const journeyId = stringValue(body, "journeyId");
     const errorCode =
       error instanceof BuyerJourneyError ? error.code : "INVALID_TRANSITION";
