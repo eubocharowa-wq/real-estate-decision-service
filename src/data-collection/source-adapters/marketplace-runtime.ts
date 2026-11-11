@@ -3,6 +3,11 @@ import {
   CIAN_SOURCE_ID,
   sourcePolicyEngine,
 } from "../source-registry";
+import {
+  getDatabasePool,
+  PostgresMarketplaceRequestStateStore,
+  readDatabaseConfig,
+} from "../../persistence";
 import { createAvitoHttpAdapter } from "./adapters/avito/adapter";
 import { AVITO_PROFILE } from "./adapters/avito/profile";
 import { createCianHttpAdapter } from "./adapters/cian/adapter";
@@ -14,6 +19,12 @@ import type {
   HttpCollector,
 } from "./contracts";
 import { SecureHttpCollector } from "./http";
+import {
+  InMemoryMarketplaceRequestStateStore,
+  MarketplaceRequestGuard,
+  type MarketplaceRequestStateStore,
+  UnavailableMarketplaceRequestStateStore,
+} from "./marketplace-request-guard";
 import { createSourceCollectionPipeline } from "./orchestrator";
 
 type MarketplaceSourceId = typeof CIAN_SOURCE_ID | typeof AVITO_SOURCE_ID;
@@ -58,10 +69,48 @@ const enabledConditions = (
 
 export interface MarketplaceCollectionInput {
   readonly task: CollectionTask;
-  readonly environment: "development" | "test" | "pilot" | "production";
   readonly observedAt: string;
   readonly canonicalState?: CanonicalState;
 }
+
+type TrustedMarketplaceRuntimeEnvironment =
+  "development" | "test" | "pilot" | "production";
+
+const trustedRuntimeEnvironment = (
+  env: MarketplaceRuntimeEnvironment,
+): TrustedMarketplaceRuntimeEnvironment => {
+  if (env.NODE_ENV === "test") return "test";
+  if (env.NODE_ENV === "development") return "development";
+  if (env.NODE_ENV === "production")
+    return env.REDS_APPLICATION_MODE === "pilot" ? "pilot" : "production";
+  // Unknown/missing server mode is never treated as the permissive test mode.
+  return "production";
+};
+
+const requestStateStore = ({
+  env,
+  environment,
+}: {
+  readonly env: MarketplaceRuntimeEnvironment;
+  readonly environment: TrustedMarketplaceRuntimeEnvironment;
+}): MarketplaceRequestStateStore => {
+  const backend = env.REDS_MARKETPLACE_REQUEST_STATE_BACKEND ?? "disabled";
+  if (backend === "memory") {
+    if (environment !== "development" && environment !== "test")
+      return new UnavailableMarketplaceRequestStateStore();
+    return new InMemoryMarketplaceRequestStateStore();
+  }
+  if (backend === "postgres") {
+    const database = readDatabaseConfig(env);
+    if (!database.success) return new UnavailableMarketplaceRequestStateStore();
+    return new PostgresMarketplaceRequestStateStore(
+      getDatabasePool(database.config),
+    );
+  }
+  if (backend !== "disabled")
+    throw new Error("MARKETPLACE_REQUEST_GUARD_CONFIG_INVALID");
+  return new UnavailableMarketplaceRequestStateStore();
+};
 
 /**
  * Runtime composition for single-card marketplace collection. Approval flags
@@ -69,17 +118,23 @@ export interface MarketplaceCollectionInput {
  * request before the collector can run.
  */
 export const createMarketplaceCardRuntime = ({
-  env = process.env,
-  collector = new SecureHttpCollector(),
+  collector,
 }: {
-  readonly env?: MarketplaceRuntimeEnvironment;
   readonly collector?: HttpCollector;
 } = {}) => {
+  const env = process.env;
+  const environment = trustedRuntimeEnvironment(env);
+  if (collector && environment !== "development" && environment !== "test")
+    throw new Error("MARKETPLACE_TEST_COLLECTOR_FORBIDDEN");
+  const runtimeCollector = collector ?? new SecureHttpCollector();
+  const requestGuard = new MarketplaceRequestGuard(
+    requestStateStore({ env, environment }),
+  );
   const pipeline = createSourceCollectionPipeline({
     policyEngine: sourcePolicyEngine,
     adapters: [
-      createCianHttpAdapter(collector),
-      createAvitoHttpAdapter(collector),
+      createCianHttpAdapter(runtimeCollector, requestGuard),
+      createAvitoHttpAdapter(runtimeCollector, requestGuard),
     ],
     profiles: [CIAN_PROFILE, AVITO_PROFILE],
   });
@@ -94,6 +149,9 @@ export const createMarketplaceCardRuntime = ({
           : [];
       return pipeline.execute({
         ...input,
+        // The environment is server-owned. A forged runtime property cannot
+        // downgrade a production process to the test policy.
+        environment,
         satisfiedConditions: conditions,
       });
     },

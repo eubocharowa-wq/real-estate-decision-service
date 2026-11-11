@@ -11,6 +11,7 @@ export * from "./contracts";
 export * from "./duplicate-hook";
 export * from "./http";
 export * from "./marketplace-runtime";
+export * from "./marketplace-request-guard";
 export * from "./normalization";
 export * from "./orchestrator";
 export * from "./source-profile";

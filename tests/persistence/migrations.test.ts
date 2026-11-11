@@ -46,6 +46,7 @@ describe.skipIf(!isDatabaseAvailable)("schema migrations", () => {
       "0004",
       "0005",
       "0006",
+      "0007",
     ]);
     const tables = await listTables(database);
     for (const table of PHASE_ONE_TABLES) expect(tables).toContain(table);
@@ -55,7 +56,7 @@ describe.skipIf(!isDatabaseAvailable)("schema migrations", () => {
   it("records what it applied and reports status", async () => {
     expect(
       (await listApplied(database.pool)).map((row) => row.version),
-    ).toEqual(["0001", "0002", "0003", "0004", "0005", "0006"]);
+    ).toEqual(["0001", "0002", "0003", "0004", "0005", "0006", "0007"]);
     expect(await migrationStatus(database.pool)).toEqual([
       { version: "0001", name: "user_state", applied: true },
       { version: "0002", name: "ingestion_source_mode", applied: true },
@@ -79,6 +80,11 @@ describe.skipIf(!isDatabaseAvailable)("schema migrations", () => {
         name: "evidence_artifact_retention",
         applied: true,
       },
+      {
+        version: "0007",
+        name: "marketplace_request_guard",
+        applied: true,
+      },
     ]);
   });
 
@@ -100,9 +106,25 @@ describe.skipIf(!isDatabaseAvailable)("schema migrations", () => {
       expect(tables).not.toContain(catalogueTable);
   });
 
-  it("rolls migration 0006 down and re-applies it", async () => {
+  it("rolls migration 0007 down and re-applies it", async () => {
     const reverted = await migrateDown(database.pool, { steps: 1 });
-    expect(reverted.map((migration) => migration.version)).toEqual(["0006"]);
+    expect(reverted.map((migration) => migration.version)).toEqual(["0007"]);
+    expect(await listTables(database)).not.toContain(
+      "marketplace_source_request_state",
+    );
+    const reapplied = await migrateUp(database.pool);
+    expect(reapplied.map((migration) => migration.version)).toEqual(["0007"]);
+    expect(await listTables(database)).toContain(
+      "marketplace_source_request_state",
+    );
+  });
+
+  it("preserves migration 0006 backfill across rollback and re-apply", async () => {
+    const reverted = await migrateDown(database.pool, { steps: 2 });
+    expect(reverted.map((migration) => migration.version)).toEqual([
+      "0007",
+      "0006",
+    ]);
     expect(await listTables(database)).not.toContain(
       "evidence_artifact_retention_state",
     );
@@ -122,7 +144,10 @@ describe.skipIf(!isDatabaseAvailable)("schema migrations", () => {
     );
 
     const reapplied = await migrateUp(database.pool);
-    expect(reapplied.map((migration) => migration.version)).toEqual(["0006"]);
+    expect(reapplied.map((migration) => migration.version)).toEqual([
+      "0006",
+      "0007",
+    ]);
     expect(await listTables(database)).toContain(
       "evidence_artifact_retention_state",
     );
@@ -142,8 +167,9 @@ describe.skipIf(!isDatabaseAvailable)("schema migrations", () => {
   it("rolls back cleanly and can be re-applied", async () => {
     // Newest first, so each constraint fix comes off before the tables it
     // altered.
-    const reverted = await migrateDown(database.pool, { steps: 6 });
+    const reverted = await migrateDown(database.pool, { steps: 7 });
     expect(reverted.map((migration) => migration.version)).toEqual([
+      "0007",
       "0006",
       "0005",
       "0004",
@@ -168,6 +194,7 @@ describe.skipIf(!isDatabaseAvailable)("schema migrations", () => {
       "0004",
       "0005",
       "0006",
+      "0007",
     ]);
     expect(await listTables(database)).toContain("buyer_journeys");
   });

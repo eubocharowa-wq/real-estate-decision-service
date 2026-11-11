@@ -1,0 +1,1 @@
+DROP TABLE marketplace_source_request_state;

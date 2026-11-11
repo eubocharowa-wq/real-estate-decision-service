@@ -550,4 +550,35 @@ describe("Cian live collection", () => {
       expect(collect).not.toHaveBeenCalled();
     },
   );
+
+  it("does not turn test approvals into production permission", async () => {
+    const collect = vi.fn();
+    const adapter: SourceAdapter = {
+      sourceId: CIAN_PROFILE.sourceId,
+      method: "http",
+      version: "must-not-run",
+      canHandle: () => true,
+      collect,
+    };
+    const result = await createSourceCollectionPipeline({
+      adapters: [adapter],
+      profiles: [CIAN_PROFILE],
+    }).execute({
+      task: makeTask({
+        task_id: "task_src_mkt_01_production_denied",
+        source_id: CIAN_PROFILE.sourceId,
+        target_urls: [NEW_BUILD.url],
+        requested_fields: [...CIAN_SUPPORTED_FIELDS],
+      }),
+      environment: "production",
+      satisfiedConditions: [
+        "CIAN_CARD_HTTP_ACCESS_APPROVED",
+        "CIAN_NORMALIZED_DATA_USE_APPROVED",
+      ],
+      observedAt: COLLECTED_AT,
+    });
+    expect(result.status).toBe("blocked");
+    expect(result.errorCode).toBe("POLICY_DENIED");
+    expect(collect).not.toHaveBeenCalled();
+  });
 });

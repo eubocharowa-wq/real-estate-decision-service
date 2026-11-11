@@ -1,6 +1,6 @@
 import { readFile } from "node:fs/promises";
 
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
   AVITO_SUPPORTED_FIELDS,
@@ -46,9 +46,28 @@ const task: CollectionTask = {
 };
 
 const approvedEnv = {
+  NODE_ENV: "test",
+  REDS_MARKETPLACE_REQUEST_STATE_BACKEND: "memory",
   REDS_AVITO_LIVE_METHOD: "http",
   REDS_AVITO_CARD_HTTP_ACCESS_APPROVED: "true",
   REDS_AVITO_NORMALIZED_DATA_USE_APPROVED: "true",
+};
+
+const configureRuntimeEnv = (
+  env: Readonly<Record<string, string | undefined>>,
+) => {
+  for (const key of [
+    "NODE_ENV",
+    "REDS_APPLICATION_MODE",
+    "REDS_MARKETPLACE_REQUEST_STATE_BACKEND",
+    "REDS_CIAN_LIVE_METHOD",
+    "REDS_CIAN_CARD_HTTP_ACCESS_APPROVED",
+    "REDS_CIAN_NORMALIZED_DATA_USE_APPROVED",
+    "REDS_AVITO_LIVE_METHOD",
+    "REDS_AVITO_CARD_HTTP_ACCESS_APPROVED",
+    "REDS_AVITO_NORMALIZED_DATA_USE_APPROVED",
+  ])
+    vi.stubEnv(key, env[key]);
 };
 
 class ControlledCollector implements HttpCollector {
@@ -67,14 +86,17 @@ class ControlledCollector implements HttpCollector {
 const execute = async (
   collector: HttpCollector,
   env: Readonly<Record<string, string | undefined>> = approvedEnv,
-) =>
-  createMarketplaceCardRuntime({ collector, env }).execute({
+) => {
+  configureRuntimeEnv(env);
+  return createMarketplaceCardRuntime({ collector }).execute({
     task,
-    environment: "test",
     observedAt: OBSERVED_AT,
   });
+};
 
 describe("policy-gated marketplace live runtime", () => {
+  afterEach(() => vi.unstubAllEnvs());
+
   it("collects one approved card into claimed transient Property + Offer", async () => {
     const collector = new ControlledCollector({
       status: 200,
@@ -110,9 +132,31 @@ describe("policy-gated marketplace live runtime", () => {
       contentType: "text/html",
       body: await html(),
     });
-    const result = await execute(collector, {});
+    const result = await execute(collector, {
+      NODE_ENV: "test",
+      REDS_MARKETPLACE_REQUEST_STATE_BACKEND: "memory",
+    });
     expect(result.status).toBe("blocked");
     expect(result.errorCode).toBe("POLICY_DENIED");
+    expect(collector.calls).toBe(0);
+  });
+
+  it("does not call an approved source without a configured request-state backend", async () => {
+    const collector = new ControlledCollector({
+      status: 200,
+      finalUrl: CARD_URL,
+      contentType: "text/html",
+      body: await html(),
+    });
+    const result = await execute(collector, {
+      ...approvedEnv,
+      REDS_MARKETPLACE_REQUEST_STATE_BACKEND: "disabled",
+    });
+    expect(result.status).toBe("blocked");
+    expect(result.errorCode).toBe("RATE_LIMITED");
+    expect(result.rawResult.warnings).toContain(
+      "The shared request guard is unavailable; no request was made.",
+    );
     expect(collector.calls).toBe(0);
   });
 
@@ -130,21 +174,20 @@ describe("policy-gated marketplace live runtime", () => {
         "utf8",
       ),
     });
-    const result = await createMarketplaceCardRuntime({
-      collector,
-      env: {
-        REDS_CIAN_LIVE_METHOD: "http",
-        REDS_CIAN_CARD_HTTP_ACCESS_APPROVED: "true",
-        REDS_CIAN_NORMALIZED_DATA_USE_APPROVED: "true",
-      },
-    }).execute({
+    configureRuntimeEnv({
+      NODE_ENV: "test",
+      REDS_MARKETPLACE_REQUEST_STATE_BACKEND: "memory",
+      REDS_CIAN_LIVE_METHOD: "http",
+      REDS_CIAN_CARD_HTTP_ACCESS_APPROVED: "true",
+      REDS_CIAN_NORMALIZED_DATA_USE_APPROVED: "true",
+    });
+    const result = await createMarketplaceCardRuntime({ collector }).execute({
       task: {
         ...task,
         task_id: "task_src_mkt_01_308625197",
         source_id: "src_mkt_01",
         target_urls: [cianUrl],
       },
-      environment: "test",
       observedAt: OBSERVED_AT,
     });
     expect(result.status, JSON.stringify(result.rawResult)).toBe("success");
@@ -207,12 +250,9 @@ describe("policy-gated marketplace live runtime", () => {
       contentType: "text/html",
       body: await html(),
     });
-    const result = await createMarketplaceCardRuntime({
-      collector,
-      env: approvedEnv,
-    }).execute({
+    configureRuntimeEnv(approvedEnv);
+    const result = await createMarketplaceCardRuntime({ collector }).execute({
       task: { ...task, requested_fields: ["seller.name"] },
-      environment: "test",
       observedAt: OBSERVED_AT,
     });
     expect(result.status).toBe("blocked");
@@ -224,4 +264,78 @@ describe("policy-gated marketplace live runtime", () => {
     expect(AVITO_SUPPORTED_FIELDS).not.toContain("media.photos");
     expect(AVITO_SUPPORTED_FIELDS).not.toContain("listing.description");
   });
+
+  it("uses trusted production mode even when execute carries a forged test field", async () => {
+    const collector = new ControlledCollector({
+      status: 200,
+      finalUrl: CARD_URL,
+      contentType: "text/html",
+      body: await html(),
+    });
+    configureRuntimeEnv({
+      ...approvedEnv,
+      NODE_ENV: "production",
+      REDS_APPLICATION_MODE: "demo",
+    });
+    expect(() => createMarketplaceCardRuntime({ collector })).toThrow(
+      "MARKETPLACE_TEST_COLLECTOR_FORBIDDEN",
+    );
+    const runtime = createMarketplaceCardRuntime();
+    const result = await runtime.execute({
+      task,
+      observedAt: OBSERVED_AT,
+      environment: "test",
+    } as Parameters<typeof runtime.execute>[0] & { environment: "test" });
+    expect(result.status).toBe("blocked");
+    expect(result.errorCode).toBe("POLICY_DENIED");
+    expect(result.policyAudit.allowedMethod).toBeNull();
+  });
+
+  it("rate-limits subsequent requests for the same source", async () => {
+    const collector = new ControlledCollector({
+      status: 200,
+      finalUrl: CARD_URL,
+      contentType: "text/html",
+      body: await html(),
+    });
+    configureRuntimeEnv(approvedEnv);
+    const runtime = createMarketplaceCardRuntime({ collector });
+    expect(
+      (await runtime.execute({ task, observedAt: OBSERVED_AT })).status,
+    ).toBe("success");
+    const second = await runtime.execute({
+      task: { ...task, task_id: "task_src_mkt_04_rate_limited" },
+      observedAt: "2026-11-11T12:00:01.000Z",
+    });
+    expect(second.status).toBe("blocked");
+    expect(second.errorCode).toBe("RATE_LIMITED");
+    expect(collector.calls).toBe(1);
+  });
+
+  it.each([
+    [403, "<html></html>", "AUTH_REQUIRED"],
+    [429, "<html></html>", "RATE_LIMITED"],
+    [200, "<html>captcha: verify you are human</html>", "AUTH_REQUIRED"],
+  ] as const)(
+    "stops later source attempts after terminal response %i",
+    async (status, body, expectedCode) => {
+      const collector = new ControlledCollector({
+        status,
+        finalUrl: CARD_URL,
+        contentType: "text/html",
+        body,
+      });
+      configureRuntimeEnv(approvedEnv);
+      const runtime = createMarketplaceCardRuntime({ collector });
+      const first = await runtime.execute({ task, observedAt: OBSERVED_AT });
+      expect(first.errorCode).toBe(expectedCode);
+      const second = await runtime.execute({
+        task: { ...task, task_id: `task_src_mkt_04_stopped_${status}` },
+        observedAt: "2026-11-11T12:00:01.000Z",
+      });
+      expect(second.status).toBe("blocked");
+      expect(second.errorCode).toBe(expectedCode);
+      expect(collector.calls).toBe(1);
+    },
+  );
 });

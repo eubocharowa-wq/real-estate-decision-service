@@ -11,6 +11,11 @@ import type {
 } from "../contracts";
 import { rawCollectionResultSchema } from "../contracts";
 import { HttpTransportError } from "../http";
+import type {
+  MarketplaceGuardSourceId,
+  MarketplaceRequestGuard,
+  MarketplaceStopReason,
+} from "../marketplace-request-guard";
 
 export interface MarketplaceObservation {
   readonly field: string;
@@ -29,7 +34,7 @@ export interface MarketplaceParsedCard {
 }
 
 export interface MarketplaceHttpAdapterConfig {
-  readonly sourceId: string;
+  readonly sourceId: MarketplaceGuardSourceId;
   readonly adapterVersion: string;
   readonly parserVersion: string;
   readonly supportedFields: readonly string[];
@@ -134,6 +139,7 @@ export class MarketplaceHttpAdapter implements SourceAdapter {
   constructor(
     private readonly config: MarketplaceHttpAdapterConfig,
     private readonly collector: HttpCollector,
+    private readonly requestGuard: MarketplaceRequestGuard,
   ) {
     this.sourceId = config.sourceId;
     this.version = config.adapterVersion;
@@ -186,6 +192,31 @@ export class MarketplaceHttpAdapter implements SourceAdapter {
         config: this.config,
       });
 
+    const guardDecision = await this.requestGuard.beforeRequest(
+      this.config.sourceId,
+    );
+    if (!guardDecision.allowed) {
+      const stoppedForAuth =
+        guardDecision.stopReason === "access_denied" ||
+        guardDecision.stopReason === "challenge";
+      return terminalResult({
+        task,
+        context,
+        collectorVersion: this.collector.version,
+        sourceUrl,
+        status: "blocked",
+        errorCode: stoppedForAuth ? "AUTH_REQUIRED" : "RATE_LIMITED",
+        warnings: [
+          guardDecision.reason === "guard_unavailable"
+            ? "The shared request guard is unavailable; no request was made."
+            : guardDecision.reason === "source_stopped"
+              ? "Collection for this source was stopped after a terminal response."
+              : "The per-source request limit was reached; no request was made.",
+        ],
+        config: this.config,
+      });
+    }
+
     let response: HttpCollectionResponse;
     try {
       response = await this.collector.get(sourceUrl);
@@ -222,15 +253,34 @@ export class MarketplaceHttpAdapter implements SourceAdapter {
         warnings: [warning],
         config: this.config,
       });
-    if (response.status === 401 || response.status === 403)
+    const terminalAndStop = async (
+      stopReason: MarketplaceStopReason,
+      errorCode: CollectionErrorCode,
+      warning: string,
+    ): Promise<RawCollectionResult> => {
+      let sharedStopRecorded = true;
+      try {
+        await this.requestGuard.stopSource(this.config.sourceId, stopReason);
+      } catch {
+        sharedStopRecorded = false;
+      }
       return terminal(
         "blocked",
+        errorCode,
+        sharedStopRecorded
+          ? warning
+          : `${warning} Shared stop-state persistence was unavailable.`,
+      );
+    };
+    if (response.status === 401 || response.status === 403)
+      return terminalAndStop(
+        "access_denied",
         "AUTH_REQUIRED",
         "Access was denied; no authentication or challenge bypass was attempted.",
       );
     if (response.status === 429)
-      return terminal(
-        "blocked",
+      return terminalAndStop(
+        "rate_limited",
         "RATE_LIMITED",
         "The source rate-limited the single request; collection stopped.",
       );
@@ -259,8 +309,8 @@ export class MarketplaceHttpAdapter implements SourceAdapter {
         "Only an HTML card response is accepted.",
       );
     if (challengeDetected(response.body))
-      return terminal(
-        "blocked",
+      return terminalAndStop(
+        "challenge",
         "AUTH_REQUIRED",
         "A challenge page was detected; no bypass was attempted.",
       );

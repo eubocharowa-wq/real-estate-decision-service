@@ -408,6 +408,15 @@ export interface EvidenceArtifactRetentionEventTable {
   occurred_at: Timestamp;
 }
 
+export interface MarketplaceSourceRequestStateTable {
+  source_id: string;
+  window_started_at: Timestamp;
+  request_count: number;
+  stop_reason: string | null;
+  stopped_at: Timestamp | null;
+  updated_at: Timestamp;
+}
+
 export interface Database {
   application_errors: ApplicationErrorTable;
   buyer_journeys: BuyerJourneyTable;
@@ -434,6 +443,7 @@ export interface Database {
   journey_imported_candidates: JourneyImportedCandidateTable;
   matching_bundle_entries: MatchingBundleEntryTable;
   matching_bundles: MatchingBundleTable;
+  marketplace_source_request_state: MarketplaceSourceRequestStateTable;
   parsed_requests: ParsedRequestTable;
   refresh_tasks: RefreshTaskTable;
 }

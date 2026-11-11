@@ -1,7 +1,11 @@
+import { Buffer } from "node:buffer";
+import { lookup } from "node:dns/promises";
+import { request as httpsRequest, type RequestOptions } from "node:https";
+import { BlockList, isIP, type LookupFunction } from "node:net";
+import type { TLSSocket } from "node:tls";
+
 import { SOURCE_ADAPTER_HTTP_CONFIG } from "./config";
 import type { HttpCollectionResponse, HttpCollector } from "./contracts";
-import { lookup } from "node:dns/promises";
-import { isIP } from "node:net";
 
 export type HttpTransportErrorCode =
   | "FETCH_FAILED"
@@ -9,7 +13,8 @@ export type HttpTransportErrorCode =
   | "RESPONSE_TOO_LARGE"
   | "REDIRECT_DENIED"
   | "TARGET_NOT_TLS"
-  | "TARGET_NOT_PUBLIC";
+  | "TARGET_NOT_PUBLIC"
+  | "TARGET_ADDRESS_MISMATCH";
 
 export class HttpTransportError extends Error {
   constructor(
@@ -20,11 +25,6 @@ export class HttpTransportError extends Error {
     this.name = "HttpTransportError";
   }
 }
-
-type FetchImplementation = (
-  input: string | URL | Request,
-  init?: RequestInit,
-) => Promise<Response>;
 
 export type AddressResolver = (hostname: string) => Promise<readonly string[]>;
 
@@ -74,54 +74,189 @@ const publicAddress = (address: string): boolean => {
   );
 };
 
-const isAbortError = (error: unknown): boolean =>
-  error instanceof DOMException
-    ? error.name === "AbortError"
-    : error instanceof Error && error.name === "AbortError";
-
-const readBoundedBody = async (
-  response: Response,
-  maximumBytes: number,
-): Promise<string> => {
-  const contentLength = response.headers.get("content-length");
-  if (contentLength && Number(contentLength) > maximumBytes)
-    throw new HttpTransportError(
-      "RESPONSE_TOO_LARGE",
-      "Response exceeds the configured byte limit.",
-    );
-  if (!response.body) return "";
-
-  const reader = response.body.getReader();
-  const decoder = new TextDecoder("utf-8", { fatal: true });
-  let bytesRead = 0;
-  let body = "";
-  while (true) {
-    const chunk = await reader.read();
-    if (chunk.done) break;
-    bytesRead += chunk.value.byteLength;
-    if (bytesRead > maximumBytes) {
-      await reader.cancel();
-      throw new HttpTransportError(
-        "RESPONSE_TOO_LARGE",
-        "Response exceeds the configured byte limit.",
-      );
-    }
-    body += decoder.decode(chunk.value, { stream: true });
-  }
-  body += decoder.decode();
-  return body;
+export const matchesPinnedAddress = (
+  expected: string,
+  actual: string,
+): boolean => {
+  const version = isIP(expected);
+  if (version === 0 || isIP(actual) !== version) return false;
+  const blockList = new BlockList();
+  const type = version === 4 ? "ipv4" : "ipv6";
+  blockList.addAddress(expected, type);
+  return blockList.check(actual, type);
 };
 
+export interface PinnedHttpsTransportInput {
+  readonly url: string;
+  readonly pinnedAddress: string;
+  readonly timeoutMs: number;
+  readonly maximumResponseBytes: number;
+}
+
+export interface PinnedHttpsTransport {
+  get(input: PinnedHttpsTransportInput): Promise<HttpCollectionResponse>;
+}
+
 /**
- * Network boundary for the one approved HTTP adapter. Redirects are never
- * followed, credentials are omitted, and the caller can only pass a URL that
- * has already survived the Source Policy Engine scope check.
+ * Keeps the original hostname for Host/SNI/certificate validation while the
+ * custom lookup can return only the address that passed SSRF validation.
  */
+export const buildPinnedHttpsRequestOptions = (
+  url: string,
+  pinnedAddress: string,
+): RequestOptions => {
+  const parsed = new URL(url);
+  const family = isIP(pinnedAddress);
+  const pinnedLookup: LookupFunction = (_hostname, options, callback) => {
+    if (options.all) {
+      callback(null, [{ address: pinnedAddress, family }]);
+      return;
+    }
+    callback(null, pinnedAddress, family);
+  };
+  return {
+    protocol: "https:",
+    hostname: parsed.hostname,
+    port: 443,
+    path: `${parsed.pathname}${parsed.search}`,
+    method: "GET",
+    headers: { Accept: "text/html", "Accept-Encoding": "identity" },
+    agent: false,
+    lookup: pinnedLookup,
+    servername: parsed.hostname,
+    rejectUnauthorized: true,
+  };
+};
+
+const headerValue = (
+  value: string | readonly string[] | undefined,
+): string | null => (typeof value === "string" ? value : (value?.[0] ?? null));
+
+/** One DNS-pinned TLS connection. Node never follows redirects here. */
+export class NodePinnedHttpsTransport implements PinnedHttpsTransport {
+  get(input: PinnedHttpsTransportInput): Promise<HttpCollectionResponse> {
+    return new Promise((resolve, reject) => {
+      let settled = false;
+      const timeout: { handle?: ReturnType<typeof setTimeout> } = {};
+      const settleReject = (error: unknown) => {
+        if (settled) return;
+        settled = true;
+        if (timeout.handle) clearTimeout(timeout.handle);
+        reject(
+          error instanceof HttpTransportError
+            ? error
+            : new HttpTransportError("FETCH_FAILED", "HTTP collection failed."),
+        );
+      };
+      const settleResolve = (response: HttpCollectionResponse) => {
+        if (settled) return;
+        settled = true;
+        if (timeout.handle) clearTimeout(timeout.handle);
+        resolve(response);
+      };
+      const request = httpsRequest(
+        buildPinnedHttpsRequestOptions(input.url, input.pinnedAddress),
+        (response) => {
+          const status = response.statusCode ?? 0;
+          if (status >= 300 && status < 400) {
+            response.destroy();
+            settleReject(
+              new HttpTransportError(
+                "REDIRECT_DENIED",
+                "Redirects are denied for explicit-target collection.",
+              ),
+            );
+            return;
+          }
+          const contentLength = headerValue(response.headers["content-length"]);
+          if (
+            contentLength !== null &&
+            Number(contentLength) > input.maximumResponseBytes
+          ) {
+            response.destroy();
+            settleReject(
+              new HttpTransportError(
+                "RESPONSE_TOO_LARGE",
+                "Response exceeds the configured byte limit.",
+              ),
+            );
+            return;
+          }
+          const chunks: Buffer[] = [];
+          let bytesRead = 0;
+          response.on("data", (chunk: Buffer | Uint8Array) => {
+            const buffer = Buffer.from(chunk);
+            bytesRead += buffer.byteLength;
+            if (bytesRead > input.maximumResponseBytes) {
+              response.destroy();
+              settleReject(
+                new HttpTransportError(
+                  "RESPONSE_TOO_LARGE",
+                  "Response exceeds the configured byte limit.",
+                ),
+              );
+              return;
+            }
+            chunks.push(buffer);
+          });
+          response.once("error", settleReject);
+          response.once("end", () => {
+            try {
+              settleResolve({
+                status,
+                finalUrl: input.url,
+                contentType: headerValue(response.headers["content-type"]),
+                body: new TextDecoder("utf-8", { fatal: true }).decode(
+                  Buffer.concat(chunks),
+                ),
+              });
+            } catch {
+              settleReject(
+                new HttpTransportError(
+                  "FETCH_FAILED",
+                  "Response was not valid UTF-8.",
+                ),
+              );
+            }
+          });
+        },
+      );
+      request.once("socket", (socket) => {
+        const tlsSocket = socket as TLSSocket;
+        tlsSocket.once("secureConnect", () => {
+          const remoteAddress = tlsSocket.remoteAddress;
+          if (
+            !tlsSocket.authorized ||
+            !remoteAddress ||
+            !matchesPinnedAddress(input.pinnedAddress, remoteAddress)
+          )
+            request.destroy(
+              new HttpTransportError(
+                "TARGET_ADDRESS_MISMATCH",
+                "The HTTPS connection did not use the policy-vetted address.",
+              ),
+            );
+        });
+      });
+      request.once("error", settleReject);
+      timeout.handle = setTimeout(
+        () =>
+          request.destroy(
+            new HttpTransportError("TIMEOUT", "HTTP collection timed out."),
+          ),
+        input.timeoutMs,
+      );
+      request.end();
+    });
+  }
+}
+
+/** DNS/SSRF validation plus binding of the vetted IP to the TLS connection. */
 export class SecureHttpCollector implements HttpCollector {
-  readonly version = "secure-http-collector-v1";
+  readonly version = "secure-http-collector-v2";
 
   constructor(
-    private readonly fetchImplementation: FetchImplementation = fetch,
+    private readonly transport: PinnedHttpsTransport = new NodePinnedHttpsTransport(),
     private readonly resolveAddresses: AddressResolver = defaultAddressResolver,
   ) {}
 
@@ -137,12 +272,12 @@ export class SecureHttpCollector implements HttpCollector {
         "TARGET_NOT_TLS",
         "Only credential-free HTTPS targets on the default port are allowed.",
       );
-
     if (isIP(parsed.hostname) !== 0)
       throw new HttpTransportError(
         "TARGET_NOT_PUBLIC",
         "IP-literal targets are not allowed.",
       );
+
     let addresses: readonly string[];
     try {
       addresses = await this.resolveAddresses(parsed.hostname);
@@ -161,46 +296,22 @@ export class SecureHttpCollector implements HttpCollector {
         "The target hostname does not resolve exclusively to public addresses.",
       );
 
-    const controller = new AbortController();
-    const timeout = setTimeout(
-      () => controller.abort(),
-      SOURCE_ADAPTER_HTTP_CONFIG.timeoutMs,
-    );
-    try {
-      const response = await this.fetchImplementation(url, {
-        method: "GET",
-        redirect: "manual",
-        credentials: "omit",
-        referrerPolicy: "no-referrer",
-        headers: { Accept: "text/html" },
-        signal: controller.signal,
-      });
-      if (response.status >= 300 && response.status < 400)
-        throw new HttpTransportError(
-          "REDIRECT_DENIED",
-          "Redirects are denied for the explicit-target PoC.",
-        );
-      if (response.url && response.url !== url)
-        throw new HttpTransportError(
-          "REDIRECT_DENIED",
-          "The final URL differs from the policy-validated target.",
-        );
-      return {
-        status: response.status,
-        finalUrl: response.url || url,
-        contentType: response.headers.get("content-type"),
-        body: await readBoundedBody(
-          response,
-          SOURCE_ADAPTER_HTTP_CONFIG.maximumResponseBytes,
-        ),
-      };
-    } catch (error) {
-      if (error instanceof HttpTransportError) throw error;
-      if (isAbortError(error))
-        throw new HttpTransportError("TIMEOUT", "HTTP collection timed out.");
-      throw new HttpTransportError("FETCH_FAILED", "HTTP collection failed.");
-    } finally {
-      clearTimeout(timeout);
-    }
+    const response = await this.transport.get({
+      url,
+      pinnedAddress: addresses[0]!,
+      timeoutMs: SOURCE_ADAPTER_HTTP_CONFIG.timeoutMs,
+      maximumResponseBytes: SOURCE_ADAPTER_HTTP_CONFIG.maximumResponseBytes,
+    });
+    if (response.status >= 300 && response.status < 400)
+      throw new HttpTransportError(
+        "REDIRECT_DENIED",
+        "Redirects are denied for explicit-target collection.",
+      );
+    if (response.finalUrl !== url)
+      throw new HttpTransportError(
+        "REDIRECT_DENIED",
+        "The final URL differs from the policy-validated target.",
+      );
+    return response;
   }
 }

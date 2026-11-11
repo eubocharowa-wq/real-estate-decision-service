@@ -12,11 +12,12 @@ const CARD =
 const decide = (
   targetUrls: readonly string[] = [CARD],
   satisfiedConditions: readonly string[] = [],
+  environment: "test" | "production" = "test",
 ) =>
   sourcePolicyEngine.resolve({
     sourceId: AVITO_SOURCE_ID,
     operation: "scheduled_collect",
-    environment: "test",
+    environment,
     requestedMethod: "http",
     targetUrls,
     requestedFields: [...AVITO_SUPPORTED_FIELDS],
@@ -48,6 +49,19 @@ describe("Avito source policy", () => {
     );
     expect(allowed.allowed).toBe(true);
     expect(allowed.validatedTargetUrls).toEqual([CARD]);
+  });
+
+  it("remains denied in production even if both test conditions are supplied", () => {
+    expect(
+      decide(
+        [CARD],
+        [
+          "AVITO_CARD_HTTP_ACCESS_APPROVED",
+          "AVITO_NORMALIZED_DATA_USE_APPROVED",
+        ],
+        "production",
+      ).allowed,
+    ).toBe(false);
   });
 
   it.each([

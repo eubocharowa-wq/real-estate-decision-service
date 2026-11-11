@@ -5,11 +5,13 @@ import {
   AVITO_SUPPORTED_FIELDS,
 } from "../../config";
 import type { HttpCollector } from "../../contracts";
+import type { MarketplaceRequestGuard } from "../../marketplace-request-guard";
 import { MarketplaceHttpAdapter } from "../marketplace-http-adapter";
 import { parseAvitoOfferCard } from "./parser";
 
 export const createAvitoHttpAdapter = (
   collector: HttpCollector,
+  requestGuard: MarketplaceRequestGuard,
 ): MarketplaceHttpAdapter =>
   new MarketplaceHttpAdapter(
     {
@@ -20,4 +22,5 @@ export const createAvitoHttpAdapter = (
       parse: parseAvitoOfferCard,
     },
     collector,
+    requestGuard,
   );

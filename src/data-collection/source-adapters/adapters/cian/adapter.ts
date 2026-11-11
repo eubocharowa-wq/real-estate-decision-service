@@ -5,11 +5,13 @@ import {
   CIAN_SUPPORTED_FIELDS,
 } from "../../config";
 import type { HttpCollector } from "../../contracts";
+import type { MarketplaceRequestGuard } from "../../marketplace-request-guard";
 import { MarketplaceHttpAdapter } from "../marketplace-http-adapter";
 import { parseCianOfferCard } from "./parser";
 
 export const createCianHttpAdapter = (
   collector: HttpCollector,
+  requestGuard: MarketplaceRequestGuard,
 ): MarketplaceHttpAdapter =>
   new MarketplaceHttpAdapter(
     {
@@ -20,4 +22,5 @@ export const createCianHttpAdapter = (
       parse: parseCianOfferCard,
     },
     collector,
+    requestGuard,
   );
