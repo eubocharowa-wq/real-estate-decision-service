@@ -172,6 +172,36 @@ describe("TASK-009 shortlist states", () => {
     expect(screen.getByText(/^Шаг \d+ ·/)).toBeTruthy();
   });
 
+  it("never shows internal identifiers or English jargon in the rendered page", () => {
+    render(
+      <ShortlistPageView
+        view={{
+          ...pilotView,
+          datasetNotice:
+            "Реальные объекты из официального источника (ЕИСЖС). Это выборка, а не весь рынок; цену, доступность и условия финансирования источник не публикует.",
+        }}
+      />,
+    );
+    const text = document.body.textContent ?? "";
+    for (const forbidden of [
+      "dataset_type",
+      "origin=",
+      "origins=",
+      "Match Score",
+      "Data Confidence",
+      "matching layer",
+      "live-market",
+      "synthetic_pilot",
+      "manual_curated_pilot",
+      "mixed_explicit",
+      "user_supplied_only",
+      "empty_pilot",
+      "Pilot dataset",
+    ]) {
+      expect(text).not.toContain(forbidden);
+    }
+  });
+
   it("renders a controlled state when a confirmed request is missing", () => {
     render(<ShortlistClient initialView={null} />);
     expect(

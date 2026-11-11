@@ -12,10 +12,10 @@ import { detailView, personalizedDetailView } from "./fixtures";
 afterEach(cleanup);
 
 describe("TASK-010 Property Detail components", () => {
-  it("renders Match Score and Data Confidence as separate values", () => {
+  it("renders the match and data-confidence scores as separate values", () => {
     render(<PropertyDetailPageView view={personalizedDetailView} />);
     expect(screen.getByText("100% подходит под ваши условия")).toBeTruthy();
-    expect(screen.getByText(/Data Confidence · отдельно/i)).toBeTruthy();
+    expect(screen.getByText(/Надёжность данных · отдельно/i)).toBeTruthy();
     expect(
       screen.getAllByText(personalizedDetailView.dataQuality.confidenceLabel)
         .length,
@@ -192,6 +192,28 @@ describe("TASK-010 Property Detail components", () => {
     expect(
       screen.getByRole("link", { name: "Описать свои условия" }),
     ).toBeTruthy();
+  });
+
+  it("never shows internal identifiers or English jargon in the rendered page", () => {
+    render(<PropertyDetailPageView view={personalizedDetailView} />);
+    const text = document.body.textContent ?? "";
+    for (const forbidden of [
+      "dataset_type",
+      "origin=",
+      "origins=",
+      "Match Score",
+      "Data Confidence",
+      "matching layer",
+      "live-market",
+      "synthetic_pilot",
+      "manual_curated_pilot",
+      "mixed_explicit",
+      "user_supplied_only",
+      "empty_pilot",
+      "Pilot dataset",
+    ]) {
+      expect(text).not.toContain(forbidden);
+    }
   });
 
   it("renders a controlled not-found state", () => {

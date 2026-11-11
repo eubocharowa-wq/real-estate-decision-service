@@ -85,6 +85,23 @@ describe("RequestConfirmation", () => {
     expect(screen.queryByText("budget.purchase_price.maximum")).toBeNull();
   });
 
+  it("never shows internal identifiers or English jargon in the rendered page", () => {
+    render(<RequestConfirmation parserResult={clearRequest} />);
+    const text = document.body.textContent ?? "";
+    for (const forbidden of [
+      "dataset_type",
+      "origin=",
+      "origins=",
+      "Match Score",
+      "Data Confidence",
+      "matching layer",
+      "live-market",
+      "UserRequest",
+    ]) {
+      expect(text).not.toContain(forbidden);
+    }
+  });
+
   it("has one clear step number, not a brand-mark page index alongside it", () => {
     render(<RequestConfirmation parserResult={clearRequest} />);
     expect(screen.getByText("Основание")).toBeTruthy();
