@@ -9,6 +9,10 @@ import {
   parseRooms,
   SourceValueError,
 } from "./value-parsers";
+import {
+  marketTypeSchema,
+  propertyTypeSchema,
+} from "../../domain/common/schema";
 
 export type RawResultValidation =
   | { readonly success: true; readonly value: RawCollectionResult }
@@ -22,6 +26,7 @@ const validateFieldValue = (
 ): void => {
   switch (field.field) {
     case "identity.unit_id":
+    case "identity.listing_id":
       if (
         typeof field.raw_value !== "string" ||
         !/^[0-9]+$/u.test(field.raw_value)
@@ -29,11 +34,11 @@ const validateFieldValue = (
         throw new SourceValueError(field.field, "invalid numeric unit ID");
       break;
     case "identity.property_type":
-      if (field.raw_value !== "apartment")
+      if (!propertyTypeSchema.safeParse(field.raw_value).success)
         throw new SourceValueError(field.field, "unexpected property type");
       break;
     case "identity.market_type":
-      if (field.raw_value !== "new_build")
+      if (!marketTypeSchema.safeParse(field.raw_value).success)
         throw new SourceValueError(field.field, "unexpected market type");
       break;
     case "physical.rooms":
@@ -54,6 +59,25 @@ const validateFieldValue = (
     case "availability":
       parseAvailability(field.raw_value);
       break;
+    case "building.floors_total":
+    case "building.built_year":
+    case "land.area_sotka":
+      if (typeof field.raw_value !== "number" || field.raw_value <= 0)
+        throw new SourceValueError(field.field, "invalid positive number");
+      break;
+    case "location.geo_point": {
+      const point = field.raw_value;
+      if (
+        typeof point !== "object" ||
+        point === null ||
+        !("latitude" in point) ||
+        !("longitude" in point) ||
+        typeof point.latitude !== "number" ||
+        typeof point.longitude !== "number"
+      )
+        throw new SourceValueError(field.field, "invalid geo point");
+      break;
+    }
     default:
       if (typeof field.raw_value !== "string" || !field.raw_value.trim())
         throw new SourceValueError(field.field, "invalid textual field");
@@ -71,12 +95,17 @@ export const validateRawCollectionResult = (
     return { success: true, value: raw };
   if (raw.source_id !== task.source_id || raw.task_id !== task.task_id)
     return { success: false, message: "Raw result identity mismatch." };
+  const identityField = task.requested_fields.includes("identity.unit_id")
+    ? "identity.unit_id"
+    : task.requested_fields.includes("identity.listing_id")
+      ? "identity.listing_id"
+      : null;
   const requiredIdentityFields = [
-    "identity.unit_id",
     "identity.property_type",
     "identity.market_type",
   ];
   if (
+    identityField === null ||
     requiredIdentityFields.some(
       (field) => !task.requested_fields.includes(field),
     )
@@ -84,7 +113,7 @@ export const validateRawCollectionResult = (
     return {
       success: false,
       message:
-        "Unit ID, property type, and market type are required for stable normalization.",
+        "A source record ID, property type, and market type are required for stable normalization.",
     };
   const fields = raw.extracted_fields.map((field) => field.field);
   if (new Set(fields).size !== fields.length)
@@ -111,7 +140,7 @@ export const validateRawCollectionResult = (
   )
     return { success: false, message: "Raw result status is inconsistent." };
   const unitId = raw.extracted_fields.find(
-    (field) => field.field === "identity.unit_id",
+    (field) => field.field === identityField,
   )?.raw_value;
   if (unitId !== raw.external_record_id)
     return {

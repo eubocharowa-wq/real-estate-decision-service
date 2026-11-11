@@ -194,6 +194,7 @@ export const EISJS_SHARED_DOMAIN_RULE =
 export const EISJS_SOURCE_ID = "src_gov_01" as const;
 
 export const CIAN_SOURCE_ID = "src_mkt_01" as const;
+export const AVITO_SOURCE_ID = "src_mkt_04" as const;
 
 interface ExternalEntryInput {
   readonly sourceId: string;
@@ -644,6 +645,48 @@ const partnerMethods = (
   ...manualMethods,
 ];
 
+const marketplaceCardMethods = ({
+  httpCondition,
+  partnerCondition,
+  credentialRef,
+}: {
+  readonly httpCondition: string;
+  readonly partnerCondition: string;
+  readonly credentialRef: string;
+}): SourceRegistryEntry["policy"]["methods"] => [
+  {
+    method: "api",
+    priority: 100,
+    operations: ["scheduled_collect", "targeted_refresh", "user_url_ingest"],
+    required_conditions: [partnerCondition],
+    credential_ref: credentialRef,
+  },
+  {
+    method: "http",
+    priority: 80,
+    operations: ["scheduled_collect", "user_url_ingest"],
+    required_conditions: [httpCondition],
+    credential_ref: null,
+  },
+  ...manualMethods,
+];
+
+const marketplaceTransientStorage = {
+  raw_content: "denied" as const,
+  normalized_data: "conditional" as const,
+  evidence_metadata: "conditional" as const,
+  snapshots: "denied" as const,
+  derived_data: "denied" as const,
+};
+
+const marketplaceSafeDisplay = {
+  normalized_facts: "conditional" as const,
+  source_link: "approved" as const,
+  evidence_snippet: "denied" as const,
+  raw_content: "denied" as const,
+  image_media: "denied" as const,
+};
+
 const marketplaceEntries: SourceRegistryEntry[] = [
   externalEntry({
     sourceId: CIAN_SOURCE_ID,
@@ -659,11 +702,16 @@ const marketplaceEntries: SourceRegistryEntry[] = [
     fieldAuthority: marketplaceAuthority,
     capabilities: marketplaceCapabilities,
     policyReasons: ["PARTNER_API_ONLY", "DO_NOT_AUTOCOLLECT"],
-    // The single switch for live collection. It stays denied until the owner
-    // decides otherwise; the card adapter only parses cards saved by hand.
-    automation: "denied",
-    methods: partnerMethods("CIAN_PARTNER_ACCESS_KEY"),
-    environmentMethods: ["api", "manual", "user_supplied"],
+    access: "conditional",
+    automation: "conditional",
+    storage: marketplaceTransientStorage,
+    display: marketplaceSafeDisplay,
+    methods: marketplaceCardMethods({
+      httpCondition: "CIAN_CARD_HTTP_ACCESS_APPROVED",
+      partnerCondition: "CIAN_PARTNER_CONTRACT_CONFIGURED",
+      credentialRef: "CIAN_PARTNER_ACCESS_KEY",
+    }),
+    environmentMethods: ["api", "http", "manual", "user_supplied"],
     collectionScope: {
       explicit_targets_only: true,
       allowed_hosts: ["cian.ru", "www.cian.ru", "tula.cian.ru"],
@@ -722,10 +770,10 @@ const marketplaceEntries: SourceRegistryEntry[] = [
       raw_content: "prohibited",
       raw_snapshots: "prohibited",
     },
-    requiredConditions: ["PARTNER_CONTRACT_CONFIGURED"],
+    requiredConditions: ["CIAN_NORMALIZED_DATA_USE_APPROVED"],
     reviewedAt: "2026-11-11T00:00:00.000Z",
     notes:
-      "MKT-01: automatic collection is denied. Single listing cards saved by hand are parsed offline into staging candidates as seller claims; enabling live collection is a separate owner decision recorded in policy.automation.",
+      "MKT-01: live card HTTP and partner API are independently conditional. Neither condition is satisfied by default; project-owner preference is not platform permission. Only one explicit card may produce transient claimed facts.",
   }),
   externalEntry({
     sourceId: "src_mkt_02",
@@ -777,7 +825,7 @@ const marketplaceEntries: SourceRegistryEntry[] = [
       "MKT-03: available API covers an authorized company's own listings, not general market search.",
   }),
   externalEntry({
-    sourceId: "src_mkt_04",
+    sourceId: AVITO_SOURCE_ID,
     name: "Авито",
     sourceType: "classified",
     domains: ["avito.ru"],
@@ -794,11 +842,73 @@ const marketplaceEntries: SourceRegistryEntry[] = [
       "PARTNER_API_ONLY",
       "DO_NOT_AUTOCOLLECT",
     ],
-    methods: partnerMethods("AVITO_PARTNER_CLIENT_CREDENTIAL"),
-    environmentMethods: ["api", "manual", "user_supplied"],
-    requiredConditions: ["PARTNER_CONTRACT_CONFIGURED"],
+    access: "conditional",
+    automation: "conditional",
+    storage: marketplaceTransientStorage,
+    display: marketplaceSafeDisplay,
+    methods: marketplaceCardMethods({
+      httpCondition: "AVITO_CARD_HTTP_ACCESS_APPROVED",
+      partnerCondition: "AVITO_PARTNER_CONTRACT_CONFIGURED",
+      credentialRef: "AVITO_PARTNER_CLIENT_CREDENTIAL",
+    }),
+    environmentMethods: ["api", "http", "manual", "user_supplied"],
+    collectionScope: {
+      explicit_targets_only: true,
+      allowed_hosts: ["avito.ru", "www.avito.ru"],
+      allowed_path_patterns: [
+        "^/[^/]+/kvartiry/[^/]+_[0-9]+$",
+        "^/[^/]+/doma_dachi_kottedzhi/[^/]+_[0-9]+$",
+      ],
+      maximum_target_urls: 1,
+      discovery_allowed: false,
+      follow_links_allowed: false,
+      pagination_allowed: false,
+      sitemap_allowed: false,
+      authentication_allowed: false,
+      challenge_action: "stop",
+    },
+    fieldPolicy: {
+      requested_fields_required: true,
+      allowed_fields: [
+        "identity.listing_id",
+        "identity.property_type",
+        "identity.market_type",
+        "identity.development_name",
+        "physical.rooms",
+        "physical.floor",
+        "physical.total_area_m2",
+        "building.floors_total",
+        "building.built_year",
+        "building.material_type",
+        "land.area_sotka",
+        "location.address.region",
+        "location.address.city",
+        "location.address.locality",
+        "location.address.street",
+        "location.address.house_number",
+        "location.geo_point",
+        "listing_price",
+      ],
+      required_evidence_metadata: ["source_url", "observed_at"],
+      verification_ceilings: [
+        { field_pattern: "identity.*", maximum_status: "claimed" },
+        { field_pattern: "physical.*", maximum_status: "claimed" },
+        { field_pattern: "building.*", maximum_status: "claimed" },
+        { field_pattern: "land.*", maximum_status: "claimed" },
+        { field_pattern: "location.*", maximum_status: "claimed" },
+        { field_pattern: "listing_price", maximum_status: "claimed" },
+      ],
+    },
+    retentionPolicy: {
+      normalized_facts: "transient_only",
+      evidence_metadata: "transient_only",
+      raw_content: "prohibited",
+      raw_snapshots: "prohibited",
+    },
+    requiredConditions: ["AVITO_NORMALIZED_DATA_USE_APPROVED"],
+    reviewedAt: "2026-11-11T00:00:00.000Z",
     notes:
-      "MKT-04: account-based Business API exists; public market ingestion is not established.",
+      "MKT-04: live card HTTP and account API are independently conditional. Neither condition is satisfied by default; project-owner preference is not platform permission. Only one explicit card may produce transient claimed facts.",
   }),
 ];
 

@@ -6,6 +6,15 @@ methods are allowed in an environment, and what storage, display, refresh,
 derivation, caching, attribution, freshness, authority, and health rules apply.
 It only creates decisions and collection plans; it does not execute collectors.
 
+## Marketplace single-card runtime
+
+`src_mkt_01` (ЦИАН) и `src_mkt_04` (Авито) имеют отдельные policy contracts.
+Их HTTP card methods условны и по умолчанию не получают требуемые access/data
+use conditions. Наличие parser, fixture или environment flag не является
+разрешением правообладателя. Если оба независимых approvals подтверждены,
+runtime допускает только одну каноническую карточку в development/test,
+сохраняет лишь transient normalized facts/evidence и не хранит HTML.
+
 ## Configuration
 
 `config/pilot.ts` is the typed, versioned and runtime-validated configuration.

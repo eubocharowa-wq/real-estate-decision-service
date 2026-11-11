@@ -12,6 +12,11 @@ export const CIAN_ADAPTER_VERSION = "src-mkt-01-card-adapter-v1";
 export const CIAN_PARSER_VERSION = "src-mkt-01-card-parser-v1";
 export const CIAN_NORMALIZATION_VERSION = "src-mkt-01-normalization-v1";
 
+export const AVITO_SOURCE_ID = "src_mkt_04" as const;
+export const AVITO_ADAPTER_VERSION = "src-mkt-04-card-adapter-v1";
+export const AVITO_PARSER_VERSION = "src-mkt-04-card-parser-v1";
+export const AVITO_NORMALIZATION_VERSION = "src-mkt-04-normalization-v1";
+
 /** Structured state is read as published; the value is not interpreted. */
 export const CIAN_EXTRACTION_CONFIDENCE = 0.98;
 
@@ -88,3 +93,27 @@ export const CIAN_SUPPORTED_FIELDS = [
 ] as const;
 
 export type CianSupportedField = (typeof CIAN_SUPPORTED_FIELDS)[number];
+
+/** Facts retained from an Avito card; seller data and listing prose are excluded. */
+export const AVITO_SUPPORTED_FIELDS = [
+  "identity.listing_id",
+  "identity.property_type",
+  "identity.market_type",
+  "identity.development_name",
+  "physical.rooms",
+  "physical.floor",
+  "physical.total_area_m2",
+  "building.floors_total",
+  "building.built_year",
+  "building.material_type",
+  "land.area_sotka",
+  "location.address.region",
+  "location.address.city",
+  "location.address.locality",
+  "location.address.street",
+  "location.address.house_number",
+  "location.geo_point",
+  "listing_price",
+] as const;
+
+export type AvitoSupportedField = (typeof AVITO_SUPPORTED_FIELDS)[number];

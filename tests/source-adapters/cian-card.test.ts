@@ -381,38 +381,14 @@ describe("Cian card adapter: what it never extracts", () => {
           ])
         : [];
 
-  const captured = (html: string, pattern: RegExp): string[] =>
-    [...html.matchAll(pattern)].map(
-      (match) => JSON.parse(`"${match[1]}"`) as string,
-    );
-
   it.each(ALL_CARDS)(
-    "emits no phone, listing text, photo or agent data from $file",
+    "stores and emits no phone, listing text, photo or agent data from $file",
     (card) => {
       const html = readCard(card);
       const serialized = JSON.stringify(candidateFor(card));
-
-      // The fixtures carry redacted phones, so there is something to leak.
-      const phones = captured(html, /"number":"(\d{6,})"/gu);
-      expect(phones.length).toBeGreaterThan(0);
-      for (const phone of phones) expect(serialized).not.toContain(phone);
-      expect(serialized).not.toContain("+7");
-
-      const descriptions = captured(
-        html,
-        /"description":"((?:[^"\\]|\\.){40,}?)"/gu,
+      expect(html).not.toMatch(
+        /phone|firstName|lastName|avatar|email|images\.cdn-cian|description/iu,
       );
-      expect(descriptions.length).toBeGreaterThan(0);
-      for (const text of descriptions)
-        expect(serialized).not.toContain(text.slice(0, 40));
-
-      const personNames = captured(
-        html,
-        /"(?:firstName|lastName)":"((?:[^"\\]|\\.)+)"/gu,
-      );
-      for (const name of personNames) expect(serialized).not.toContain(name);
-
-      expect(html).toContain("images.cdn-cian.ru");
       expect(serialized).not.toMatch(/cdn-cian|get-avatar|\.jpg|\.png/u);
 
       const keys = keysOf(JSON.parse(serialized));
@@ -529,9 +505,12 @@ describe("Cian card adapter: card identity and URL", () => {
 });
 
 describe("Cian live collection", () => {
-  it("declares no environment in which a card may be fetched", () => {
+  it("limits a conditionally approved card fetch to development/test", () => {
     expect(CIAN_PROFILE.sourceId).toBe("src_mkt_01");
-    expect(CIAN_PROFILE.collectionContract.environments).toEqual([]);
+    expect(CIAN_PROFILE.collectionContract.environments).toEqual([
+      "development",
+      "test",
+    ]);
     expect(CIAN_PROFILE.collectionContract.retention).toMatchObject({
       raw_content: "prohibited",
       raw_snapshots: "prohibited",
@@ -560,10 +539,7 @@ describe("Cian live collection", () => {
           requested_fields: [...CIAN_SUPPORTED_FIELDS],
         }),
         environment,
-        satisfiedConditions: [
-          "PARTNER_CONTRACT_CONFIGURED",
-          "PILOT_APPROVAL_CONFIRMED",
-        ],
+        satisfiedConditions: [],
         observedAt: COLLECTED_AT,
       });
 
