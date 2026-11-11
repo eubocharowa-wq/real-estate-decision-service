@@ -35,12 +35,17 @@ export interface MarketplaceRequestStateStore {
     readonly reason: MarketplaceStopReason;
     readonly now: Date;
   }): Promise<void>;
+  complete(input: {
+    readonly sourceId: MarketplaceGuardSourceId;
+    readonly now: Date;
+  }): Promise<void>;
 }
 
 interface ProcessState {
   windowStartedAtMs: number;
   requestCount: number;
   stopReason: MarketplaceStopReason | null;
+  outcomePending: boolean;
 }
 
 /** Offline/dev store. It is deliberately marked process-local. */
@@ -63,17 +68,25 @@ export class InMemoryMarketplaceRequestStateStore implements MarketplaceRequestS
         reason: "source_stopped",
         stopReason: current.stopReason,
       };
+    if (current?.outcomePending)
+      return {
+        allowed: false,
+        reason: "guard_unavailable",
+        stopReason: null,
+      };
     if (!current || nowMs - current.windowStartedAtMs >= limit.windowMs) {
       this.states.set(sourceId, {
         windowStartedAtMs: nowMs,
         requestCount: 1,
         stopReason: null,
+        outcomePending: true,
       });
       return { allowed: true };
     }
     if (current.requestCount >= limit.maximumRequestsPerWindow)
       return { allowed: false, reason: "rate_limit", stopReason: null };
     current.requestCount += 1;
+    current.outcomePending = true;
     return { allowed: true };
   }
 
@@ -87,7 +100,17 @@ export class InMemoryMarketplaceRequestStateStore implements MarketplaceRequestS
       windowStartedAtMs: current?.windowStartedAtMs ?? now.getTime(),
       requestCount: current?.requestCount ?? 0,
       stopReason: current?.stopReason ?? reason,
+      outcomePending: false,
     });
+  }
+
+  async complete({
+    sourceId,
+  }: Parameters<MarketplaceRequestStateStore["complete"]>[0]): Promise<void> {
+    const current = this.states.get(sourceId);
+    if (!current?.outcomePending || current.stopReason)
+      throw new Error("MARKETPLACE_REQUEST_GUARD_STATE_INVALID");
+    current.outcomePending = false;
   }
 }
 
@@ -105,6 +128,10 @@ export class UnavailableMarketplaceRequestStateStore implements MarketplaceReque
   async stop(): Promise<void> {
     throw new Error("MARKETPLACE_REQUEST_GUARD_UNAVAILABLE");
   }
+
+  async complete(): Promise<void> {
+    throw new Error("MARKETPLACE_REQUEST_GUARD_UNAVAILABLE");
+  }
 }
 
 /**
@@ -116,6 +143,7 @@ export class MarketplaceRequestGuard {
     MarketplaceGuardSourceId,
     MarketplaceStopReason
   >();
+  private readonly locallyUncertain = new Set<MarketplaceGuardSourceId>();
 
   constructor(
     private readonly store: MarketplaceRequestStateStore,
@@ -135,6 +163,12 @@ export class MarketplaceRequestGuard {
         allowed: false,
         reason: "source_stopped",
         stopReason: localReason,
+      };
+    if (this.locallyUncertain.has(sourceId))
+      return {
+        allowed: false,
+        reason: "guard_unavailable",
+        stopReason: null,
       };
     const limit = MARKETPLACE_REQUEST_GUARD_CONFIG.sources[sourceId];
     try {
@@ -158,5 +192,14 @@ export class MarketplaceRequestGuard {
   ): Promise<void> {
     this.locallyStopped.set(sourceId, reason);
     await this.store.stop({ sourceId, reason, now: this.clock() });
+  }
+
+  async completeRequest(sourceId: MarketplaceGuardSourceId): Promise<void> {
+    try {
+      await this.store.complete({ sourceId, now: this.clock() });
+    } catch {
+      this.locallyUncertain.add(sourceId);
+      throw new Error("MARKETPLACE_REQUEST_GUARD_STORE_FAILED");
+    }
   }
 }

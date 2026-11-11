@@ -117,11 +117,26 @@ const contentTypeAllowed = (contentType: string | null): boolean =>
     ),
   );
 
-const challengeDetected = (html: string): boolean =>
-  !/(?:window\.__staticRouterHydrationData|window\._cianConfig)/u.test(html) &&
-  /(?:captcha|cloudflare challenge|verify you are human|access denied|доступ ограничен)/iu.test(
-    html,
+const challengeDetected = (html: string): boolean => {
+  // Listing hydration can coexist with an interstitial challenge, so its
+  // presence is never treated as proof that collection is allowed. Ignore
+  // passive code strings to avoid stopping on ordinary application bundles,
+  // then require either visible challenge wording or explicit challenge UI.
+  const visibleMarkup = html.replace(
+    /<(?:script|style|template|noscript)\b[^>]*>[\s\S]*?<\/(?:script|style|template|noscript)>/giu,
+    " ",
   );
+  const visibleText = visibleMarkup.replace(/<[^>]+>/gu, " ");
+  const explicitChallengeText =
+    /(?:verify\s+(?:that\s+)?you\s+are\s+(?:a\s+)?human|cloudflare\s+challenge|access\s+denied|доступ\s+ограничен|(?:solve|complete|enter)\s+(?:the\s+)?captcha)/iu.test(
+      visibleText,
+    );
+  const explicitChallengeUi =
+    /<(?:form|div|section|iframe|input)\b[^>]*(?:id|class|name|src|action|data-sitekey)\s*=\s*["'][^"']*(?:captcha|recaptcha|hcaptcha|cf-chl|challenge-platform)[^"']*["'][^>]*>/iu.test(
+      visibleMarkup,
+    );
+  return explicitChallengeText || explicitChallengeUi;
+};
 
 const transportErrorCode = (error: HttpTransportError): CollectionErrorCode =>
   error.code === "TIMEOUT" ? "TIMEOUT" : "FETCH_FAILED";
@@ -217,151 +232,164 @@ export class MarketplaceHttpAdapter implements SourceAdapter {
       });
     }
 
-    let response: HttpCollectionResponse;
+    let terminalStopAttempted = false;
     try {
-      response = await this.collector.get(sourceUrl);
-    } catch (error) {
-      const transport =
-        error instanceof HttpTransportError
-          ? error
-          : new HttpTransportError("FETCH_FAILED", "HTTP collection failed.");
-      return terminalResult({
-        task,
-        context,
-        collectorVersion: this.collector.version,
-        sourceUrl,
-        status: "failed",
-        errorCode: transportErrorCode(transport),
-        warnings: [transport.message],
-        config: this.config,
-      });
-    }
-
-    const terminal = (
-      status: RawCollectionResult["status"],
-      errorCode: CollectionErrorCode,
-      warning: string,
-    ) =>
-      terminalResult({
-        task,
-        context,
-        collectorVersion: this.collector.version,
-        sourceUrl,
-        response,
-        status,
-        errorCode,
-        warnings: [warning],
-        config: this.config,
-      });
-    const terminalAndStop = async (
-      stopReason: MarketplaceStopReason,
-      errorCode: CollectionErrorCode,
-      warning: string,
-    ): Promise<RawCollectionResult> => {
-      let sharedStopRecorded = true;
+      let response: HttpCollectionResponse;
       try {
-        await this.requestGuard.stopSource(this.config.sourceId, stopReason);
-      } catch {
-        sharedStopRecorded = false;
+        response = await this.collector.get(sourceUrl);
+      } catch (error) {
+        const transport =
+          error instanceof HttpTransportError
+            ? error
+            : new HttpTransportError("FETCH_FAILED", "HTTP collection failed.");
+        return terminalResult({
+          task,
+          context,
+          collectorVersion: this.collector.version,
+          sourceUrl,
+          status: "failed",
+          errorCode: transportErrorCode(transport),
+          warnings: [transport.message],
+          config: this.config,
+        });
       }
-      return terminal(
-        "blocked",
-        errorCode,
-        sharedStopRecorded
-          ? warning
-          : `${warning} Shared stop-state persistence was unavailable.`,
-      );
-    };
-    if (response.status === 401 || response.status === 403)
-      return terminalAndStop(
-        "access_denied",
-        "AUTH_REQUIRED",
-        "Access was denied; no authentication or challenge bypass was attempted.",
-      );
-    if (response.status === 429)
-      return terminalAndStop(
-        "rate_limited",
-        "RATE_LIMITED",
-        "The source rate-limited the single request; collection stopped.",
-      );
-    if (response.status === 404 || response.status === 410)
-      return terminal(
-        "unavailable",
-        "FETCH_FAILED",
-        "The card is unavailable; this is not interpreted as sold.",
-      );
-    if (response.finalUrl !== sourceUrl)
-      return terminal(
-        "blocked",
-        "FETCH_FAILED",
-        "The response URL differs from the policy-validated target.",
-      );
-    if (response.status < 200 || response.status >= 300)
-      return terminal(
-        "failed",
-        "FETCH_FAILED",
-        `Unexpected HTTP status ${response.status}.`,
-      );
-    if (!contentTypeAllowed(response.contentType))
-      return terminal(
-        "failed",
-        "UNEXPECTED_CONTENT_TYPE",
-        "Only an HTML card response is accepted.",
-      );
-    if (challengeDetected(response.body))
-      return terminalAndStop(
-        "challenge",
-        "AUTH_REQUIRED",
-        "A challenge page was detected; no bypass was attempted.",
-      );
 
-    try {
-      const parsed = this.config.parse({ html: response.body, sourceUrl });
-      const requested = new Set(context.plan.validatedRequestedFields);
-      const extracted = parsed.observations.filter(
-        (item) => requested.has(item.field) && item.value !== null,
-      );
-      const extractedFields = new Set(extracted.map((item) => item.field));
-      return rawCollectionResultSchema.parse({
-        schema_version: "1.0",
-        collection_run_id: context.collectionRunId,
-        task_id: task.task_id,
-        source_id: task.source_id,
-        source_url: sourceUrl,
-        canonical_url: parsed.facts.canonicalUrl,
-        collected_at: context.observedAt,
-        http_status: response.status,
-        content_type: response.contentType,
-        raw_payload_reference: null,
-        external_record_id: parsed.facts.listingId,
-        extracted_fields: extracted.map((item) => ({
-          field: item.field,
-          // Only the allow-listed normalized fact crosses this boundary. The
-          // complete page state and listing prose are deliberately discarded.
-          raw_value: normalizedRawValue(item),
-          semantics: "source_claim",
-          extraction_confidence: 0.98,
-          evidence_reference: item.statePath,
-        })),
-        missing_fields: context.plan.validatedRequestedFields.filter(
-          (field) => !extractedFields.has(field),
-        ),
-        warnings: [...parsed.warnings],
-        adapter_version: this.config.adapterVersion,
-        parser_version: this.config.parserVersion,
-        collector_version: this.collector.version,
-        status:
-          extracted.length === context.plan.validatedRequestedFields.length
-            ? "success"
-            : "partial",
-        error_code: null,
-      });
-    } catch (error) {
-      return terminal(
-        "source_changed",
-        "SOURCE_CHANGED",
-        error instanceof Error ? error.message : "Card structure changed.",
-      );
+      const terminal = (
+        status: RawCollectionResult["status"],
+        errorCode: CollectionErrorCode,
+        warning: string,
+      ) =>
+        terminalResult({
+          task,
+          context,
+          collectorVersion: this.collector.version,
+          sourceUrl,
+          response,
+          status,
+          errorCode,
+          warnings: [warning],
+          config: this.config,
+        });
+      const terminalAndStop = async (
+        stopReason: MarketplaceStopReason,
+        errorCode: CollectionErrorCode,
+        warning: string,
+      ): Promise<RawCollectionResult> => {
+        terminalStopAttempted = true;
+        let sharedStopRecorded = true;
+        try {
+          await this.requestGuard.stopSource(this.config.sourceId, stopReason);
+        } catch {
+          sharedStopRecorded = false;
+        }
+        return terminal(
+          "blocked",
+          errorCode,
+          sharedStopRecorded
+            ? warning
+            : `${warning} Shared stop-state persistence was unavailable.`,
+        );
+      };
+      if (response.status === 401 || response.status === 403)
+        return terminalAndStop(
+          "access_denied",
+          "AUTH_REQUIRED",
+          "Access was denied; no authentication or challenge bypass was attempted.",
+        );
+      if (response.status === 429)
+        return terminalAndStop(
+          "rate_limited",
+          "RATE_LIMITED",
+          "The source rate-limited the single request; collection stopped.",
+        );
+      if (response.status === 404 || response.status === 410)
+        return terminal(
+          "unavailable",
+          "FETCH_FAILED",
+          "The card is unavailable; this is not interpreted as sold.",
+        );
+      if (response.finalUrl !== sourceUrl)
+        return terminal(
+          "blocked",
+          "FETCH_FAILED",
+          "The response URL differs from the policy-validated target.",
+        );
+      if (response.status < 200 || response.status >= 300)
+        return terminal(
+          "failed",
+          "FETCH_FAILED",
+          `Unexpected HTTP status ${response.status}.`,
+        );
+      if (!contentTypeAllowed(response.contentType))
+        return terminal(
+          "failed",
+          "UNEXPECTED_CONTENT_TYPE",
+          "Only an HTML card response is accepted.",
+        );
+      if (challengeDetected(response.body))
+        return terminalAndStop(
+          "challenge",
+          "AUTH_REQUIRED",
+          "A challenge page was detected; no bypass was attempted.",
+        );
+
+      try {
+        const parsed = this.config.parse({ html: response.body, sourceUrl });
+        const requested = new Set(context.plan.validatedRequestedFields);
+        const extracted = parsed.observations.filter(
+          (item) => requested.has(item.field) && item.value !== null,
+        );
+        const extractedFields = new Set(extracted.map((item) => item.field));
+        return rawCollectionResultSchema.parse({
+          schema_version: "1.0",
+          collection_run_id: context.collectionRunId,
+          task_id: task.task_id,
+          source_id: task.source_id,
+          source_url: sourceUrl,
+          canonical_url: parsed.facts.canonicalUrl,
+          collected_at: context.observedAt,
+          http_status: response.status,
+          content_type: response.contentType,
+          raw_payload_reference: null,
+          external_record_id: parsed.facts.listingId,
+          extracted_fields: extracted.map((item) => ({
+            field: item.field,
+            // Only the allow-listed normalized fact crosses this boundary. The
+            // complete page state and listing prose are deliberately discarded.
+            raw_value: normalizedRawValue(item),
+            semantics: "source_claim",
+            extraction_confidence: 0.98,
+            evidence_reference: item.statePath,
+          })),
+          missing_fields: context.plan.validatedRequestedFields.filter(
+            (field) => !extractedFields.has(field),
+          ),
+          warnings: [...parsed.warnings],
+          adapter_version: this.config.adapterVersion,
+          parser_version: this.config.parserVersion,
+          collector_version: this.collector.version,
+          status:
+            extracted.length === context.plan.validatedRequestedFields.length
+              ? "success"
+              : "partial",
+          error_code: null,
+        });
+      } catch (error) {
+        return terminal(
+          "source_changed",
+          "SOURCE_CHANGED",
+          error instanceof Error ? error.message : "Card structure changed.",
+        );
+      }
+    } finally {
+      if (!terminalStopAttempted) {
+        try {
+          await this.requestGuard.completeRequest(this.config.sourceId);
+        } catch {
+          // The guard retains a local fail-closed state, while the shared
+          // store keeps outcome_pending=true for every other instance.
+        }
+      }
     }
   }
 }

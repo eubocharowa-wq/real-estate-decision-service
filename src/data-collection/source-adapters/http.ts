@@ -97,6 +97,11 @@ export interface PinnedHttpsTransport {
   get(input: PinnedHttpsTransportInput): Promise<HttpCollectionResponse>;
 }
 
+export type PinnedPeerValidator = (
+  expectedAddress: string,
+  actualAddress: string,
+) => boolean;
+
 /**
  * Keeps the original hostname for Host/SNI/certificate validation while the
  * custom lookup can return only the address that passed SSRF validation.
@@ -104,6 +109,7 @@ export interface PinnedHttpsTransport {
 export const buildPinnedHttpsRequestOptions = (
   url: string,
   pinnedAddress: string,
+  trustedCertificateAuthorities?: RequestOptions["ca"],
 ): RequestOptions => {
   const parsed = new URL(url);
   const family = isIP(pinnedAddress);
@@ -117,7 +123,7 @@ export const buildPinnedHttpsRequestOptions = (
   return {
     protocol: "https:",
     hostname: parsed.hostname,
-    port: 443,
+    port: parsed.port ? Number(parsed.port) : 443,
     path: `${parsed.pathname}${parsed.search}`,
     method: "GET",
     headers: { Accept: "text/html", "Accept-Encoding": "identity" },
@@ -125,6 +131,9 @@ export const buildPinnedHttpsRequestOptions = (
     lookup: pinnedLookup,
     servername: parsed.hostname,
     rejectUnauthorized: true,
+    ...(trustedCertificateAuthorities
+      ? { ca: trustedCertificateAuthorities }
+      : {}),
   };
 };
 
@@ -134,6 +143,11 @@ const headerValue = (
 
 /** One DNS-pinned TLS connection. Node never follows redirects here. */
 export class NodePinnedHttpsTransport implements PinnedHttpsTransport {
+  constructor(
+    private readonly trustedCertificateAuthorities?: RequestOptions["ca"],
+    private readonly peerMatches: PinnedPeerValidator = matchesPinnedAddress,
+  ) {}
+
   get(input: PinnedHttpsTransportInput): Promise<HttpCollectionResponse> {
     return new Promise((resolve, reject) => {
       let settled = false;
@@ -155,7 +169,11 @@ export class NodePinnedHttpsTransport implements PinnedHttpsTransport {
         resolve(response);
       };
       const request = httpsRequest(
-        buildPinnedHttpsRequestOptions(input.url, input.pinnedAddress),
+        buildPinnedHttpsRequestOptions(
+          input.url,
+          input.pinnedAddress,
+          this.trustedCertificateAuthorities,
+        ),
         (response) => {
           const status = response.statusCode ?? 0;
           if (status >= 300 && status < 400) {
@@ -228,7 +246,7 @@ export class NodePinnedHttpsTransport implements PinnedHttpsTransport {
           if (
             !tlsSocket.authorized ||
             !remoteAddress ||
-            !matchesPinnedAddress(input.pinnedAddress, remoteAddress)
+            !this.peerMatches(input.pinnedAddress, remoteAddress)
           )
             request.destroy(
               new HttpTransportError(

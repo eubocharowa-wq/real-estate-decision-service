@@ -1,11 +1,18 @@
+import { execFileSync } from "node:child_process";
+import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { createServer, type Server } from "node:https";
 import type { LookupFunction } from "node:net";
+import type { AddressInfo } from "node:net";
+import { tmpdir } from "node:os";
+import path from "node:path";
 
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 
 import {
   buildPinnedHttpsRequestOptions,
   HttpTransportError,
   matchesPinnedAddress,
+  NodePinnedHttpsTransport,
   SOURCE_ADAPTER_HTTP_CONFIG,
   SecureHttpCollector,
   type PinnedHttpsTransport,
@@ -31,12 +38,81 @@ class ControlledPinnedTransport implements PinnedHttpsTransport {
 }
 
 describe("SecureHttpCollector", () => {
+  const servers: Server[] = [];
+  const temporaryDirectories: string[] = [];
   const publicDns = async () => ["93.184.216.34"];
   const response = {
     status: 200,
     finalUrl: UNIT_URL,
     contentType: "text/html",
     body: "<html>synthetic</html>",
+  };
+
+  afterEach(async () => {
+    await Promise.all(
+      servers
+        .splice(0)
+        .map(
+          (server) =>
+            new Promise<void>((resolve, reject) =>
+              server.close((error) => (error ? reject(error) : resolve())),
+            ),
+        ),
+    );
+    await Promise.all(
+      temporaryDirectories
+        .splice(0)
+        .map((directory) => rm(directory, { recursive: true, force: true })),
+    );
+  });
+
+  const startTlsServer = async () => {
+    const directory = await mkdtemp(path.join(tmpdir(), "reds-pinned-tls-"));
+    temporaryDirectories.push(directory);
+    const certificatePath = path.join(directory, "localhost-cert.pem");
+    const privateKeyPath = path.join(directory, "localhost-key.pem");
+    execFileSync(
+      "openssl",
+      [
+        "req",
+        "-x509",
+        "-newkey",
+        "rsa:2048",
+        "-sha256",
+        "-days",
+        "1",
+        "-nodes",
+        "-keyout",
+        privateKeyPath,
+        "-out",
+        certificatePath,
+        "-subj",
+        "/CN=localhost",
+        "-addext",
+        "subjectAltName=DNS:localhost",
+      ],
+      { stdio: "ignore" },
+    );
+    const [certificate, privateKey] = await Promise.all([
+      readFile(certificatePath, "utf8"),
+      readFile(privateKeyPath, "utf8"),
+    ]);
+    const received: string[] = [];
+    const server = createServer(
+      { cert: certificate, key: privateKey },
+      (request, response) => {
+        received.push(request.socket.localAddress ?? "");
+        response.writeHead(200, { "content-type": "text/html" });
+        response.end("<html>controlled TLS response</html>");
+      },
+    );
+    await new Promise<void>((resolve, reject) => {
+      server.once("error", reject);
+      server.listen(0, "127.0.0.1", () => resolve());
+    });
+    servers.push(server);
+    const address = server.address() as AddressInfo;
+    return { certificate, port: address.port, received };
   };
 
   it("pins the vetted DNS address to the request transport", async () => {
@@ -79,6 +155,45 @@ describe("SecureHttpCollector", () => {
     expect(resolved).toBe("93.184.216.34");
     expect(matchesPinnedAddress("93.184.216.34", "93.184.216.34")).toBe(true);
     expect(matchesPinnedAddress("93.184.216.34", "10.0.0.1")).toBe(false);
+  });
+
+  it("uses the pinned IP for an actual TLS connection and validates the hostname", async () => {
+    const controlled = await startTlsServer();
+    const transport = new NodePinnedHttpsTransport(controlled.certificate);
+    const result = await transport.get({
+      url: `https://localhost:${controlled.port}/card`,
+      pinnedAddress: "127.0.0.1",
+      timeoutMs: 2_000,
+      maximumResponseBytes: 10_000,
+    });
+    expect(result.status).toBe(200);
+    expect(result.body).toContain("controlled TLS response");
+    expect(controlled.received).toEqual(["127.0.0.1"]);
+
+    await expect(
+      transport.get({
+        url: `https://wrong-host.invalid:${controlled.port}/card`,
+        pinnedAddress: "127.0.0.1",
+        timeoutMs: 2_000,
+        maximumResponseBytes: 10_000,
+      }),
+    ).rejects.toMatchObject({ code: "FETCH_FAILED" });
+  });
+
+  it("aborts an actual TLS request when the connected peer fails the pinned-IP check", async () => {
+    const controlled = await startTlsServer();
+    const transport = new NodePinnedHttpsTransport(
+      controlled.certificate,
+      () => false,
+    );
+    await expect(
+      transport.get({
+        url: `https://localhost:${controlled.port}/card`,
+        pinnedAddress: "127.0.0.1",
+        timeoutMs: 2_000,
+        maximumResponseBytes: 10_000,
+      }),
+    ).rejects.toMatchObject({ code: "TARGET_ADDRESS_MISMATCH" });
   });
 
   it("rejects non-TLS or credential-bearing targets before transport", async () => {

@@ -25,7 +25,7 @@ describe.skipIf(!isDatabaseAvailable)(
       await dropTestDatabase(database);
     });
 
-    it("atomically shares rate and terminal stop state across instances", async () => {
+    it("shares pending, rate, and terminal stop state across instances", async () => {
       const first = new PostgresMarketplaceRequestStateStore(database.pool);
       const second = new PostgresMarketplaceRequestStateStore(database.pool);
       const input = {
@@ -34,6 +34,11 @@ describe.skipIf(!isDatabaseAvailable)(
         now: new Date("2026-11-11T12:00:00.000Z"),
       };
       await expect(first.acquire(input)).resolves.toEqual({ allowed: true });
+      await expect(second.acquire(input)).resolves.toMatchObject({
+        allowed: false,
+        reason: "guard_unavailable",
+      });
+      await first.complete({ sourceId: "src_mkt_04", now: input.now });
       await expect(second.acquire(input)).resolves.toMatchObject({
         allowed: false,
         reason: "rate_limit",

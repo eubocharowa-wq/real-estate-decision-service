@@ -10,6 +10,7 @@ interface RequestStateRow {
   readonly window_started_at: Date;
   readonly request_count: number;
   readonly stop_reason: MarketplaceStopReason | null;
+  readonly outcome_pending: boolean;
 }
 
 const rollback = async (client: PoolClient): Promise<void> => {
@@ -46,7 +47,7 @@ export class PostgresMarketplaceRequestStateStore implements MarketplaceRequestS
       );
       const now = nowResult.rows[0]!.now;
       const stateResult = await client.query<RequestStateRow>(
-        `SELECT window_started_at, request_count, stop_reason
+        `SELECT window_started_at, request_count, stop_reason, outcome_pending
          FROM marketplace_source_request_state
          WHERE source_id = $1
          FOR UPDATE`,
@@ -61,12 +62,20 @@ export class PostgresMarketplaceRequestStateStore implements MarketplaceRequestS
           stopReason: state.stop_reason,
         };
       }
+      if (state?.outcome_pending) {
+        await client.query("COMMIT");
+        return {
+          allowed: false,
+          reason: "guard_unavailable",
+          stopReason: null,
+        };
+      }
       if (!state) {
         await client.query(
           `INSERT INTO marketplace_source_request_state (
-             source_id, window_started_at, request_count, stop_reason,
+             source_id, window_started_at, request_count, outcome_pending, stop_reason,
              stopped_at, updated_at
-           ) VALUES ($1, $2, 1, NULL, NULL, $2)`,
+           ) VALUES ($1, $2, 1, true, NULL, NULL, $2)`,
           [sourceId, now],
         );
         await client.query("COMMIT");
@@ -77,7 +86,8 @@ export class PostgresMarketplaceRequestStateStore implements MarketplaceRequestS
       if (windowExpired) {
         await client.query(
           `UPDATE marketplace_source_request_state
-           SET window_started_at = $2, request_count = 1, updated_at = $2
+           SET window_started_at = $2, request_count = 1,
+               outcome_pending = true, updated_at = $2
            WHERE source_id = $1`,
           [sourceId, now],
         );
@@ -90,7 +100,8 @@ export class PostgresMarketplaceRequestStateStore implements MarketplaceRequestS
       }
       await client.query(
         `UPDATE marketplace_source_request_state
-         SET request_count = request_count + 1, updated_at = $2
+         SET request_count = request_count + 1, outcome_pending = true,
+             updated_at = $2
          WHERE source_id = $1`,
         [sourceId, now],
       );
@@ -116,15 +127,45 @@ export class PostgresMarketplaceRequestStateStore implements MarketplaceRequestS
       ]);
       await client.query(
         `INSERT INTO marketplace_source_request_state (
-           source_id, window_started_at, request_count, stop_reason,
+           source_id, window_started_at, request_count, outcome_pending, stop_reason,
            stopped_at, updated_at
-         ) VALUES ($1, clock_timestamp(), 0, $2, clock_timestamp(), clock_timestamp())
+         ) VALUES ($1, clock_timestamp(), 0, false, $2, clock_timestamp(), clock_timestamp())
          ON CONFLICT (source_id) DO UPDATE
          SET stop_reason = COALESCE(marketplace_source_request_state.stop_reason, EXCLUDED.stop_reason),
              stopped_at = COALESCE(marketplace_source_request_state.stopped_at, EXCLUDED.stopped_at),
+             outcome_pending = false,
              updated_at = EXCLUDED.updated_at`,
         [sourceId, reason],
       );
+      await client.query("COMMIT");
+    } catch {
+      await rollback(client);
+      throw new Error("MARKETPLACE_REQUEST_GUARD_STORE_FAILED");
+    } finally {
+      client.release();
+    }
+  }
+
+  async complete({
+    sourceId,
+  }: Parameters<MarketplaceRequestStateStore["complete"]>[0]): Promise<void> {
+    const client = await this.connect();
+    try {
+      await client.query("BEGIN");
+      await client.query("SELECT pg_advisory_xact_lock(hashtext($1))", [
+        sourceId,
+      ]);
+      const result = await client.query(
+        `UPDATE marketplace_source_request_state
+         SET outcome_pending = false, updated_at = clock_timestamp()
+         WHERE source_id = $1
+           AND outcome_pending = true
+           AND stop_reason IS NULL
+         RETURNING source_id`,
+        [sourceId],
+      );
+      if (result.rowCount !== 1)
+        throw new Error("MARKETPLACE_REQUEST_GUARD_STATE_INVALID");
       await client.query("COMMIT");
     } catch {
       await rollback(client);

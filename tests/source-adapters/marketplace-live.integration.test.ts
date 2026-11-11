@@ -243,6 +243,40 @@ describe("policy-gated marketplace live runtime", () => {
     expect(result.errorCode).toBe("AUTH_REQUIRED");
   });
 
+  it("stops when valid hydration data coexists with an explicit CAPTCHA", async () => {
+    const collector = new ControlledCollector({
+      status: 200,
+      finalUrl: CARD_URL,
+      contentType: "text/html",
+      body: `${await html()}<form id="captcha-form"><h1>Verify you are human</h1></form>`,
+    });
+    configureRuntimeEnv(approvedEnv);
+    const runtime = createMarketplaceCardRuntime({ collector });
+    const first = await runtime.execute({ task, observedAt: OBSERVED_AT });
+    expect(first.status).toBe("blocked");
+    expect(first.errorCode).toBe("AUTH_REQUIRED");
+
+    const second = await runtime.execute({
+      task: { ...task, task_id: "task_src_mkt_04_after_captcha" },
+      observedAt: "2026-11-11T12:00:01.000Z",
+    });
+    expect(second.status).toBe("blocked");
+    expect(second.errorCode).toBe("AUTH_REQUIRED");
+    expect(collector.calls).toBe(1);
+  });
+
+  it("does not treat passive CAPTCHA strings in application code as a challenge", async () => {
+    const collector = new ControlledCollector({
+      status: 200,
+      finalUrl: CARD_URL,
+      contentType: "text/html",
+      body: `${await html()}<script>window.uiLabels = ["captcha", "access denied"];</script>`,
+    });
+    const result = await execute(collector);
+    expect(result.status, JSON.stringify(result.rawResult)).toBe("success");
+    expect(collector.calls).toBe(1);
+  });
+
   it("rejects fields outside the policy allowlist before collection", async () => {
     const collector = new ControlledCollector({
       status: 200,
