@@ -6,6 +6,15 @@ export const VNESHSTROI_ADAPTER_VERSION = "src-dev-02-http-adapter-v1";
 export const VNESHSTROI_PARSER_VERSION = "src-dev-02-parser-v1";
 export const VNESHSTROI_NORMALIZATION_VERSION = "src-dev-02-normalization-v1";
 
+export { CIAN_SOURCE_ID } from "../source-registry/config/pilot";
+
+export const CIAN_ADAPTER_VERSION = "src-mkt-01-card-adapter-v1";
+export const CIAN_PARSER_VERSION = "src-mkt-01-card-parser-v1";
+export const CIAN_NORMALIZATION_VERSION = "src-mkt-01-normalization-v1";
+
+/** Structured state is read as published; the value is not interpreted. */
+export const CIAN_EXTRACTION_CONFIDENCE = 0.98;
+
 export const SOURCE_ADAPTER_HTTP_CONFIG = Object.freeze({
   timeoutMs: 10_000,
   maximumResponseBytes: 512 * 1024,
@@ -51,3 +60,31 @@ export const VNESHSTROI_SUPPORTED_FIELDS = [
 
 export type VneshstroiSupportedField =
   (typeof VNESHSTROI_SUPPORTED_FIELDS)[number];
+
+/**
+ * Every fact the Cian card adapter may emit. Phones, the listing text, photos
+ * and anything about the agent or the user are deliberately absent.
+ */
+export const CIAN_SUPPORTED_FIELDS = [
+  "identity.listing_id",
+  "identity.property_type",
+  "identity.market_type",
+  "identity.development_name",
+  "physical.rooms",
+  "physical.floor",
+  "physical.total_area_m2",
+  "building.floors_total",
+  "building.built_year",
+  "building.material_type",
+  "building.developer_name",
+  "land.area_sotka",
+  "location.address.region",
+  "location.address.city",
+  "location.address.street",
+  "location.address.house_number",
+  "location.geo_point",
+  "timeline.handover_quarter",
+  "listing_price",
+] as const;
+
+export type CianSupportedField = (typeof CIAN_SUPPORTED_FIELDS)[number];

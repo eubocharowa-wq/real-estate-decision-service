@@ -94,14 +94,16 @@ describe("source policy decisions", () => {
   });
 
   it("denies browser for partner-api-only and allows only configured API", () => {
+    // Домклик, not ЦИАН: ЦИАН's automation is denied outright (see
+    // cian-source.test.ts), so it no longer shows the configured-API path.
     const browser = resolve({
-      sourceId: "src_mkt_01",
+      sourceId: "src_mkt_03",
       operation: "scheduled_collect",
       requestedMethod: "browser",
       satisfiedConditions: ["PARTNER_CONTRACT_CONFIGURED"],
     });
     const api = resolve({
-      sourceId: "src_mkt_01",
+      sourceId: "src_mkt_03",
       operation: "scheduled_collect",
       requestedMethod: "api",
       satisfiedConditions: ["PARTNER_CONTRACT_CONFIGURED"],
