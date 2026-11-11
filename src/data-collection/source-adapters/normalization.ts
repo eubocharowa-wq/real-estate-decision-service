@@ -58,6 +58,23 @@ const rawText = (raw: RawCollectionResult, field: string): string | null => {
   return typeof value === "string" ? value : null;
 };
 
+const rawNumber = (raw: RawCollectionResult, field: string): number | null => {
+  const value = rawField(raw, field)?.raw_value;
+  return typeof value === "number" && Number.isFinite(value) ? value : null;
+};
+
+const rawGeoPoint = (
+  raw: RawCollectionResult,
+): Property["location"]["geo_point"] => {
+  const value = rawField(raw, "location.geo_point")?.raw_value;
+  if (typeof value !== "object" || value === null) return null;
+  const latitude = "latitude" in value ? value.latitude : null;
+  const longitude = "longitude" in value ? value.longitude : null;
+  return typeof latitude === "number" && typeof longitude === "number"
+    ? { latitude, longitude }
+    : null;
+};
+
 /**
  * The address the source actually published, and nothing else.
  *
@@ -234,7 +251,7 @@ export const normalizeCollectionResult = (
     market_type: rawText(raw, "identity.market_type"),
     location: {
       address: addressFrom(raw),
-      geo_point: null,
+      geo_point: rawGeoPoint(raw),
     },
     physical: {
       total_area_m2: area?.total ?? null,
@@ -251,9 +268,10 @@ export const normalizeCollectionResult = (
     },
     building: {
       name: rawText(raw, "identity.development_name"),
-      building_type: null,
-      floors_total: floor?.floorsTotal ?? null,
-      built_year: null,
+      building_type: rawText(raw, "building.material_type"),
+      floors_total:
+        rawNumber(raw, "building.floors_total") ?? floor?.floorsTotal ?? null,
+      built_year: rawNumber(raw, "building.built_year"),
       elevator: null,
       freight_elevator: null,
     },
@@ -262,7 +280,11 @@ export const normalizeCollectionResult = (
       condition_description: null,
       ready_for_living: null,
     },
-    land: { area_sotka: null, category: null, permitted_use: null },
+    land: {
+      area_sotka: rawNumber(raw, "land.area_sotka"),
+      category: null,
+      permitted_use: null,
+    },
     utilities: {
       electricity: "unknown",
       water: "unknown",

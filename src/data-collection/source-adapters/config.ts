@@ -6,11 +6,16 @@ export const VNESHSTROI_ADAPTER_VERSION = "src-dev-02-http-adapter-v1";
 export const VNESHSTROI_PARSER_VERSION = "src-dev-02-parser-v1";
 export const VNESHSTROI_NORMALIZATION_VERSION = "src-dev-02-normalization-v1";
 
-export { CIAN_SOURCE_ID } from "../source-registry/config/pilot";
+export { CIAN_SOURCE_ID };
 
 export const CIAN_ADAPTER_VERSION = "src-mkt-01-card-adapter-v1";
 export const CIAN_PARSER_VERSION = "src-mkt-01-card-parser-v1";
 export const CIAN_NORMALIZATION_VERSION = "src-mkt-01-normalization-v1";
+
+export const AVITO_SOURCE_ID = "src_mkt_04" as const;
+export const AVITO_ADAPTER_VERSION = "src-mkt-04-card-adapter-v1";
+export const AVITO_PARSER_VERSION = "src-mkt-04-card-parser-v1";
+export const AVITO_NORMALIZATION_VERSION = "src-mkt-04-normalization-v1";
 
 /** Structured state is read as published; the value is not interpreted. */
 export const CIAN_EXTRACTION_CONFIDENCE = 0.98;
@@ -22,6 +27,25 @@ export const SOURCE_ADAPTER_HTTP_CONFIG = Object.freeze({
   allowedContentTypes: ["text/html"] as const,
   redirectPolicy: "deny" as const,
   retryableHttpStatuses: [429, 500, 502, 503, 504] as const,
+});
+
+/**
+ * Conservative technical ceilings for explicitly approved marketplace card
+ * requests. These are safety limits, not representations of marketplace
+ * contractual quotas. The state store must apply them atomically per source.
+ */
+export const MARKETPLACE_REQUEST_GUARD_CONFIG = Object.freeze({
+  version: "marketplace-request-guard-v1",
+  sources: {
+    [CIAN_SOURCE_ID]: {
+      maximumRequestsPerWindow: 1,
+      windowMs: 60_000,
+    },
+    [AVITO_SOURCE_ID]: {
+      maximumRequestsPerWindow: 1,
+      windowMs: 60_000,
+    },
+  },
 });
 
 /**
@@ -88,3 +112,28 @@ export const CIAN_SUPPORTED_FIELDS = [
 ] as const;
 
 export type CianSupportedField = (typeof CIAN_SUPPORTED_FIELDS)[number];
+
+/** Facts retained from an Avito card; seller data and listing prose are excluded. */
+export const AVITO_SUPPORTED_FIELDS = [
+  "identity.listing_id",
+  "identity.property_type",
+  "identity.market_type",
+  "identity.development_name",
+  "physical.rooms",
+  "physical.floor",
+  "physical.total_area_m2",
+  "building.floors_total",
+  "building.built_year",
+  "building.material_type",
+  "land.area_sotka",
+  "location.address.region",
+  "location.address.city",
+  "location.address.locality",
+  "location.address.street",
+  "location.address.house_number",
+  "location.geo_point",
+  "listing_price",
+] as const;
+
+export type AvitoSupportedField = (typeof AVITO_SUPPORTED_FIELDS)[number];
+import { CIAN_SOURCE_ID } from "../source-registry/config/pilot";

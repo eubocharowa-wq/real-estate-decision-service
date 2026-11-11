@@ -6,6 +6,27 @@ methods are allowed in an environment, and what storage, display, refresh,
 derivation, caching, attribution, freshness, authority, and health rules apply.
 It only creates decisions and collection plans; it does not execute collectors.
 
+## Marketplace single-card runtime
+
+`src_mkt_01` (ЦИАН) и `src_mkt_04` (Авито) имеют отдельные policy contracts.
+Их HTTP card methods условны и по умолчанию не получают требуемые access/data
+use conditions. Наличие parser, fixture или environment flag не является
+разрешением правообладателя. Если оба независимых approvals подтверждены,
+runtime допускает только одну каноническую карточку в development/test,
+сохраняет лишь transient normalized facts/evidence и не хранит HTML.
+
+HTTP transport pins the public DNS answer to the actual TLS connection, keeps
+certificate verification against the original hostname and rejects redirects.
+An independent request guard enforces per-source windows and a terminal stop
+after 403/429/challenge responses. Its `postgres` backend coordinates multiple
+application instances through migration 0007; process-memory state is strictly
+development/test-only. The guard is not an access approval and is not described
+as production-ready until the shared backend is deployed and verified.
+
+The policy environment is derived from trusted server configuration
+(`NODE_ENV` plus `REDS_APPLICATION_MODE` for a production process). A caller's
+collection input cannot select `test` to bypass pilot/production policy.
+
 ## Configuration
 
 `config/pilot.ts` is the typed, versioned and runtime-validated configuration.

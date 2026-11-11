@@ -84,6 +84,7 @@ export {
   createPostgresRepositories,
   mapDatabaseError,
   PostgresContext,
+  PostgresMarketplaceRequestStateStore,
   StorageUnavailableError,
   type Database,
   type PostgresRepositories,

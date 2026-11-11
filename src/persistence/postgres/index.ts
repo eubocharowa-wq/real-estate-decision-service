@@ -19,6 +19,7 @@ export { PostgresEvidenceArtifactRepository } from "./evidence-artifact-reposito
 export { PostgresEvidenceArtifactRetentionRepository } from "./evidence-artifact-retention-repository";
 export { PostgresExpertRequestRepository } from "./expert-request-repository";
 export { PostgresRefreshQueueRepository } from "./refresh-queue-repository";
+export { PostgresMarketplaceRequestStateStore } from "./marketplace-request-state-store";
 export {
   PostgresApplicationErrorRepository,
   PostgresExpertResultDraftRepository,

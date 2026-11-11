@@ -23,12 +23,7 @@ const resolve = (overrides: Partial<ResolvePolicyInput> = {}) =>
     requestedMethod: "http",
     targetUrls: [FLAT_CARD],
     requestedFields: [...CIAN_SUPPORTED_FIELDS],
-    // Every condition the registry knows for this source is satisfied, so a
-    // denial below can only come from the automation switch itself.
-    satisfiedConditions: [
-      "PARTNER_CONTRACT_CONFIGURED",
-      "PILOT_APPROVAL_CONFIRMED",
-    ],
+    satisfiedConditions: [],
     decidedAt: DECIDED_AT,
     ...overrides,
   });
@@ -36,14 +31,14 @@ const resolve = (overrides: Partial<ResolvePolicyInput> = {}) =>
 describe("ЦИАН registry entry", () => {
   const entry = sourceRegistry.get(CIAN_SOURCE_ID);
 
-  it("denies automatic collection until the owner decides otherwise", () => {
-    expect(entry?.policy.automation).toBe("denied");
+  it("keeps automatic collection conditional on independent approvals", () => {
+    expect(entry?.policy.automation).toBe("conditional");
     expect(entry?.policy.reason_codes).toContain("DO_NOT_AUTOCOLLECT");
     expect(entry?.environment_approval.production.status).toBe("denied");
   });
 
   it.each(["development", "test", "pilot", "production"] as const)(
-    "allows no automatic method in %s",
+    "allows no automatic method without approvals in %s",
     (environment) => {
       for (const requestedMethod of [
         "http",
@@ -59,6 +54,18 @@ describe("ЦИАН registry entry", () => {
       }
     },
   );
+
+  it("can select one-card HTTP only after both scoped conditions", () => {
+    const decision = resolve({
+      satisfiedConditions: [
+        "CIAN_NORMALIZED_DATA_USE_APPROVED",
+        "CIAN_CARD_HTTP_ACCESS_APPROVED",
+      ],
+    });
+    expect(decision.allowed).toBe(true);
+    expect(decision.allowedMethods).toContain("http");
+    expect(decision.allowedMethods).not.toContain("api");
+  });
 
   it("still allows a person to enter a card by hand", () => {
     const manual = resolve({

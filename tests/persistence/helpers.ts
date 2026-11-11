@@ -102,6 +102,7 @@ export const PHASE_ONE_TABLES = [
   "journey_imported_candidates",
   "matching_bundle_entries",
   "matching_bundles",
+  "marketplace_source_request_state",
   "parsed_requests",
   "refresh_tasks",
 ] as const;

@@ -6,11 +6,9 @@ import {
 import type { SourceNormalizationProfile } from "../../source-profile";
 
 /**
- * Cian listing cards, parsed offline from pages saved by hand.
- *
- * No environment is listed: live collection is denied by `policy.automation`
- * in the Source Registry and stays so until the owner decides otherwise. The
- * seller is unknown on purpose — the adapter never reads who posted a card.
+ * Cian listing cards. The profile can execute only in development/test and
+ * only when both independent access and normalized-use approval conditions
+ * are present in an allowed Collection Plan. They are absent by default.
  */
 export const CIAN_PROFILE: SourceNormalizationProfile = {
   sourceId: CIAN_SOURCE_ID,
@@ -24,8 +22,11 @@ export const CIAN_PROFILE: SourceNormalizationProfile = {
   },
   collectionContract: {
     method: "http",
-    environments: [],
-    requiredConditions: [],
+    environments: ["development", "test"],
+    requiredConditions: [
+      "CIAN_NORMALIZED_DATA_USE_APPROVED",
+      "CIAN_CARD_HTTP_ACCESS_APPROVED",
+    ],
     maximumTargetUrls: 1,
     retention: {
       normalized_facts: "transient_only",
