@@ -4,6 +4,9 @@
 **Updated:** 2026-10-03
 **Baseline HEAD:** `51a33b7071a3773897401777b6572bfb9f40b585`
 
+
+> **Сверка статуса 12.11.2026 (документационная пометка; не новый технический baseline).** Коммерческие цели, позиционирование и недельный маркетинг теперь находятся в [едином плане v4.0](osnovanie-unified-business-marketing-delivery-v4-2026-11-12.md). Этот файл по-прежнему является обязательной очередью инженерных TASK согласно `AGENTS.md`, но его разделы «Baseline»/«NEXT» фиксировались 03.10.2026 и **не являются проверенным состоянием 12.11.2026**: ряд более поздних PR уже merged, а TASK-028 по собственному файлу остаётся ACTIVE (RU-storage proof не выполнен). **Перед следующей кодовой задачей** открыть docs-only сверку task statuses с фактическим main/PR, не помечая незакрытое Done. P0 по персональным данным: Issues [#27](https://github.com/eubocharowa-wq/real-estate-decision-service/issues/27) и [#29](https://github.com/eubocharowa-wq/real-estate-decision-service/issues/29), PR #28 открыты; для server-side guard нужен отдельный ограниченный PR с тестами и явным решением curator о порядке hotfix. Release gate не снимать; публичную обработку ПДн и upload не открывать автоматически.
+
 This document does not replace `PROJECT.md`, `AGENTS.md`, domain contracts,
 source policies, or historical task specifications. It defines the current
 implementation sequence from the repository baseline above to a controlled
