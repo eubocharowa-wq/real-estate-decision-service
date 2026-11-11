@@ -140,6 +140,22 @@ Subprocess safety does not rely on redaction: raw stdout, stderr, environment
 and command credentials never leave the executor. Credential-pattern scanning
 of the final JSON is defense in depth only.
 
+## Privacy and data-residency evidence
+
+TASK-028 evidence proves the production EvidenceArtifact lifecycle and its
+private object-storage boundary. It must include provider-verified Russian
+bucket residency and deployed private write/head/read/delete, retention,
+orphan-reconciliation, PostgreSQL-linkage, credential-isolation, and rollback
+evidence for the evaluated revision. A configured `dataResidency: "RU"`
+capability or an environment variable is not sufficient proof by itself.
+
+TASK-031B evidence is a separate hard gate. It must cover the complete
+personal-data path: request ingress and dynamic processing, PostgreSQL,
+application/platform logs, backups, expert access, retention/deletion,
+processors, and any cross-border transfers. Passing TASK-028 does not prove
+that buyer-journey or expert data is localized. See
+[RU data residency and migration plan](ru-data-residency.md).
+
 ## Current expected result
 
 Until the planned readiness work for TASK-028, TASK-029, TASK-029B,

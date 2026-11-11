@@ -216,5 +216,6 @@ decision; and OpenClaw denied with executor not called.
 - feedback does not tune matching, parsing or source policy automatically.
 
 See [privacy inventory](privacy-inventory.md),
+[RU data residency and migration plan](ru-data-residency.md),
 [pilot rollback procedure](rollback.md), and
 [dynamic staging runbook](dynamic-staging.md).
