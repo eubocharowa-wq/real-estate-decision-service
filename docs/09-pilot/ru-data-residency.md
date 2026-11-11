@@ -25,9 +25,19 @@ repository, and Vercel documents a US default for new Node.js Functions. A
 Russian S3 bucket alone would therefore not establish an end-to-end Russian
 localization boundary.
 
-Public processing remains blocked pending operator/legal decisions and
-provider-verified infrastructure evidence. This is consistent with the
-fail-closed release gate for TASK-028 and TASK-031B.
+The operational release gate remains `ready=false`, so public launch is not
+approved. This is a release-readiness decision, not runtime enforcement. The
+current `/selection` form can submit `rawRequestText` to
+`POST /api/buyer-journeys`, and that route does not check the release-gate
+result before the buyer-journey application may persist the request in
+PostgreSQL. No server-side denial of this public input path has been proven in
+the current revision or deployment.
+
+The required fail-closed server boundary is tracked separately in
+[GitHub Issue #29](https://github.com/eubocharowa-wq/real-estate-decision-service/issues/29).
+Until it is implemented and deployment-tested, `ready=false`, `noindex`, a
+demo/pilot label, or browser UI behavior must not be described as blocking an
+HTTP POST.
 
 ## Verified facts and unknowns
 
@@ -103,32 +113,38 @@ map and legal decision.
 
 No step below is authorized for automatic execution by repository code.
 
-1. Keep public personal-data collection disabled or protected while the
-   operator and counsel approve the data map, lawful basis, notices/consents,
-   processor contracts, cross-border analysis, retention, and destruction.
-2. Identify the actual Production and staging bindings using provider project
+1. Before public personal-data collection, obtain an operator-approved closed
+   access mode or implement and test a server-side fail-closed data-entry guard
+   as tracked in Issue #29. The current repository does not prove that this
+   protection is active. Preserve explicitly authorized synthetic CI/QA and
+   internal flows without treating client-side UI, `noindex`, or release-gate
+   output as API authorization.
+2. Have the operator and counsel approve the data map, lawful basis,
+   notices/consents, processor contracts, cross-border analysis, retention,
+   and destruction.
+3. Identify the actual Production and staging bindings using provider project
    IDs and region metadata. Do not infer them from a secret hostname or project
    display name in documentation.
-3. Provision the RU PostgreSQL and S3 boundaries, least-privilege roles,
+4. Provision the RU PostgreSQL and S3 boundaries, least-privilege roles,
    encryption, network restrictions, backups, monitoring, and secret-manager
    bindings.
-4. Apply migrations to an empty RU staging database and run database,
+5. Apply migrations to an empty RU staging database and run database,
    readiness, EvidenceArtifact, retention, and restore tests with synthetic
    data.
-5. Create an encrypted, access-controlled export of the existing database only
+6. Create an encrypted, access-controlled export of the existing database only
    after authorization. Transfer through an approved channel, import into the
    RU target, and compare migration history, table counts, referential
    integrity, and controlled checksums without printing row content.
-6. Migrate private object bytes with an inventory and checksum manifest, then
+7. Migrate private object bytes with an inventory and checksum manifest, then
    prove private write/head/read/delete, lifecycle, legal hold, retention, and
    orphan reconciliation against PostgreSQL metadata.
-7. Run Preview/golden-flow verification using RU-only processing, database,
+8. Run Preview/golden-flow verification using RU-only processing, database,
    object storage, logs, and backups. Produce provider-verified evidence bound
    to the evaluated commit.
-8. During an approved maintenance window, freeze writes, take a rollback
+9. During an approved maintenance window, freeze writes, take a rollback
    snapshot, apply the final delta, switch secrets/routes, and monitor the
    complete flow. Do not change Production and staging simultaneously.
-9. After acceptance and the approved retention window, revoke old credentials
+10. After acceptance and the approved retention window, revoke old credentials
    and close or delete foreign copies, backups, and processor access according
    to the operator's legal decision. Preserve only the required audit record,
    never the credentials or row contents.
@@ -151,8 +167,10 @@ rollback on the evaluated application revision.
 
 That proof covers EvidenceArtifact bytes only. It does **not** prove that the
 buyer journey, expert records, logs, backups, or dynamic request ingress meet
-the operator's privacy/localization requirements. Those remain separate
-TASK-031B and operational release blockers.
+the operator's privacy/localization requirements. TASK-031B is a future roadmap
+stage and required release-evidence check; it is not an implemented runtime
+guard in the current revision. Runtime denial of unapproved public data entry
+is tracked in Issue #29.
 
 ## Release blockers
 
@@ -166,15 +184,20 @@ TASK-031B and operational release blockers.
   application error, log, and backup data;
 - no provider-verified backup/restore, monitoring, incident, and processor-exit
   evidence;
-- TASK-028, TASK-031B, and operational release evidence remain incomplete.
+- the Issue #29 server-side public-input guard is not implemented or proven;
+- TASK-028, the future TASK-031B work, and operational release evidence remain
+  incomplete.
 
 Until these blockers are resolved, the release gate must remain
-`ready=false`, and this document must not be used as authorization for public
+`ready=false`, and public launch is not approved. This state does not itself
+disable `/api/buyer-journeys`; this document must not be used as evidence that
+public processing is technically blocked, or as authorization for public
 processing or a production migration.
 
 ## References
 
 - [GitHub Issue #27](https://github.com/eubocharowa-wq/real-estate-decision-service/issues/27)
+- [GitHub Issue #29 — runtime public-input protection](https://github.com/eubocharowa-wq/real-estate-decision-service/issues/29)
 - [Article 18 of Federal Law No. 152-FZ](https://www.consultant.ru/document/cons_doc_LAW_61801/cbf4e15b7c330f9372e876cdf2bc928bad7950ef/)
 - [Vercel Function region configuration](https://vercel.com/docs/functions/configuring-functions/region)
 - [Vercel regions and global network](https://vercel.com/docs/regions)
