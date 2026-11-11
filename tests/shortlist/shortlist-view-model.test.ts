@@ -277,4 +277,31 @@ describe("TASK-009 shortlist view model", () => {
       error: { code: "BROKEN_REFERENCE" },
     });
   });
+
+  it("claims full certainty only when eligible — matchScore itself never changes", () => {
+    const eligible = withStatus(candidate("prop_nb_003"), "eligible");
+    const view = buildShortlistItemView(pilotRequest, eligible);
+    expect(view.matchScore).toBe(eligible.match.match_result.match_score);
+    expect(view.matchLabel).toBe(
+      `${Math.round(eligible.match.match_result.match_score)}% подходит`,
+    );
+    expect(view.matchContext).toBe("Именно под ваши условия");
+  });
+
+  it.each(["eligible_with_unknowns", "possible_match"] as const)(
+    "never claims '%s подходит' or 'Именно под ваши условия' when eligibility is %s — a hard criterion is unknown there, and unknown != confirmed",
+    (status) => {
+      const source = withStatus(candidate("prop_nb_003"), status);
+      const view = buildShortlistItemView(pilotRequest, source);
+      // Match Score the number is untouched — only the label/context text.
+      expect(view.matchScore).toBe(source.match.match_result.match_score);
+      expect(view.matchLabel).not.toContain("%");
+      expect(view.matchLabel).not.toMatch(/подходит$/);
+      expect(view.matchLabel).toBe("Подходит по известным данным");
+      expect(view.matchContext).not.toBe("Именно под ваши условия");
+      // What exactly is unconfirmed is shown separately, in criticalUnknowns
+      // — the label/context only need to stop overclaiming, not repeat it.
+      expect(view.matchContext).toMatch(/подтвержд/i);
+    },
+  );
 });

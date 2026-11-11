@@ -225,7 +225,7 @@ export const criterionPresentationRegistry: Record<
   }),
   "location.cities": entry({
     label: "Город",
-    category_label: "Район",
+    category_label: "Город",
     editor: "text",
     category: "location",
     operator: "in",

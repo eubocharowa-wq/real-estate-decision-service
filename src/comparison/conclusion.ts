@@ -120,7 +120,7 @@ export const buildComparisonConclusion = ({
     return {
       status: "conditional_leader",
       label: "Лидер при условии проверки",
-      summary: `${leader.title} выглядит сильнее по Match Score, но это не окончательный выбор до проверки данных.`,
+      summary: `${leader.title} выглядит сильнее по оценке соответствия, но это не окончательный выбор до проверки данных.`,
       leadingPropertyId: leader.propertyId,
       alternativePropertyId: alternative.propertyId,
       decisionDriverIds: decisionDrivers.map((driver) => driver.id),
@@ -138,7 +138,7 @@ export const buildComparisonConclusion = ({
     label: "Явного лидера нет",
     summary:
       gap <= COMPARISON_POLICY_V1.nearTieMatchGap
-        ? "Варианты близки по Match Score; выбор определяется показанными trade-offs."
+        ? "Варианты близки по оценке соответствия; выбор определяется показанными компромиссами."
         : "Преимущества распределены между вариантами, поэтому победитель не навязывается.",
     leadingPropertyId: null,
     alternativePropertyId: null,

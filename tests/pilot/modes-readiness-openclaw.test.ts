@@ -164,8 +164,10 @@ describe("pilot modes and source readiness", async () => {
     expect(result.bundle.entries).toEqual([]);
     expect(result.shortlist.cards).toEqual([]);
     expect(result.shortlist.datasetNotice).toContain(
-      "Данных недостаточно для вывода",
+      "Недостаточно данных, чтобы судить",
     );
+    expect(result.shortlist.datasetNotice).not.toContain("Pilot dataset");
+    expect(result.shortlist.datasetNotice).not.toContain("empty_pilot");
   });
 });
 

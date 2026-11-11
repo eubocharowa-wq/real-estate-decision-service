@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { POST } from "../../app/api/buyer-journeys/route";
 import { resetBuyerJourneyRuntimeForTests } from "../../src/buyer-journey";
+import { readCuratedPilotCandidateFiles } from "../../src/pilot-hardening/curated-dataset";
 import {
   confirmRequest,
   createConfirmationSession,
@@ -95,7 +96,21 @@ describe("P0 follow-up: ordinary Russian requests match correctly", () => {
         "cards",
       ) as readonly ShortlistCardView[];
 
-      expect(cards.length).toBeGreaterThan(0);
+      // Every real-pilot candidate on disk must reach the shortlist — none
+      // silently dropped. Read dynamically rather than hardcoding a count,
+      // the same reasoning as the migration-count fix in
+      // tests/staging/readiness.postgres.test.ts: this must not go stale as
+      // candidates are added. This is also the regression guard for a
+      // reported live-site discrepancy (shortlist showed 4 of the 5
+      // real-pilot objects): investigated and could not reproduce on this
+      // code — every code path checked (validator, result_limit, the
+      // availability/freshness/price/market-type fields, which are
+      // identical across all 5 candidates, dedup, and the shortlist's
+      // React key) returns all of them; this assertion locks in the
+      // correct count so a future regression fails loudly instead of
+      // silently dropping a candidate again.
+      const realPilotCandidateCount = readCuratedPilotCandidateFiles().length;
+      expect(cards.length).toBe(realPilotCandidateCount);
 
       const unconfirmedCityCards = cards.filter((card) =>
         card.criticalUnknowns.includes("Город не подтверждён"),
@@ -104,6 +119,15 @@ describe("P0 follow-up: ordinary Russian requests match correctly", () => {
       // (data/examples/real-pilot/candidates) — they must still reach the
       // shortlist, flagged, not be silently dropped.
       expect(unconfirmedCityCards.length).toBeGreaterThan(0);
+
+      // Every real candidate here has an unconfirmed price (listing_price
+      // is null for all 5), so none is eligibilityStatus "eligible" — none
+      // may claim "100% подходит" / "Именно под ваши условия".
+      for (const card of cards) {
+        expect(card.eligibilityStatus).not.toBe("eligible");
+        expect(card.matchLabel).not.toContain("%");
+        expect(card.matchContext).not.toBe("Именно под ваши условия");
+      }
 
       // Ordering: src/shortlist/policy.ts sorts by Match Score first, then
       // by Data Confidence as a tiebreaker (never by city specifically —

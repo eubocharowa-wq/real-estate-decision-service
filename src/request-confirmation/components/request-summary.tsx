@@ -40,7 +40,7 @@ export function RequestSummary({ session }: RequestSummaryProps) {
           {maximumPrice
             ? `Бюджет ${formatCriterionValue(maximumPrice.field, maximumPrice.value)}.`
             : "Бюджет не задан."}{" "}
-          Покажем до {request.result_limit} вариантов после реализации подбора.
+          Покажем до {request.result_limit} вариантов после подбора.
         </p>
       </div>
     </section>

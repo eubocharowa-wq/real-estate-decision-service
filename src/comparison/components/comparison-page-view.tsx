@@ -26,7 +26,7 @@ export function ComparisonPageView({
       <header className="comparison-header">
         <nav className="comparison-navigation" aria-label="Навигация сравнения">
           <Link href="/" className="brand-mark" aria-label="На главную">
-            Основание <span> / 11</span>
+            Основание
           </Link>
           <div>
             <Link
@@ -54,8 +54,8 @@ export function ComparisonPageView({
         <p className="step-label">Шаг 5 · Сравнение финалистов</p>
         <h1>Сравнение вариантов</h1>
         <p className="comparison-lead">
-          Match Score и надёжность данных показаны отдельно. Подсветка не
-          создаёт универсальный рейтинг объекта.
+          Оценка соответствия и надёжность данных показаны отдельно. Подсветка
+          не создаёт универсальный рейтинг объекта.
         </p>
         <ul
           className="request-summary-chips"

@@ -85,6 +85,58 @@ describe("RequestConfirmation", () => {
     expect(screen.queryByText("budget.purchase_price.maximum")).toBeNull();
   });
 
+  it("never shows internal identifiers or English jargon in the rendered page", () => {
+    render(<RequestConfirmation parserResult={clearRequest} />);
+    const text = document.body.textContent ?? "";
+    for (const forbidden of [
+      "dataset_type",
+      "origin=",
+      "origins=",
+      "Match Score",
+      "Data Confidence",
+      "matching layer",
+      "live-market",
+      "UserRequest",
+    ]) {
+      expect(text).not.toContain(forbidden);
+    }
+  });
+
+  it("has one clear step number, not a brand-mark page index alongside it", () => {
+    render(<RequestConfirmation parserResult={clearRequest} />);
+    expect(screen.getByText("Основание")).toBeTruthy();
+    expect(screen.queryByText(/\/\s*04/)).toBeNull();
+    expect(screen.getByText("Шаг 2 · Подтверждение")).toBeTruthy();
+  });
+
+  it("uses plain wording for the result-limit note, not the old 'после реализации подбора'", () => {
+    render(<RequestConfirmation parserResult={clearRequest} />);
+
+    expect(screen.getByText(/после подбора\.$/)).toBeTruthy();
+    expect(screen.queryByText(/после реализации подбора/)).toBeNull();
+  });
+
+  it("shows the city criterion as required, categorized as Город, not Район", () => {
+    render(<RequestConfirmation parserResult={clearRequest} />);
+
+    const city = screen.getByTestId("criterion-location.cities");
+    // In the "Обязательно" (required) section, not "Желательно" — a city
+    // is mandatory for every confirmed request (isBudgetAndCityPresent in
+    // src/request-confirmation/state.ts), so an ordinary mention like "в
+    // Туле" (no explicit "только") must still be required, not merely
+    // preferred.
+    expect(city.closest("section")?.querySelector("h2")?.textContent).toBe(
+      "Обязательно",
+    );
+    expect(
+      within(city).getByText("Город", { selector: ".eyebrow" }),
+    ).toBeTruthy();
+    expect(within(city).queryByText("Район")).toBeNull();
+    expect(
+      within(city).getByText("Обязательно", { selector: ".priority-badge" }),
+    ).toBeTruthy();
+  });
+
   it("distinguishes avoid, exclude, and neutral priorities", () => {
     const { rerender } = render(
       <RequestConfirmation parserResult={softFloor} />,

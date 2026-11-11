@@ -52,9 +52,7 @@ describe("updated decision UI", () => {
     ).toBeTruthy();
     expect(screen.getByText(/88 → 88 \(без изменения\)/)).toBeTruthy();
     expect(screen.getByText(/42 → 78/)).toBeTruthy();
-    expect(
-      screen.getByText(/не выдаются за live-market coverage/),
-    ).toBeTruthy();
+    expect(screen.getByText(/не выдаются за реальный рынок/)).toBeTruthy();
   });
 
   it("does not fabricate before/after when recompute was not required", () => {

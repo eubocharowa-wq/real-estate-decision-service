@@ -41,7 +41,7 @@ export function ShortlistPageView({
       <header className="shortlist-header">
         <div className="shortlist-navigation">
           <Link href="/" className="brand-mark" aria-label="На главную">
-            Основание <span> / 09</span>
+            Основание
           </Link>
           <Link
             href="/request/confirm"
@@ -119,8 +119,8 @@ export function ShortlistPageView({
               <h2 id="results-title">Варианты для решения</h2>
             </div>
             <p>
-              Карточки с важными неизвестными отмечены отдельно. Порядок пришёл
-              из matching layer и не пересортирован по цене.
+              Карточки с важными неизвестными отмечены отдельно. Порядок:
+              сначала — по соответствию условиям, затем — по надёжности данных.
             </p>
           </div>
           <div className="shortlist-grid">

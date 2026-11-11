@@ -158,6 +158,50 @@ describe("TASK-009 shortlist states", () => {
     expect(screen.getByText("Некоторые данные ещё обновляются.")).toBeTruthy();
   });
 
+  it("explains the card order in plain language, with one clear step number", () => {
+    render(<ShortlistPageView view={pilotView} />);
+    expect(screen.queryByText(/matching layer/i)).toBeNull();
+    expect(screen.queryByText(/не пересортирован по цене/i)).toBeNull();
+    expect(
+      screen.getByText(/по соответствию условиям.*по надёжности данных/i),
+    ).toBeTruthy();
+    // The brand mark no longer carries its own page-index number (" / 09")
+    // alongside the step label ("Шаг 3 · ...") — one numbering, not two.
+    expect(screen.getByText("Основание")).toBeTruthy();
+    expect(screen.queryByText(/\/\s*09/)).toBeNull();
+    expect(screen.getByText(/^Шаг \d+ ·/)).toBeTruthy();
+  });
+
+  it("never shows internal identifiers or English jargon in the rendered page", () => {
+    render(
+      <ShortlistPageView
+        view={{
+          ...pilotView,
+          datasetNotice:
+            "Реальные объекты из официального источника (ЕИСЖС). Это выборка, а не весь рынок; цену, доступность и условия финансирования источник не публикует.",
+        }}
+      />,
+    );
+    const text = document.body.textContent ?? "";
+    for (const forbidden of [
+      "dataset_type",
+      "origin=",
+      "origins=",
+      "Match Score",
+      "Data Confidence",
+      "matching layer",
+      "live-market",
+      "synthetic_pilot",
+      "manual_curated_pilot",
+      "mixed_explicit",
+      "user_supplied_only",
+      "empty_pilot",
+      "Pilot dataset",
+    ]) {
+      expect(text).not.toContain(forbidden);
+    }
+  });
+
   it("renders a controlled state when a confirmed request is missing", () => {
     render(<ShortlistClient initialView={null} />);
     expect(
