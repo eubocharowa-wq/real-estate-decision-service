@@ -1,4 +1,7 @@
 export * from "./adapter-registry";
+export * from "./adapters/cian/candidate";
+export * from "./adapters/cian/parser";
+export * from "./adapters/cian/profile";
 export * from "./adapters/vneshstroi/adapter";
 export * from "./adapters/vneshstroi/parser";
 export * from "./adapters/vneshstroi/profile";
