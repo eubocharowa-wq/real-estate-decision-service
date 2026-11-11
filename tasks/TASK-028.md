@@ -124,3 +124,9 @@ retention deletion, orphan reconciliation, and PostgreSQL metadata integration
 on deployed Preview. The proof must confirm bucket privacy, checksum behavior,
 data residency, credential isolation, and rollback. Only then may TASK-028
 become completed. TASK-029 has not started.
+
+This storage proof is necessary but not sufficient for public personal-data
+processing. It does not establish the residency of buyer-journey or expert
+PostgreSQL records, dynamic request ingress, platform logs, or backups. Those
+remain separate privacy/legal and operational release gates documented in
+`docs/09-pilot/ru-data-residency.md`; TASK-028 remains ACTIVE.
