@@ -169,6 +169,61 @@ describe("public HTTP write boundaries", () => {
     expect(await repositories.expertRepository.listAll()).toEqual([]);
   });
 
+  it.each([
+    "confirm_and_match",
+    "shortlist",
+    "open_property",
+    "comparison",
+    "add_user_url",
+    "create_expert_request",
+    "submit_feedback",
+    "comparison_selection",
+    "unknown_action",
+  ])("denies %s before runtime construction", async (action) => {
+    vi.stubEnv("REDS_DATABASE_URL", "not-a-postgres-url");
+    const response = await postBuyer({
+      action,
+      journeyId: "journey_synthetic",
+      sessionId: "session_synthetic",
+      rawRequestText: "PRIVATE_MUTATION_MARKER",
+    });
+
+    expect(response.status).toBe(503);
+    const payload: unknown = await response.json();
+    expect(payload).toMatchObject({ error: PUBLIC_DATA_WRITE_DISABLED });
+    expect(JSON.stringify(payload)).not.toContain("PRIVATE_MUTATION_MARKER");
+  });
+
+  it("keeps successful owned recovery read-only after writes are disabled", async () => {
+    vi.stubEnv("REDS_PUBLIC_DATA_WRITE_MODE", "synthetic_test");
+    const created = await postBuyer({
+      action: "start_and_parse",
+      sessionId: "session_owned_recovery",
+      rawRequestText: "Синтетическая квартира для проверки восстановления.",
+    });
+    expect(created.status).toBe(201);
+    const payload = (await created.json()) as {
+      journey: { journey_id: string };
+    };
+    const repositories = getApplicationRepositorySet();
+    const saveJourney = vi.spyOn(repositories.repository, "saveJourney");
+    const recordAudit = vi.spyOn(repositories.instrumentation, "record");
+    const recordError = vi.spyOn(repositories.errorRepository, "record");
+    vi.stubEnv("REDS_PUBLIC_DATA_WRITE_MODE", "disabled");
+
+    for (const action of ["journey_state", "snapshot"]) {
+      const response = await postBuyer({
+        action,
+        journeyId: payload.journey.journey_id,
+        sessionId: "session_owned_recovery",
+      });
+      expect(response.status).toBe(200);
+    }
+    expect(saveJourney).not.toHaveBeenCalled();
+    expect(recordAudit).not.toHaveBeenCalled();
+    expect(recordError).not.toHaveBeenCalled();
+  });
+
   it("keeps read-only recovery available without writing an error row", async () => {
     const repositories = getApplicationRepositorySet();
     const recordError = vi.spyOn(repositories.errorRepository, "record");
@@ -181,60 +236,6 @@ describe("public HTTP write boundaries", () => {
 
     expect(response.status).toBe(422);
     expect(recordError).not.toHaveBeenCalled();
-  });
-
-  it("reads an existing journey without creating repository records", async () => {
-    vi.stubEnv("REDS_PUBLIC_DATA_WRITE_MODE", "synthetic_test");
-    const startedResponse = await postBuyer({
-      action: "start_and_parse",
-      sessionId: "session_read_existing",
-      rawRequestText: "Синтетический запрос для проверки восстановления.",
-    });
-    expect(startedResponse.status).toBe(201);
-    const started: unknown = await startedResponse.json();
-    const journey =
-      typeof started === "object" && started !== null
-        ? Reflect.get(started, "journey")
-        : null;
-    const journeyId =
-      typeof journey === "object" && journey !== null
-        ? Reflect.get(journey, "journey_id")
-        : null;
-    expect(typeof journeyId).toBe("string");
-    if (typeof journeyId !== "string") throw new Error("journey id missing");
-
-    const repositories = getApplicationRepositorySet();
-    const auditBefore = await repositories.instrumentation.list(journeyId);
-    const errorsBefore = await repositories.errorRepository.list(journeyId);
-    const expertsBefore = await repositories.expertRepository.listAll();
-    const journeyBefore = await repositories.repository.getJourney(journeyId);
-
-    vi.stubEnv("REDS_PUBLIC_DATA_WRITE_MODE", "disabled");
-    const stateResponse = await postBuyer({
-      action: "journey_state",
-      journeyId,
-      sessionId: "session_read_existing",
-    });
-    const snapshotResponse = await postBuyer({
-      action: "snapshot",
-      journeyId,
-      sessionId: "session_read_existing",
-    });
-
-    expect(stateResponse.status).toBe(200);
-    expect(snapshotResponse.status).toBe(200);
-    expect(await repositories.instrumentation.list(journeyId)).toEqual(
-      auditBefore,
-    );
-    expect(await repositories.errorRepository.list(journeyId)).toEqual(
-      errorsBefore,
-    );
-    expect(await repositories.expertRepository.listAll()).toEqual(
-      expertsBefore,
-    );
-    expect(await repositories.repository.getJourney(journeyId)).toEqual(
-      journeyBefore,
-    );
   });
 
   it("preserves the explicitly trusted synthetic HTTP scenario", async () => {

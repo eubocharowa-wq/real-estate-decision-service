@@ -48,8 +48,10 @@ server-side processing mode.
 - protected pilot access requires explicit server deployment context;
 - read-only journey recovery remains available without error/audit writes;
 - public expert/workbench writes use the same fail-closed boundary;
-- disabled dynamic entry pages do not render buyer or expert input forms;
 - GitHub Pages continues to submit nothing.
+- closed `/selection` and `/expert/request` entry pages do not render input
+  forms; availability is evaluated at request time, with the static Pages
+  preview preserving its explicit non-submitting behavior.
 
 ## Verification
 

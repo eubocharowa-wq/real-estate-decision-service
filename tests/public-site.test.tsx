@@ -7,6 +7,7 @@ import { cleanup, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn() }) }));
+vi.mock("next/server", () => ({ connection: vi.fn(async () => undefined) }));
 
 import robots from "../app/robots";
 import sitemap from "../app/sitemap";
@@ -192,8 +193,9 @@ describe("public site chrome", () => {
 });
 
 describe("public content pages", () => {
-  it("renders the selection entry point", () => {
-    render(<SelectionPage />);
+  it("renders the selection entry point for a synthetic test", async () => {
+    vi.stubEnv("REDS_PUBLIC_DATA_WRITE_MODE", "synthetic_test");
+    render(await SelectionPage());
 
     expect(
       screen.getByRole("heading", {

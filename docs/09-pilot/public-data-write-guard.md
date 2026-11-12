@@ -46,7 +46,15 @@ Denial occurs before application/repository construction and returns a fixed
 `PUBLIC_DATA_WRITE_DISABLED` response. Submitted text, environment values,
 approval references, and database details are not returned or persisted.
 
-When the dynamic runtime is denied, `/selection` and `/expert/request` render
-a fixed closed-state notice instead of an input form. The GitHub Pages export
-keeps its separate design-preview form, but the control remains disabled and
-cannot submit because the static export contains no API routes.
+## Form availability
+
+The server-rendered `/selection` and `/expert/request` entry pages evaluate
+the same policy before rendering an input form. When intake is closed they
+show an informational notice, with no textarea, submit control, or journey
+recovery fetch. The decision is made at request time using Next.js
+`connection()`, rather than cached from build-time environment values. This
+UI treatment does not replace the independent HTTP write guard.
+
+The GitHub Pages export skips request-time rendering and keeps its existing
+explicitly non-submitting design preview. It does not enable data writes,
+even if the surrounding build process has an approved server mode.
