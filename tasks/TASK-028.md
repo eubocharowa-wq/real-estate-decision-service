@@ -124,3 +124,11 @@ retention deletion, orphan reconciliation, and PostgreSQL metadata integration
 on deployed Preview. The proof must confirm bucket privacy, checksum behavior,
 data residency, credential isolation, and rollback. Only then may TASK-028
 become completed. TASK-029 has not started.
+
+The repository now includes the reproducible operator boundary
+`npm run evidence:storage-smoke` and its runbook in
+`docs/09-pilot/ru-s3-evidence-smoke.md`. It is read-only by default and requires
+an explicit `--execute --orphan-grace-ms <positive integer>` for its synthetic
+live sequence. Adding the command does not constitute deployed proof: no
+bucket or credentials are provisioned, and TASK-028 remains **ACTIVE / NOT
+COMPLETED**.
