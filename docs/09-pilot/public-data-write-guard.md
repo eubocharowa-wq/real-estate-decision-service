@@ -45,3 +45,8 @@ production environment is claimed to be privacy-approved by this change.
 Denial occurs before application/repository construction and returns a fixed
 `PUBLIC_DATA_WRITE_DISABLED` response. Submitted text, environment values,
 approval references, and database details are not returned or persisted.
+
+When the dynamic runtime is denied, `/selection` and `/expert/request` render
+a fixed closed-state notice instead of an input form. The GitHub Pages export
+keeps its separate design-preview form, but the control remains disabled and
+cannot submit because the static export contains no API routes.

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 
 import { RequestEntry } from "../../request-entry";
 import { PublicPageHero } from "../public-page-components";
+import { evaluatePublicDataWriteAccess } from "../../../src/privacy";
 
 export const metadata: Metadata = {
   title: "Бесплатный подбор — Основание",
@@ -15,6 +16,7 @@ export default function SelectionPage() {
   // to submit to. RequestEntry disables submission and says so explicitly
   // instead of silently failing the fetch.
   const staticPreview = process.env.GITHUB_PAGES_STATIC_PREVIEW === "1";
+  const writeAccess = evaluatePublicDataWriteAccess("buyer_journey");
   return (
     <>
       <PublicPageHero
@@ -24,7 +26,20 @@ export default function SelectionPage() {
       />
 
       <section className="public-section" aria-label="Начать подбор">
-        <RequestEntry staticPreview={staticPreview} />
+        {staticPreview || writeAccess.allowed ? (
+          <RequestEntry staticPreview={staticPreview} />
+        ) : (
+          <div className="entry-shell" role="status">
+            <section className="entry-card">
+              <p className="eyebrow">Приём новых данных закрыт</p>
+              <h2>Новый запрос сейчас отправить нельзя</h2>
+              <p className="hero-lead">
+                Форма скрыта: это окружение не разрешает сохранять введённые
+                пользователем данные.
+              </p>
+            </section>
+          </div>
+        )}
       </section>
     </>
   );

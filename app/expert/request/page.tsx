@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 
 import { ExpertRequestForm } from "../../../src/expert/components";
 import { buildExpertRequestPreview } from "../../../src/expert";
+import { evaluatePublicDataWriteAccess } from "../../../src/privacy";
 
 export const metadata: Metadata = {
   title: "Экспертная проверка · Основание",
@@ -37,6 +38,17 @@ const list = (
 export default async function ExpertRequestPage({
   searchParams,
 }: ExpertRequestPageProps) {
+  if (!evaluatePublicDataWriteAccess("expert_request").allowed)
+    return (
+      <section className="expert-empty" role="status">
+        <h1>Новые экспертные запросы временно закрыты</h1>
+        <p>
+          Форма скрыта: это окружение не разрешает сохранять введённые
+          пользователем данные.
+        </p>
+      </section>
+    );
+
   const query = await searchParams;
   const preview = buildExpertRequestPreview({
     type: first(query.type),
