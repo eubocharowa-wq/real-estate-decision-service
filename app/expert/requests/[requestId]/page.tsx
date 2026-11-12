@@ -4,6 +4,7 @@ import {
   ExpertWorkbench,
   getRealExpertWorkbenchRuntime,
 } from "../../../../src/expert-workbench";
+import { evaluatePublicDataWriteAccess } from "../../../../src/privacy";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -18,6 +19,13 @@ export default async function ExpertWorkbenchPage({
 }: {
   readonly params: Promise<{ readonly requestId: string }>;
 }) {
+  if (!evaluatePublicDataWriteAccess("expert_workbench").allowed)
+    return (
+      <main className="expert-empty" role="alert">
+        <h1>Рабочая задача временно недоступна</h1>
+        <p>Окружение не разрешает сохранение экспертной работы.</p>
+      </main>
+    );
   const { requestId } = await params;
   const runtime = getRealExpertWorkbenchRuntime();
   if (runtime.actor.actor_type !== "expert")

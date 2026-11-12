@@ -18,6 +18,7 @@ import {
   buildCuratedPropertyDetailInput,
   buildPilotPropertyDetailInput,
 } from "../../../src/property-detail";
+import { requirePublicDataWriteAccess } from "../../../src/privacy";
 
 export const runtime = "nodejs";
 
@@ -188,6 +189,8 @@ const failure = (status: number, error: string, message: string): Response =>
   Response.json({ error, message }, { status });
 
 export async function POST(request: Request): Promise<Response> {
+  const denied = requirePublicDataWriteAccess("expert_request");
+  if (denied) return denied;
   const service = buildExpertRequestService();
   let raw: unknown;
   try {

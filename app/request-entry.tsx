@@ -59,6 +59,17 @@ export function RequestEntry({ staticPreview = false }: RequestEntryProps) {
         }),
       });
       const payload: unknown = await response.json();
+      if (
+        !response.ok &&
+        typeof payload === "object" &&
+        payload !== null &&
+        Reflect.get(payload, "error") === "PUBLIC_DATA_WRITE_DISABLED"
+      ) {
+        setError(
+          "Сейчас приём новых запросов временно закрыт. Введённые данные не были сохранены.",
+        );
+        return;
+      }
       const outcome = userRequestParserOutcomeSchema.safeParse(
         typeof payload === "object" && payload !== null
           ? Reflect.get(payload, "parserOutcome")
@@ -90,9 +101,7 @@ export function RequestEntry({ staticPreview = false }: RequestEntryProps) {
       await refreshJourneyState();
       router.push("/request/confirm");
     } catch {
-      setError(
-        "Не удалось разобрать запрос. Ваш текст сохранён — попробуйте ещё раз.",
-      );
+      setError("Не удалось отправить запрос. Попробуйте ещё раз.");
     } finally {
       setSubmitting(false);
     }
@@ -117,7 +126,8 @@ export function RequestEntry({ staticPreview = false }: RequestEntryProps) {
           onChange={(event) => setEditedText(event.target.value)}
         />
         <p id="request-help" className="input-help">
-          Исходная формулировка сохранится без изменений.
+          Если отправка доступна, исходная формулировка сохранится без
+          изменений.
         </p>
         {error ? (
           <p id="request-error" className="field-error" role="alert">

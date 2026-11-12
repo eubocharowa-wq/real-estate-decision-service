@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
+import { connection } from "next/server";
 
 import { ExpertRequestForm } from "../../../src/expert/components";
 import { buildExpertRequestPreview } from "../../../src/expert";
+import { evaluatePublicDataWriteAccess } from "../../../src/privacy";
+import { PublicDataWriteNotice } from "../../public-data-write-notice";
 
 export const metadata: Metadata = {
   title: "Экспертная проверка · Основание",
@@ -37,6 +40,13 @@ const list = (
 export default async function ExpertRequestPage({
   searchParams,
 }: ExpertRequestPageProps) {
+  await connection();
+  if (!evaluatePublicDataWriteAccess("expert_request").allowed)
+    return (
+      <main className="expert-request-shell">
+        <PublicDataWriteNotice headingLevel={1} />
+      </main>
+    );
   const query = await searchParams;
   const preview = buildExpertRequestPreview({
     type: first(query.type),
