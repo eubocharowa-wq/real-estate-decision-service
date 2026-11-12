@@ -79,3 +79,17 @@ export {
   type EvidenceArtifactBlobRuntimeTestSeams,
   type EvidenceArtifactRuntimeMode,
 } from "./runtime";
+export {
+  EVIDENCE_ARTIFACT_STORAGE_SMOKE_SCHEMA_VERSION,
+  parseEvidenceArtifactStorageSmokeArguments,
+  runEvidenceArtifactStorageSmoke,
+  S3AnonymousEvidenceArtifactReadProbe,
+  type EvidenceArtifactAnonymousReadProbe,
+  type EvidenceArtifactStorageSmokeCheck,
+  type EvidenceArtifactStorageSmokeCheckId,
+  type EvidenceArtifactStorageSmokeDatabaseReadiness,
+  type EvidenceArtifactStorageSmokeDependencies,
+  type EvidenceArtifactStorageSmokeMode,
+  type EvidenceArtifactStorageSmokeOptions,
+  type EvidenceArtifactStorageSmokeReport,
+} from "./storage-smoke";

@@ -95,3 +95,11 @@ S3-compatible RU bucket and deployed proof of private object operations,
 checksum enforcement, PostgreSQL integration, retention/orphan behavior,
 credential isolation, data residency, and rollback. No bucket is provisioned
 by repository code.
+
+The operator smoke command and its safety/cleanup procedure are documented in
+`docs/09-pilot/ru-s3-evidence-smoke.md`. Its default preflight performs no
+writes; a live run is explicit, synthetic, scoped to a unique run prefix, and
+uses the same storage, authorization, PostgreSQL, retention, and orphan ports
+as the application. A passing report is operational evidence for one
+configured runtime, not independent proof that the provider's physical data
+residency is in Russia.
