@@ -557,6 +557,15 @@ Vercel
 OpenClaw / adapters for collection
 ```
 
+Infrastructure direction reconciled on 2026-11-12: the owner accepted Yandex
+Cloud Managed PostgreSQL and Object Storage as the target for database and
+private artifact storage. Existing Vercel/Neon deployments remain the current
+environment until a verified migration and cutover. Final application hosting,
+domain and paid resource budget are separate unresolved deployment decisions.
+The operational dependencies, including non-Vercel access protection and a
+controlled migration job, are recorded in sections 14.7–14.9 of the unified
+launch plan; this note changes no runtime setting or product invariant.
+
 Git — единый source of truth.
 
 VS Code — основной workspace.
