@@ -161,6 +161,61 @@ describe("public HTTP write boundaries", () => {
     expect(await repositories.expertRepository.listAll()).toEqual([]);
   });
 
+  it.each([
+    "confirm_and_match",
+    "shortlist",
+    "open_property",
+    "comparison",
+    "add_user_url",
+    "create_expert_request",
+    "submit_feedback",
+    "comparison_selection",
+    "unknown_action",
+  ])("denies %s before runtime construction", async (action) => {
+    vi.stubEnv("REDS_DATABASE_URL", "not-a-postgres-url");
+    const response = await postBuyer({
+      action,
+      journeyId: "journey_synthetic",
+      sessionId: "session_synthetic",
+      rawRequestText: "PRIVATE_MUTATION_MARKER",
+    });
+
+    expect(response.status).toBe(503);
+    const payload: unknown = await response.json();
+    expect(payload).toMatchObject({ error: PUBLIC_DATA_WRITE_DISABLED });
+    expect(JSON.stringify(payload)).not.toContain("PRIVATE_MUTATION_MARKER");
+  });
+
+  it("keeps successful owned recovery read-only after writes are disabled", async () => {
+    vi.stubEnv("REDS_PUBLIC_DATA_WRITE_MODE", "synthetic_test");
+    const created = await postBuyer({
+      action: "start_and_parse",
+      sessionId: "session_owned_recovery",
+      rawRequestText: "Синтетическая квартира для проверки восстановления.",
+    });
+    expect(created.status).toBe(201);
+    const payload = (await created.json()) as {
+      journey: { journey_id: string };
+    };
+    const repositories = getApplicationRepositorySet();
+    const saveJourney = vi.spyOn(repositories.repository, "saveJourney");
+    const recordAudit = vi.spyOn(repositories.instrumentation, "record");
+    const recordError = vi.spyOn(repositories.errorRepository, "record");
+    vi.stubEnv("REDS_PUBLIC_DATA_WRITE_MODE", "disabled");
+
+    for (const action of ["journey_state", "snapshot"]) {
+      const response = await postBuyer({
+        action,
+        journeyId: payload.journey.journey_id,
+        sessionId: "session_owned_recovery",
+      });
+      expect(response.status).toBe(200);
+    }
+    expect(saveJourney).not.toHaveBeenCalled();
+    expect(recordAudit).not.toHaveBeenCalled();
+    expect(recordError).not.toHaveBeenCalled();
+  });
+
   it("keeps read-only recovery available without writing an error row", async () => {
     const repositories = getApplicationRepositorySet();
     const recordError = vi.spyOn(repositories.errorRepository, "record");
