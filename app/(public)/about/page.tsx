@@ -1,95 +1,129 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import { PublicCta, PublicPageHero } from "../public-page-components";
+import { publicProfile } from "../../../src/site-content/public-profile";
+import { PublicPageHero } from "../public-page-components";
 
 export const metadata: Metadata = {
-  title: "Об эксперте — Основание",
+  title: "Елена Бочарова — об эксперте и контакты | Основание",
   description:
-    "Елена Бочарова, Центр Бизнес-Инвестиций: экспертная оценка недвижимости и проектов развития перед вложением капитала.",
-  // Kept out of search results until every page in this legal/about group is
-  // cleared of {{ТРЕБУЕТСЯ ТЕКСТ}} placeholders; remove once that is done.
+    "Елена Бочарова: 15 лет в недвижимости, высшее юридическое образование. Центр ипотеки и недвижимости «Основание». Задачи, подход и прямая связь с экспертом.",
+  // The static profile slice does not clear the wider public launch gate.
   robots: { index: false, follow: false },
 };
 
-// This page carries the ЦБИ expert/investment-analysis identity rather than
-// the free selection product, so its content area opts into the dark,
-// gold-accented density (data-contour="invest"), same as /expert-review,
-// while the shared header and footer stay in the light buyer density — one
-// design system, two densities, see app/design-system.css.
 export default function AboutPage() {
   return (
-    <div data-contour="invest">
+    <div data-contour="invest" className="expert-profile-page">
       <PublicPageHero
         eyebrow="Об эксперте"
-        title="Об эксперте"
-        lead="Елена Бочарова. Основной фокус — недвижимость России. Зарубежные задачи — по согласованию запроса. Центр Бизнес-Инвестиций — экспертная оценка недвижимости и проектов развития перед вложением капитала."
-      />
+        title={publicProfile.name}
+        lead={`${publicProfile.brand}. Помогаю разобраться в недвижимости и условиях сделки перед решением: что известно, что вызывает вопросы и что нужно проверить.`}
+      >
+        <a className="button button-primary" href="#contacts">
+          Обсудить задачу
+        </a>
+        <Link className="button button-secondary" href="/methodology">
+          Подход к проверке
+        </Link>
+      </PublicPageHero>
 
-      <section className="public-section" aria-label="Опыт">
-        <h2>Опыт</h2>
-        <p>Когда на кону деньги, красивой подачи недостаточно.</p>
-        <p>
-          Нужно понять, что перед вами на самом деле: сильная инвестиционная
-          возможность, сырой объект или риск, замаскированный под перспективу.
-          Именно за этим сюда приходят.
-        </p>
-        <p>
-          Здесь можно получить обоснованный вывод по объекту или проекту до
-          входа в сделку — не впечатление, не общее мнение и не чужую
-          уверенность, а профессиональную оценку: что это за объект или проект
-          по сути, есть ли у него инвестиционная логика, за счёт чего может
-          формироваться результат и где слабое место.
-        </p>
-      </section>
-
-      <section className="public-section" aria-label="Подход к проверке">
-        <h2>Подход к проверке</h2>
-        <p>Решение не может держаться на одном параметре.</p>
-        <p>
-          Поэтому оценивается не только сам объект, но и вся логика вложения:
-        </p>
-        <ul className="public-list">
-          <li>документы и правовой контур;</li>
-          <li>ограничения и уязвимости;</li>
-          <li>реальная логика локации;</li>
-          <li>спрос и сценарий использования;</li>
-          <li>инвестиционная привлекательность;</li>
-          <li>перспектива на будущее;</li>
-          <li>расчёт модели в нескольких сценариях.</li>
+      <section className="public-section" aria-label="Опыт и образование">
+        <h2>Опыт и образование</h2>
+        <ul className="expert-facts">
+          <li>{publicProfile.experience}</li>
+          <li>{publicProfile.education}</li>
         </ul>
         <p>
-          То есть не «может ли это понравиться рынку», а может ли это выдержать
-          расчёт, проверку и время. Подробнее о том, как формируется вывод, — на
-          странице <Link href="/methodology">«Как проверяем»</Link>.
+          Работаю с недвижимостью России. Тула и Тульская область — первая
+          территория проекта. Возможность выезда и работу с объектом в другом
+          регионе обсуждаем отдельно.
         </p>
       </section>
 
-      <section className="public-section" aria-label="Границы ответственности">
-        <h2>Границы ответственности</h2>
+      <section className="public-section" aria-label="С чем можно обратиться">
+        <h2>С чем можно обратиться</h2>
+        <ul className="public-list">
+          <li>
+            Ищете недвижимость: нужно уточнить задачу и сравнить варианты по
+            бюджету, срокам и условиям покупки.
+          </li>
+          <li>
+            Объект уже выбран: есть вопросы к документам, состоянию, цене или
+            условиям сделки.
+          </li>
+          <li>
+            Сложная ипотечная или юридическая ситуация: нужно разобраться в
+            исходных условиях и определить следующие шаги.
+          </li>
+        </ul>
         <p>
-          Услуги — консультационные и экспертные услуги в области анализа
-          инвестиционных решений и недвижимости: скрининг, разбор документов и
-          вводных, построение сценариев, сопровождение коммуникации по проекту в
-          согласованном объёме.
-        </p>
-        <p>
-          Услуги не являются брокерскими по смыслу закона о недвижимости, не
-          являются гарантией доходности и не заменяют юридическую, налоговую или
-          бухгалтерскую консультацию, если иное не согласовано письменно.
-        </p>
-        <p>
-          Результатом является экспертная оценка и рекомендации на основе
-          переданных сведений. Ответственность за полноту и достоверность
-          вводных несёт заказчик; исполнитель не отвечает за решения третьих лиц
-          (банки, контрагенты, госорганы).
+          Для первого разговора достаточно коротко описать ситуацию. До начала
+          работы согласуем вопросы, результат, объём, стоимость и срок.
         </p>
       </section>
 
-      <PublicCta
-        title="Начните с подбора"
-        text="Экспертная проверка подключается там, где цифровой контур упирается в неподтверждённые данные."
-      />
+      <section
+        className="public-section"
+        aria-label="Что лежит в основе вывода"
+      >
+        <h2>Что лежит в основе вывода</h2>
+        <p>
+          Сопоставляю задачу покупателя, доступные документы, сведения об
+          объекте и условия сделки. Отделяю подтверждённые данные от заявлений
+          продавца и вопросов, на которые пока нет ответа.
+        </p>
+        <p>
+          В выводе должны быть понятны основания, ограничения и следующий шаг.
+          Когда информации недостаточно, отмечаю, что ещё требуется выяснить.
+          Подробнее — на странице{" "}
+          <Link href="/methodology">«Как проверяем»</Link>.
+        </p>
+        <p>
+          Разбор не гарантирует одобрение банка или доходность. Выездной осмотр
+          не заменяет техническое обследование, а состав проверки документов
+          определяется согласованной задачей.
+        </p>
+      </section>
+
+      <section
+        id="contacts"
+        className="public-section expert-contacts"
+        aria-labelledby="expert-contacts-title"
+      >
+        <p className="public-kicker">Прямая связь</p>
+        <h2 id="expert-contacts-title">Обсудим вашу задачу</h2>
+        <p>
+          Можно обратиться напрямую, без предварительного подбора на сайте.
+          Напишите, что хотите решить, где находится объект и на каком этапе
+          сейчас находитесь. Документы для первого сообщения не нужны.
+        </p>
+        <div className="public-hero-actions">
+          <a
+            className="button button-primary"
+            href={publicProfile.telegram.href}
+          >
+            {publicProfile.telegram.label}
+          </a>
+          <a
+            className="button button-secondary"
+            href={publicProfile.phone.href}
+          >
+            {publicProfile.phone.label}
+          </a>
+        </div>
+        <div
+          className="expert-community-links"
+          aria-label="Сообщества Основания"
+        >
+          <span>Материалы проекта:</span>
+          {publicProfile.communities.map((community) => (
+            <a key={community.href} href={community.href}>
+              {community.label}
+            </a>
+          ))}
+        </div>
+      </section>
     </div>
   );
 }

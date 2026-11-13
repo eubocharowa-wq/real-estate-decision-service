@@ -4,6 +4,13 @@
 **Updated:** 2026-10-03
 **Baseline HEAD:** `51a33b7071a3773897401777b6572bfb9f40b585`
 
+> **Static parallel slice, 2026-11-13:** [TASK-MKT-005A](../../tasks/TASK-MKT-005A.md)
+> implements the expert profile and direct public contacts from the owner's
+> [unified plan v4.3](https://github.com/eubocharowa-wq/real-estate-decision-service/blob/ac01a668e375d9f28fdfe3d4cadf578809cdee72/docs/08-roadmap/osnovanie-unified-business-marketing-delivery-v4-2026-11-12.md).
+> It is based on PR #32 and does not change intake, indexing, production or the
+> technical sequence: TASK-028 remains ACTIVE / NOT COMPLETED; TASK-029 has not
+> started. This note records the bounded parallel work, not a release waiver.
+
 This document does not replace `PROJECT.md`, `AGENTS.md`, domain contracts,
 source policies, or historical task specifications. It defines the current
 implementation sequence from the repository baseline above to a controlled

@@ -23,6 +23,7 @@ import CaseStudyPage, {
   generateStaticParams as generateCaseStudyParams,
 } from "../app/(public)/materials/[materialSlug]/page";
 import MethodologyPage from "../app/(public)/methodology/page";
+import HomePage from "../app/(public)/page";
 import PrivacyPage, {
   metadata as privacyMetadata,
 } from "../app/(public)/privacy/page";
@@ -106,9 +107,12 @@ describe("public site chrome", () => {
     const menu = screen.getByRole("navigation", { name: "Меню разделов" });
 
     expect(screen.getByText("Меню")).toBeDefined();
-    for (const label of [...navigationLabels, "Об эксперте"]) {
+    for (const label of [...navigationLabels, "Об эксперте", "Контакты"]) {
       expect(within(menu).getByRole("link", { name: label })).toBeDefined();
     }
+    expect(
+      within(menu).getByRole("link", { name: "Контакты" }).getAttribute("href"),
+    ).toBe("/about#contacts");
   });
 
   it("renders the footer columns", () => {
@@ -159,6 +163,24 @@ describe("public site chrome", () => {
     expect(container.textContent).toBe("");
   });
 
+  it("keeps direct expert contact separate from the two community destinations", () => {
+    render(<SiteFooter />);
+    const contacts = screen.getByRole("region", { name: "Связь и сообщества" });
+    for (const [label, href] of [
+      ["Контакты", "/about#contacts"],
+      ["+7 (910) 943-44-22", "tel:+79109434422"],
+      ["Написать Елене в Telegram", "https://t.me/ELENA_BOCHAROWA"],
+      ["Сообщество VK", "https://vk.ru/club231315767"],
+      ["Канал в Telegram", "https://t.me/gid_novostroek_tula"],
+    ]) {
+      expect(
+        within(contacts)
+          .getByRole("link", { name: label })
+          .getAttribute("href"),
+      ).toBe(href);
+    }
+  });
+
   it("points every navigation link at a route that exists", () => {
     render(
       <>
@@ -177,7 +199,8 @@ describe("public site chrome", () => {
 
     expect(hrefs.size).toBeGreaterThan(0);
     for (const href of hrefs) {
-      const segment = href === "/" ? "" : href.slice(1);
+      const pathname = href.split("#")[0];
+      const segment = pathname === "/" ? "" : pathname.slice(1);
       // Public pages live in the (public) route group, internal screens sit
       // directly under app/ — either location answers the URL.
       const candidates = [
@@ -260,14 +283,60 @@ describe("public content pages", () => {
     ).toBeDefined();
   });
 
-  it("renders the about page with ЦБИ expert material in the invest contour", () => {
+  it("offers a factual expert profile and direct contact while intake is closed", () => {
+    vi.stubEnv("REDS_PUBLIC_DATA_WRITE_MODE", "closed");
     const { container } = render(<AboutPage />);
 
-    expect(screen.getByRole("heading", { name: "Об эксперте" })).toBeDefined();
-    expect(screen.getAllByText(/Елена Бочарова/).length).toBeGreaterThan(0);
+    expect(
+      screen.getByRole("heading", { level: 1, name: "Елена Бочарова" }),
+    ).toBeDefined();
+    expect(screen.getByText("15 лет в недвижимости")).toBeDefined();
+    expect(screen.getByText("Высшее юридическое образование")).toBeDefined();
+    expect(
+      screen.getByText(/Центр ипотеки и недвижимости «Основание»/),
+    ).toBeDefined();
+    expect(
+      screen.queryByText(/Центр Бизнес|скрининг|брокерскими по смыслу/),
+    ).toBeNull();
+    const contacts = screen.getByRole("region", {
+      name: "Обсудим вашу задачу",
+    });
+    expect(contacts.id).toBe("contacts");
+    expect(
+      screen
+        .getByRole("link", { name: "Обсудить задачу" })
+        .getAttribute("href"),
+    ).toBe("#contacts");
+    expect(
+      within(contacts)
+        .getByRole("link", { name: "Написать Елене в Telegram" })
+        .getAttribute("href"),
+    ).toBe("https://t.me/ELENA_BOCHAROWA");
+    expect(
+      within(contacts)
+        .getByRole("link", { name: "+7 (910) 943-44-22" })
+        .getAttribute("href"),
+    ).toBe("tel:+79109434422");
+    expect(
+      container.querySelector('form, input, textarea, a[href="/selection"]'),
+    ).toBeNull();
     expect(screen.queryByText(/ТРЕБУЕТСЯ ТЕКСТ/)).toBeNull();
     expect(container.querySelector('[data-contour="invest"]')).not.toBeNull();
     expect(aboutMetadata.robots).toEqual({ index: false, follow: false });
+  });
+
+  it("lets a home-page visitor reach the expert without entering a selection journey", () => {
+    render(<HomePage />);
+    expect(
+      screen
+        .getByRole("link", { name: "Обсудить задачу с Еленой" })
+        .getAttribute("href"),
+    ).toBe("/about#contacts");
+    for (const link of screen.getAllByRole("link", {
+      name: "Начать бесплатный подбор",
+    })) {
+      expect(link.getAttribute("href")).toBe("/selection");
+    }
   });
 
   it("renders materials with case-study cards linking to their own pages", () => {

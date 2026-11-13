@@ -3065,8 +3065,22 @@ fieldset {
 }
 
 .site-identity {
+  display: flex;
+  flex-direction: column;
   margin-right: auto;
   text-decoration: none;
+}
+
+.site-identity-descriptor {
+  color: var(--muted);
+  font-size: 0.72rem;
+  line-height: 1.4;
+}
+
+.site-header-contact {
+  color: var(--ink);
+  font-weight: 750;
+  text-underline-offset: 0.25rem;
 }
 
 .site-nav {
@@ -3123,7 +3137,7 @@ fieldset {
 
 .site-footer-inner {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   align-items: start;
   padding: 3rem 0;
 }
@@ -3306,6 +3320,7 @@ fieldset {
 
 @media (max-width: 820px) {
   .site-nav,
+  .site-header-contact,
   .site-header-cta {
     display: none;
   }
@@ -3317,6 +3332,88 @@ fieldset {
   .site-footer-inner {
     grid-template-columns: 1fr;
     gap: 2rem;
+  }
+}
+
+/* Expert profile and direct contacts: static public content only. */
+.expert-profile-page {
+  background: var(--brand-blue);
+}
+
+.expert-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem 1.5rem;
+  margin: 1rem 0 1.5rem;
+  padding: 0;
+  list-style: none;
+}
+
+.expert-facts li {
+  border-left: 2px solid var(--brand-gold);
+  padding-left: 0.8rem;
+  line-height: 1.5;
+}
+
+.expert-contacts {
+  scroll-margin-top: 1.5rem;
+}
+
+.expert-community-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.5rem;
+  margin-top: 2rem;
+  line-height: 1.5;
+}
+
+.expert-summary {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 2rem;
+  align-items: center;
+  width: min(100% - 2rem, 76rem);
+  margin: var(--section-y) auto;
+  border-top: 2px solid var(--brand-gold);
+  border-radius: var(--radius-sm);
+  padding: clamp(1.5rem, 4vw, 3rem);
+  background: var(--brand-blue);
+  color: var(--brand-text);
+}
+
+.expert-summary h2 {
+  margin-bottom: 1rem;
+  font-family: var(--font-display), Georgia, "Times New Roman", serif;
+  font-size: clamp(1.8rem, 3vw, 2.5rem);
+  font-weight: 600;
+}
+
+.expert-summary p {
+  max-width: 42rem;
+  line-height: 1.6;
+}
+
+.expert-summary .public-kicker,
+.expert-summary-actions > a:last-child {
+  color: var(--brand-gold-bright);
+}
+
+.expert-summary-actions {
+  display: grid;
+  gap: 1rem;
+  justify-items: start;
+}
+
+.expert-summary-actions .button-primary {
+  border-color: var(--brand-gold);
+  background: var(--brand-gold);
+  color: var(--brand-bg);
+  text-align: center;
+}
+
+@media (max-width: 820px) {
+  .expert-summary {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
