@@ -830,3 +830,15 @@ Before starting the next implementation task:
 At this baseline the next coding task is **TASK-028 — Production Evidence
 Artifact lifecycle**. `SYNC-ROADMAP-v4` changes documentation only and does not
 start that task.
+
+## Static parallel slice — 2026-11-13
+
+[TASK-MKT-005A](../../tasks/TASK-MKT-005A.md) implements the expert profile and
+direct public contacts from the owner's [unified plan v4.3](https://github.com/eubocharowa-wq/real-estate-decision-service/blob/ac01a668e375d9f28fdfe3d4cadf578809cdee72/docs/08-roadmap/osnovanie-unified-business-marketing-delivery-v4-2026-11-12.md).
+[Draft PR #34](https://github.com/eubocharowa-wq/real-estate-decision-service/pull/34)
+is based on PR #32. UI/privacy tests, full suite, builds, Pages links and
+responsive Preview review passed; two social posts remain unsent drafts.
+It does not change intake, indexing, production or the technical sequence:
+TASK-028 remains ACTIVE / NOT COMPLETED; TASK-029 has not started.
+This records the bounded parallel work, not a release waiver or completion
+of the full expert, legal, infrastructure or social-publishing packages.

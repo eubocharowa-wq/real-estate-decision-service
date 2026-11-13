@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { resolvePilotRuntimeConfig } from "../../src/pilot-hardening/config";
+import { publicProfile } from "../../src/site-content/public-profile";
 
 type NavigationItem = Readonly<{
   href: string;
@@ -32,6 +33,10 @@ const navigation: readonly NavigationItem[] = [
 );
 
 const aboutLink: NavigationItem = { href: "/about", label: "Об эксперте" };
+const contactsLink: NavigationItem = {
+  href: publicProfile.contactsHref,
+  label: "Контакты",
+};
 
 /**
  * A pilot/demo deployment must say so, visibly, on every public page — not
@@ -52,7 +57,10 @@ export function SiteHeader() {
     <header className="site-header">
       <div className="site-header-inner">
         <Link className="site-identity" href="/" aria-label="На главную">
-          <span className="brand-mark">Основание</span>
+          <span className="site-identity-descriptor">
+            {publicProfile.brandDescriptor}
+          </span>
+          <span className="brand-mark">{publicProfile.shortBrand}</span>
         </Link>
 
         <nav className="site-nav" aria-label="Основная навигация">
@@ -62,6 +70,10 @@ export function SiteHeader() {
             </Link>
           ))}
         </nav>
+
+        <Link className="site-header-contact" href={contactsLink.href}>
+          {contactsLink.label}
+        </Link>
 
         <Link
           className="button button-primary button-small site-header-cta"
@@ -73,7 +85,7 @@ export function SiteHeader() {
         <details className="site-menu">
           <summary>Меню</summary>
           <nav aria-label="Меню разделов">
-            {[...navigation, aboutLink].map((item) => (
+            {[...navigation, aboutLink, contactsLink].map((item) => (
               <Link key={item.href} href={item.href}>
                 {item.label}
               </Link>
@@ -109,6 +121,28 @@ export function SiteFooter() {
             <li>
               <Link href="/methodology">Как проверяем</Link>
             </li>
+          </ul>
+        </section>
+
+        <section className="site-footer-column" aria-label="Связь и сообщества">
+          <h2>Связь и сообщества</h2>
+          <ul>
+            <li>
+              <Link href={contactsLink.href}>{contactsLink.label}</Link>
+            </li>
+            <li>
+              <a href={publicProfile.phone.href}>{publicProfile.phone.label}</a>
+            </li>
+            <li>
+              <a href={publicProfile.telegram.href}>
+                {publicProfile.telegram.label}
+              </a>
+            </li>
+            {publicProfile.communities.map((community) => (
+              <li key={community.href}>
+                <a href={community.href}>{community.label}</a>
+              </li>
+            ))}
           </ul>
         </section>
 

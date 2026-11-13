@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { publicProfile } from "../../src/site-content/public-profile";
 import { PublicCta, PublicPageHero } from "./public-page-components";
 
 export const metadata: Metadata = {
@@ -99,6 +100,31 @@ export default function HomePage() {
         <p>
           <Link href="/expert-review">Что такое экспертная проверка</Link>
         </p>
+      </section>
+
+      <section className="expert-summary" aria-labelledby="home-expert-title">
+        <div>
+          <p className="public-kicker">Лично о вашей задаче</p>
+          <h2 id="home-expert-title">{publicProfile.name}</h2>
+          <ul className="expert-facts">
+            <li>{publicProfile.experience}</li>
+            <li>{publicProfile.education}</li>
+          </ul>
+          <p>
+            Если объект уже выбран или ситуация требует отдельного разбора,
+            можно обратиться напрямую. Обсудим вопросы и согласуем, что нужно
+            проверить.
+          </p>
+        </div>
+        <div className="expert-summary-actions">
+          <Link
+            className="button button-primary"
+            href={publicProfile.contactsHref}
+          >
+            Обсудить задачу с Еленой
+          </Link>
+          <Link href="/about">Об эксперте и подходе</Link>
+        </div>
       </section>
 
       <PublicCta
