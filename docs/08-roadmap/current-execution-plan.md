@@ -4,6 +4,22 @@
 **Updated:** 2026-10-03
 **Baseline HEAD:** `51a33b7071a3773897401777b6572bfb9f40b585`
 
+
+> **Сверка статуса 12–13.11.2026 (документационная пометка; не переписывает исторический baseline).** Коммерческие цели и уточнённый операционный запуск находятся в [едином плане v4.5](osnovanie-unified-business-marketing-delivery-v4-2026-11-12.md), особенно 0.5 и 14.7–14.9. Разделы 19–23 добавляют аудит публичных страниц, сверку приложений и семи выбранных материалов курса по контенту, автопубликации, ботам, продвижению и сбору. Это спецификация следующих ограниченных TASK, а не готовые интеграции и не изменение технической очереди. Проверенный main — `1f592c39fd3602965823890034127d48723ff253`; исходные Baseline/NEXT ниже сохраняют историю 03.10.2026 и не заменяют текущую проверку PR.
+
+### Execution reconciliation 2026-11-12
+
+- PR #32 / Issue #29: implementation reviewed READY at `3eddfd3c79b66350ba5b40e798d1d381dd3661a2`, CI #194 and Preview successful, but **open and unmerged**. Current Vercel Production is READY at main, so the PR's tested guard is not yet in that deployment. Merge, actual deployment verification and public-processing approval are separate steps.
+- TASK-028 remains **ACTIVE / NOT COMPLETED**. Draft PR #33 (`23c1cf6609e854f4ef8eface314e49e7e6a78d17`) adds the operational smoke command and is based on PR #32's branch. It does not create a bucket, configure real credentials or prove deployed RU storage. Do not implement the same smoke command again.
+- PR #28 / Issue #27: data-flow/residency documentation and unresolved operator evidence; not a processing approval. The actual Production DB provider/region remains unverified. Known Neon staging metadata reports PostgreSQL 18 in `aws-eu-west-2`; CI's PostgreSQL 16 job is not target-provider proof.
+- Yandex Cloud Managed PostgreSQL and Object Storage are the owner's accepted **target direction** from 2026-11-11. A paid resource, final application server, domain, budget, cutover and migration are not thereby approved or completed. The infrastructure packages INF-01–INF-08 in the unified plan supply the missing operational dependencies for TASK-028 and OPS.
+- The owner explicitly requested **live collection enabled** on 2026-11-11. Cian/Avito conditional adapters already exist in main. This is an uncompleted operational objective, not a removed product source or a completed live test. Existing policy, actual source access, runtime configuration, permanent request-state storage and real-card evidence must be resolved per source; do not fabricate either approvals or a blanket cancellation from an older document.
+- Marketplace facts and client-submitted data are separate flows. PR #32 changes the latter; it does not delete source adapters. Persistent catalogue and semantic identity still follow TASK-029/029B; do not bypass them by writing raw collection output directly into canonical data.
+- Before moving runtime away from Vercel, explicitly resolve two code dependencies: `trusted_pilot` currently relies on Vercel Preview/SSO, and `scripts/vercel-prebuild.ts` applies migrations only in its Vercel production context. A new server needs verified access protection and a controlled migration job; do not fake Vercel environment variables.
+- Preserve expert practice plus the independent digital product. Main VK/TG branding is completed according to the owner; continue the existing community connection and content execution rather than restarting channel packaging. Static commercial work remains a bounded parallel track without new input/indexing permissions.
+
+This reconciliation adds no migration, provider configuration, data write, source collection, production deployment or release-gate waiver. Issue #29 is a previously documented narrow priority exception. Any new coding-order conflict still requires an explicit TASK/curator resolution under AGENTS.md; operational preparation for the active TASK-028 is not permission to skip later catalogue/dedup tasks.
+
 This document does not replace `PROJECT.md`, `AGENTS.md`, domain contracts,
 source policies, or historical task specifications. It defines the current
 implementation sequence from the repository baseline above to a controlled
