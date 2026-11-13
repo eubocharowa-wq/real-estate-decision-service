@@ -3083,6 +3083,29 @@ fieldset {
   text-underline-offset: 0.25rem;
 }
 
+@media (min-width: 821px) {
+  .site-header-inner {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+  }
+
+  .site-identity {
+    grid-area: 1 / 1;
+  }
+
+  .site-header-contact {
+    grid-area: 1 / 2;
+  }
+
+  .site-header-cta {
+    grid-area: 1 / 3;
+  }
+
+  .site-header-inner > .site-nav {
+    grid-area: 2 / 1 / 3 / -1;
+  }
+}
+
 .site-nav {
   display: flex;
   flex-wrap: wrap;
@@ -3357,6 +3380,10 @@ fieldset {
 
 .expert-contacts {
   scroll-margin-top: 1.5rem;
+}
+
+.expert-contacts h2::before {
+  display: none;
 }
 
 .expert-community-links {

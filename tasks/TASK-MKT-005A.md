@@ -44,6 +44,11 @@ No infrastructure is provisioned and no production data is touched.
 - Full suite: 1086 passed, 44 skipped (database-dependent tests need PostgreSQL).
 - Format, typecheck, lint, normal Next build and diff check: passed.
 - Disposable Pages export: 21 HTML pages, every internal link resolves.
-- Live visual review: pending Preview; local browser could not reach the
-  development server. Do not count this task as fully reviewed until checked.
+- Preview review at 1363 CSS px: home expert block, direct contact transition,
+  profile, community targets and absence of a main form checked. Two visual
+  defects found and corrected: orphan header CTA and contact kicker overlap.
+- A real narrow-viewport browser review remains pending. The browser could not
+  reach the local server and did not expose an available responsive viewport
+  control. Desktop screenshots are not mobile proof. Keep the PR Draft until
+  responsive review and the remaining MKT-05 work are resolved.
 - Social content remains two unsent drafts. No publisher capability was added.
