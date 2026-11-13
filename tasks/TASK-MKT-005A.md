@@ -47,8 +47,12 @@ No infrastructure is provisioned and no production data is touched.
 - Preview review at 1363 CSS px: home expert block, direct contact transition,
   profile, community targets and absence of a main form checked. Two visual
   defects found and corrected: orphan header CTA and contact kicker overlap.
-- A real narrow-viewport browser review remains pending. The browser could not
-  reach the local server and did not expose an available responsive viewport
-  control. Desktop screenshots are not mobile proof. Keep the PR Draft until
-  responsive review and the remaining MKT-05 work are resolved.
+- Responsive review of the corrected Preview at 1363, 779 and 340 CSS px:
+  no horizontal overflow; narrow navigation reveals Contacts; its link reaches
+  the contact section; contact actions fit; home expert block uses one column
+  at 340 px. Narrow widths used normal Chrome zoom, not a cropped screenshot
+  or a physical-phone test. Browser zoom was restored after review.
+- Reviewed code commit: `bbcf357ca8983c40479953dca342e4492b8b4492`;
+  Vercel Preview READY; GitHub CI #211 success. Later report-only edits do not
+  change that runtime tree. PR #34 remains Draft for owner review.
 - Social content remains two unsent drafts. No publisher capability was added.
