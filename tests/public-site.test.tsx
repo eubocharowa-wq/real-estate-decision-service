@@ -171,7 +171,7 @@ describe("public site chrome", () => {
       ["+7 (910) 943-44-22", "tel:+79109434422"],
       ["Написать Елене в Telegram", "https://t.me/ELENA_BOCHAROWA"],
       ["Сообщество VK", "https://vk.ru/club231315767"],
-      ["Канал в Telegram", "https://t.me/gid_novostroek_tula"],
+      ["Канал в Telegram", "https://t.me/centr_nedvegemosti_osnovanie"],
     ]) {
       expect(
         within(contacts)

@@ -14,6 +14,9 @@ export const publicProfile = {
   },
   communities: [
     { label: "Сообщество VK", href: "https://vk.ru/club231315767" },
-    { label: "Канал в Telegram", href: "https://t.me/gid_novostroek_tula" },
+    {
+      label: "Канал в Telegram",
+      href: "https://t.me/centr_nedvegemosti_osnovanie",
+    },
   ],
 } as const;
